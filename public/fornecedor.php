@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/database.php';
 
 $sql = $pdo->query("
     SELECT
-        f.id,
+        f.id 2,
         f.nome,
         f.cnpj,
         f.telefone,
