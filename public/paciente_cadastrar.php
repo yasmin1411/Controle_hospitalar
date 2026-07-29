@@ -317,7 +317,7 @@ Cadastrar Paciente
 <!-- DADOS DO PACIENTE -->
 <!-- ================================================= -->
 
-<div class="card mb-4" id="bloco_responsavel">
+<div class="card mb-4" id="bloco_paciente">
 
 <div class="card-header bg-primary text-white">
 
