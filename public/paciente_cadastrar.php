@@ -16,11 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $nome = trim($_POST['nome']);
     $cpf = trim($_POST['cpf']);
+    $data_de_nascimento = $_POST['data_de_nascimento'];
+    $telefone = trim($_POST['telefone']);
+    $cartao_cidadao = trim($_POST['cartao_cidadao']);
+    
     $dataNascimento = new DateTime($data_de_nascimento);
     $hoje = new DateTime();
+    
     $idade = $hoje->diff($dataNascimento)->y;
-
-    $precisaResponsavel = $idade < 18;
+    
+    $precisaResponsavel = ($idade < 18);
 
     // ==========================
     // ENDEREÇO PACIENTE
@@ -317,7 +322,7 @@ Cadastrar Paciente
 <!-- DADOS DO PACIENTE -->
 <!-- ================================================= -->
 
-<div class="card mb-4" id="bloco_paciente">
+<div class="card mb-4" id="bloco_paciente">x
 
 <div class="card-header bg-primary text-white">
 
