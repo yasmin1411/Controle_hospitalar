@@ -68,156 +68,379 @@ $pacientes = $sql->fetchAll(PDO::FETCH_ASSOC);
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <title>Pacientes</title>
+<title>Controle de Pacientes</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
 
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+:root{
+    --azul-principal:#2F80ED;
+    --azul-claro:#56CCF2;
+}
+
+body{
+    background:linear-gradient(135deg,#eef5ff,#dbeeff);
+    font-family:'Segoe UI',sans-serif;
+    min-height:100vh;
+}
+
+.card-principal{
+    background:white;
+    border:none;
+    border-radius:25px;
+    box-shadow:0 15px 40px rgba(47,128,237,.12);
+    padding:35px;
+}
+
+.titulo{
+    color:var(--azul-principal);
+    font-weight:700;
+    margin-bottom:5px;
+}
+
+.subtitulo{
+    color:#6c757d;
+    font-size:14px;
+}
+
+.info-card{
+    background:linear-gradient(135deg,var(--azul-principal),var(--azul-claro));
+    color:white;
+    border-radius:20px;
+    padding:25px;
+    margin-bottom:30px;
+}
+
+.info-card h3{
+    font-weight:700;
+}
+
+.btn-azul{
+    background:var(--azul-principal);
+    border:none;
+    color:white;
+    border-radius:12px;
+    font-weight:600;
+}
+
+.btn-azul:hover{
+    background:#1c6ad6;
+    color:white;
+}
+
+.btn-secondary{
+    border-radius:12px;
+}
+
+.form-control{
+    border-radius:12px;
+    border:1px solid #dbe7ff;
+}
+
+.form-control:focus{
+    border-color:var(--azul-principal);
+    box-shadow:0 0 0 .2rem rgba(47,128,237,.15);
+}
+
+.table{
+    overflow:hidden;
+    border-radius:15px;
+    background:white;
+}
+
+.table thead th{
+    background:var(--azul-principal)!important;
+    color:white;
+    border:none;
+    padding:15px;
+}
+
+.table tbody td{
+    padding:15px;
+    vertical-align:middle;
+}
+
+.table-hover tbody tr:hover{
+    background:#f5f9ff;
+}
+
+.btn-editar{
+    background:#e8f3ff;
+    color:#2F80ED;
+    border:none;
+    border-radius:12px;
+    padding:8px 14px;
+}
+
+.btn-editar:hover{
+    background:#2F80ED;
+    color:white;
+}
+
+.btn-excluir{
+    background:#fff1f2;
+    color:#dc3545;
+    border:none;
+    border-radius:12px;
+    padding:8px 14px;
+}
+
+.btn-excluir:hover{
+    background:#dc3545;
+    color:white;
+}
+
+.total-box{
+    background:white;
+    border-radius:18px;
+    padding:20px;
+    text-align:center;
+    box-shadow:0 5px 20px rgba(0,0,0,.06);
+    margin-bottom:25px;
+}
+
+.total-box h2{
+    color:var(--azul-principal);
+    margin:0;
+    font-weight:700;
+}
+
+.total-box p{
+    margin:0;
+    color:#6c757d;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<div class="container mt-4">
+<div class="container py-5">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="card-principal">
 
-        <h2>
-            <i class="bi bi-person-vcard"></i>
-            Pacientes
-        </h2>
+<div class="info-card">
 
-        <a href="paciente_cadastrar.php" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i>
-            Novo Paciente
-        </a>
+<h3>
+<i class="bi bi-hospital"></i>
+Sistema Hospitalar
+</h3>
 
-    </div>
+<p class="mb-0">
+Gerenciamento seguro e eficiente de pacientes.
+</p>
 
-    <form method="GET" class="mb-3">
+</div>
 
-        <div class="input-group">
+<div class="row mb-4">
 
-            <input
-                type="text"
-                name="pesquisa"
-                class="form-control"
-                placeholder="Pesquisar por nome, CPF, telefone ou cartão do cidadão..."
-                value="<?= htmlspecialchars($pesquisa) ?>">
+<div class="col-md-12">
 
-            <button class="btn btn-primary">
+<div class="total-box">
 
-                <i class="bi bi-search"></i>
+<h2><?= count($pacientes) ?></h2>
 
-                Pesquisar
+<p>Pacientes Cadastrados</p>
 
-            </button>
+</div>
 
-        </div>
+</div>
 
-    </form>
+</div>
 
-    <table class="table table-bordered table-hover align-middle">
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-        <thead class="table-dark">
+<div>
+
+<h2 class="titulo">
+
+<i class="bi bi-person-vcard"></i>
+
+Controle de Pacientes
+
+</h2>
+
+<div class="subtitulo">
+
+Cadastro e consulta de pacientes
+
+</div>
+
+</div>
+
+<a href="dashboard.php" class="btn btn-secondary">
+
+<i class="bi bi-arrow-left"></i>
+
+Voltar
+
+</a>
+
+</div>
+
+<form method="GET" class="row g-2 mb-4">
+
+<div class="col-md-10">
+
+<input
+type="text"
+name="pesquisa"
+class="form-control form-control-lg"
+placeholder="Pesquisar paciente, CPF ou telefone..."
+value="<?= htmlspecialchars($pesquisa) ?>">
+
+</div>
+
+<div class="col-md-2">
+
+<button class="btn btn-azul btn-lg w-100">
+
+<i class="bi bi-search"></i>
+
+Buscar
+
+</button>
+
+</div>
+
+</form>
+
+<div class="mb-4">
+
+<a href="paciente_cadastrar.php" class="btn btn-azul">
+
+<i class="bi bi-plus-circle"></i>
+
+Novo Paciente
+
+</a>
+
+</div>
+
+<div class="table-responsive">
+
+<table class="table table-hover align-middle">
+
+<thead>
+
+<tr>
+
+<th>Nome</th>
+<th>CPF</th>
+<th>Telefone</th>
+<th>Cartão</th>
+<th>Cidade</th>
+<th>Responsável</th>
+<th width="150">Ações</th>
+
+</tr>
+    <tbody>
+
+    <?php if(count($pacientes) > 0): ?>
+
+        <?php foreach($pacientes as $p): ?>
 
             <tr>
 
-                <th>Nome</th>
+                <td>
+                    <strong>
+                        <?= htmlspecialchars($p['nome']) ?>
+                    </strong>
+                </td>
 
-                <th>CPF</th>
+                <td>
+                    <?= htmlspecialchars($p['cpf']) ?>
+                </td>
 
-                <th>Telefone</th>
+                <td>
+                    <?= htmlspecialchars($p['telefone']) ?>
+                </td>
 
-                <th>Cartão do Cidadão</th>
+                <td>
+                    <?= htmlspecialchars($p['cartao_cidadao']) ?>
+                </td>
 
-                <th>Cidade</th>
+                <td>
+                    <span class="badge-forma">
+                        <?= htmlspecialchars($p['cidade']) ?>
+                    </span>
+                </td>
 
-                <th>Responsável</th>
+                <td>
 
-                <th width="160">Ações</th>
+                    <?php if($p['responsavel_nome']): ?>
 
-            </tr>
+                        <?= htmlspecialchars($p['responsavel_nome']) ?>
 
-        </thead>
+                    <?php else: ?>
 
-        <tbody>
+                        <span class="text-muted">
+                            Não possui
+                        </span>
 
-        <?php if (count($pacientes) > 0): ?>
+                    <?php endif; ?>
 
-            <?php foreach ($pacientes as $p): ?>
+                </td>
 
-                <tr>
+                <td>
 
-                    <td><?= htmlspecialchars($p['nome']) ?></td>
+                    <div class="d-flex gap-2">
 
-                    <td><?= htmlspecialchars($p['cpf']) ?></td>
-
-                    <td><?= htmlspecialchars($p['telefone']) ?></td>
-
-                    <td><?= htmlspecialchars($p['cartao_cidadao']) ?></td>
-
-                    <td><?= htmlspecialchars($p['cidade']) ?></td>
-
-                    <td>
-
-                        <?= $p['responsavel_nome']
-                            ? htmlspecialchars($p['responsavel_nome'])
-                            : '<span class="text-muted">Não possui</span>' ?>
-
-                    </td>
-
-                    <td>
-
-                        <a href="paciente_editar.php?id=<?= $p['id'] ?>"
-                            class="btn btn-warning btn-sm">
+                        <a
+                            href="paciente_editar.php?id=<?= $p['id'] ?>"
+                            class="btn btn-editar btn-sm">
 
                             <i class="bi bi-pencil-square"></i>
+                            Editar
 
                         </a>
 
-                        <a href="paciente_apagar.php?id=<?= $p['id'] ?>"
-                            class="btn btn-danger btn-sm"
+                        <a
+                            href="paciente_apagar.php?id=<?= $p['id'] ?>"
+                            class="btn btn-excluir btn-sm"
                             onclick="return confirm('Deseja realmente excluir este paciente?');">
 
                             <i class="bi bi-trash"></i>
+                            Excluir
 
                         </a>
 
-                    </td>
-
-                </tr>
-
-            <?php endforeach; ?>
-
-        <?php else: ?>
-
-            <tr>
-
-                <td colspan="7" class="text-center">
-
-                    Nenhum paciente encontrado.
+                    </div>
 
                 </td>
 
             </tr>
 
-        <?php endif; ?>
+        <?php endforeach; ?>
 
-        </tbody>
+    <?php else: ?>
 
-    </table>
+        <tr>
 
-    <a href="dashboard.php" class="btn btn-secondary">
+            <td colspan="7" class="text-center text-muted py-4">
 
-        <i class="bi bi-arrow-left"></i>
+                <i class="bi bi-search"></i>
 
-        Voltar
+                Nenhum paciente encontrado.
 
-    </a>
+            </td>
+
+        </tr>
+
+    <?php endif; ?>
+
+    </tbody>
+
+</table>
+
+</div>
+
+</div>
 
 </div>
 
