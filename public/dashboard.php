@@ -297,11 +297,10 @@ body{
 
                     </p>
 
-                    <span class="badge-dev">
-
-                        🚧 Disponível em breve
-
-                    </span>
+                    <a href="estoque.php" class="btn btn-modulo">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        Acessar módulo
+                    </a>
 
                 </div>
 
