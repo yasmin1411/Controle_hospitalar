@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $complemento = trim($_POST['complemento']);
 
     // ==========================
-    // Responsável / Filiação
+    // RESPONSÁVEL
     // ==========================
 
     $responsavel_nome = trim($_POST['responsavel_nome']);
@@ -243,9 +243,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 ?>
 
 
-
-
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -262,26 +259,262 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <style>
+          <style>
 
-        #bloco_responsavel {
-            transition: 0.2s;
-        }
-        body{
-            background:#f4f7fb;
-        }
+:root{
 
-        .card{
-            border:none;
-            border-radius:15px;
-            box-shadow:0 5px 15px rgba(0,0,0,.08);
-        }
+    --azul-principal:#1976D2;
+    --azul-medio:#2196F3;
+    --azul-claro:#64B5F6;
+    --azul-profundo:#1565C0;
+    --azul-hospital:#0288D1;
 
-        .card-header{
-            font-weight:bold;
-        }
+}
 
-    </style>
+
+
+/* FUNDO GERAL */
+
+body{
+
+    background:linear-gradient(
+        135deg,
+        #e3f2fd,
+        #bbdefb
+    );
+
+    font-family:'Segoe UI',sans-serif;
+
+    min-height:100vh;
+
+}
+
+
+
+/* CARD PRINCIPAL */
+
+.card-principal{
+
+    background:#ffffff;
+
+    border:none;
+
+    border-radius:25px;
+
+    box-shadow:
+    0 15px 40px rgba(33,150,243,.15);
+
+    padding:35px;
+
+}
+
+
+
+/* CARDS INTERNOS */
+
+.card{
+
+    border:none;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    box-shadow:
+    0 8px 25px rgba(33,150,243,.10);
+
+}
+
+
+
+.card-body{
+
+    padding:25px;
+
+}
+
+
+
+/* CABEÇALHOS */
+
+.card-header{
+
+color:white;
+
+font-weight:700;
+
+padding:22px 25px;
+
+font-size:18px;
+
+}
+
+
+.card-header h3{
+
+font-size:26px;
+
+font-weight:700;
+
+}
+
+
+.card-header p{
+
+font-size:14px;
+
+}
+
+
+
+/* CABEÇALHO PRINCIPAL */
+
+.header-principal{
+
+    background:linear-gradient(
+        135deg,
+        #1976D2,
+        #2196F3
+    );
+
+}
+
+
+
+/* DADOS DO PACIENTE */
+
+.header-paciente{
+
+    background:#2196F3;
+
+}
+
+
+
+/* ENDEREÇO PACIENTE */
+
+.header-endereco{
+
+    background:#64B5F6;
+
+}
+
+
+
+/* RESPONSÁVEL */
+
+.header-responsavel{
+
+    background:#0288D1;
+
+}
+
+
+
+/* ENDEREÇO RESPONSÁVEL */
+
+.header-endereco-responsavel{
+
+    background:#1565C0;
+
+}
+
+
+
+/* INPUTS */
+
+.form-control,
+.form-select{
+
+    border-radius:12px;
+
+    border:1px solid #bbdefb;
+
+    padding:10px;
+
+}
+
+
+
+.form-control:focus,
+.form-select:focus{
+
+    border-color:#1976D2;
+
+    box-shadow:
+    0 0 0 .2rem rgba(25,118,210,.15);
+
+}
+
+
+
+/* LABELS */
+
+.form-label,
+label{
+
+    font-weight:600;
+
+    color:#37474F;
+
+}
+
+
+
+/* BOTÃO SALVAR */
+
+.btn-sistema{
+
+    background:#1976D2;
+
+    color:white;
+
+    border:none;
+
+    border-radius:12px;
+
+    padding:10px 22px;
+
+    font-weight:600;
+
+}
+
+
+
+.btn-sistema:hover{
+
+    background:#1565C0;
+
+    color:white;
+
+}
+
+
+
+/* BOTÃO VOLTAR */
+
+.btn-voltar{
+
+    border-radius:12px;
+
+    padding:10px 22px;
+
+    font-weight:600;
+
+}
+
+
+
+/* ANIMAÇÃO RESPONSÁVEL */
+
+#bloco_responsavel{
+
+    transition:.2s;
+
+}
+
+
+</style>
 
 </head>
 
@@ -293,17 +526,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <div class="col-lg-10">
 
-<div class="card">
+<div class="card-principal">
 
-<div class="card-header bg-success text-white">
+<div class="card-header header-principal">
 
-<h3>
+<div class="d-flex align-items-center">
 
-<i class="bi bi-person-plus-fill"></i>
+<div class="me-3">
+
+<i class="bi bi-hospital fs-1"></i>
+
+</div>
+
+<div>
+
+<h3 class="mb-1">
 
 Cadastrar Paciente
 
 </h3>
+
+
+<p class="mb-0 opacity-75">
+
+Gerenciamento de informações pessoais e responsáveis
+
+</p>
+
+</div>
+
+  
+</div>
 
 </div>
 
@@ -325,13 +578,27 @@ Cadastrar Paciente
 <!-- DADOS DO PACIENTE -->
 <!-- ================================================= -->
 
-<div class="card mb-4" id="bloco_paciente">x
+<div class="card mb-4">
 
-<div class="card-header bg-primary text-white">
+<div class="card-header header-paciente">
+
+<div>
+
+<h5 class="mb-1">
 
 <i class="bi bi-person-fill"></i>
 
 Dados do Paciente
+
+</h5>
+
+<small>
+
+Informe os dados pessoais básicos do paciente
+
+</small>
+
+</div>
 
 </div>
 
@@ -438,11 +705,25 @@ required>
 
 <div class="card mb-4">
 
-<div class="card-header bg-secondary text-white">
+<div class="card-header header-endereco">
+
+<div>
+
+<h5 class="mb-1">
 
 <i class="bi bi-geo-alt-fill"></i>
 
 Endereço do Paciente
+
+</h5>
+
+<small>
+
+Localização e informações de residência
+
+</small>
+
+</div>
 
 </div>
 
@@ -544,20 +825,33 @@ class="form-control">
 
 
 <!-- ===================== -->
-<!-- Responsável / Filiação -->
+<!-- RESPONSÁVEL -->
 <!-- ===================== -->
 
-<div class="card mb-4" id="bloco_responsavel">
+<<div class="card mb-4" id="bloco_responsavel">
 
-    <div class="card-header bg-warning">
+<div class="card-header header-responsavel">
 
-        <i class="bi bi-people-fill"></i>
+<div>
 
-        Responsável / Filiação
+<h5 class="mb-1">
 
-    </div>
+<i class="bi bi-people-fill"></i>
 
-    <div class="card-body">
+Dados do Responsável
+
+</h5>
+
+<small>
+
+Informações do responsável legal pelo paciente
+
+</small>
+
+</div>
+
+ </div>
+     <div class="card-body">
 
         <div class="row">
 
@@ -582,13 +876,18 @@ class="form-control">
 
             <div class="col-md-6 mb-3">
                 <label>Grau de Parentesco</label>
-                <select
-            name="grau_parentesco"    
-            id="grau_parentesco"
-            class="form-select">
-
-            <option value="">Selecione...</option>
-
+                <select name="grau_parentesco" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    <option>Pai</option>
+                    <option>Mãe</option>
+                    <option>Avô</option>
+                    <option>Avó</option>
+                    <option>Tio</option>
+                    <option>Tia</option>
+                    <option>Irmão</option>
+                    <option>Irmã</option>
+                    <option>Tutor Legal</option>
+                    <option>Outro</option>
                 </select>
             </div>
 
@@ -609,13 +908,27 @@ class="form-control">
 
 <div class="card mb-4">
 
-    <div class="card-header bg-dark text-white">
+<div class="card-header header-endereco-responsavel">
 
-        <i class="bi bi-geo-alt-fill"></i>
+<div>
 
-        Endereço do Responsável
+<h5 class="mb-1">
 
-    </div>
+<i class="bi bi-house-door-fill"></i>
+
+Endereço do Responsável
+
+</h5>
+
+<small>
+
+Localização do responsável cadastrado
+
+</small>
+
+</div>
+
+</div>
 
     <div class="card-body">
 
@@ -656,13 +969,17 @@ class="form-control">
 
 </div>
 
-<div class="text-end">
+<div class="text-end mt-4">
 
-    <a href="pacientes.php" class="btn btn-secondary">
+    <a href="pacientes.php" class="btn btn-voltar btn-secondary">
+
+        <i class="bi bi-arrow-left"></i>
         Voltar
     </a>
 
-    <button class="btn btn-success">
+
+    <button class="btn btn-sistema">
+
         <i class="bi bi-save"></i>
         Salvar Paciente
     </button>
@@ -764,61 +1081,32 @@ document.getElementById('cep').addEventListener('blur', function () {
 
 
 <script>
-const dataNascimento = document.getElementById("data_de_nascimento");
-const parentesco = document.getElementById("grau_parentesco");
+const dataNascimento = document.getElementById('data_de_nascimento');
+const blocoResponsavel = document.getElementById('bloco_responsavel');
 
 function verificarIdade() {
 
-    if (!dataNascimento.value) {
+    if (!dataNascimento.value) return;
 
-        parentesco.innerHTML = `
-            <option value="">Selecione...</option>
-        `;
-
-        return;
-    }
-
-    const nascimento = new Date(dataNascimento.value);
+    const data = new Date(dataNascimento.value);
     const hoje = new Date();
 
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    let idade = hoje.getFullYear() - data.getFullYear();
+    const m = hoje.getMonth() - data.getMonth();
 
-    const mes = hoje.getMonth() - nascimento.getMonth();
-
-    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+    if (m < 0 || (m === 0 && hoje.getDate() < data.getDate())) {
         idade--;
     }
 
-    parentesco.innerHTML = '<option value="">Selecione...</option>';
+    if (!blocoResponsavel) return; // 🔥 EVITA ERRO
 
     if (idade < 18) {
-
-        parentesco.innerHTML += `
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-            <option value="Tutor Legal">Tutor Legal</option>
-        `;
-
+        blocoResponsavel.style.display = 'block';
     } else {
-
-        parentesco.innerHTML += `
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-            <option value="Avô">Avô</option>
-            <option value="Avó">Avó</option>
-            <option value="Tio">Tio</option>
-            <option value="Tia">Tia</option>
-            <option value="Irmão">Irmão</option>
-            <option value="Irmã">Irmã</option>
-            <option value="Tutor Legal">Tutor Legal</option>
-            <option value="Outro">Outro</option>
-        `;
-
+        blocoResponsavel.style.display = 'none';
     }
-
 }
 
-dataNascimento.addEventListener("change", verificarIdade);
-
-window.addEventListener("load", verificarIdade);
+dataNascimento.addEventListener('change', verificarIdade);
+window.addEventListener('load', verificarIdade);
 </script>
