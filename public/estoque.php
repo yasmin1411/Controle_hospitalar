@@ -46,101 +46,98 @@ href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.m
 
 <div class="container py-5">
 
-<div class="d-flex justify-content-between mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
 
-<h2>
+        <div>
 
-<i class="bi bi-box-seam"></i>
+            <h1 class="text-primary fw-bold">
+                <i class="bi bi-box-seam"></i>
+                Controle de Estoque
+            </h1>
 
-Controle de Estoque
+            <p class="text-muted mb-0">
+                Cadastro e consulta de itens do estoque
+            </p>
 
-</h2>
+        </div>
 
-<a href="estoque_cadastrar.php" class="btn btn-primary">
+        <a href="dashboard.php" class="btn btn-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left"></i>
+            Voltar
+        </a>
 
-<i class="bi bi-plus-circle"></i>
+    </div>
 
-Novo Item
+    <div class="d-flex justify-content-end mb-3">
 
-</a>
+        <a href="estoque_cadastrar.php" class="btn btn-primary rounded-pill">
 
-</div>
+            <i class="bi bi-plus-circle"></i>
 
-<table class="table table-bordered table-hover bg-white">
+            Novo Item
 
-<thead class="table-primary">
+        </a>
 
-<tr>
+    </div>
 
-<th>ID</th>
+    <table class="table table-bordered table-hover bg-white">
 
-<th>Medicamento</th>
+        <thead class="table-primary">
 
-<th>Quantidade</th>
+            <tr>
 
-<th>Lote</th>
+                <th>ID</th>
+                <th>Medicamento</th>
+                <th>Quantidade</th>
+                <th>Lote</th>
+                <th>Validade</th>
+                <th>Fornecedor</th>
+                <th>Código de Barra</th>
+                <th>Ações</th>
 
-<th>Validade</th>
+            </tr>
 
-<th>Fornecedor</th>
+        </thead>
 
-<th>Código de Barra</th>
+        <tbody>
 
-<th>Ações</th>
+        <?php foreach($estoque as $item): ?>
 
-</tr>
+            <tr>
 
-</thead>
+                <td><?= $item['id'] ?></td>
+                <td><?= $item['medicamento'] ?></td>
+                <td><?= $item['quantidade'] ?></td>
+                <td><?= $item['lote'] ?></td>
+                <td><?= date('d/m/Y', strtotime($item['validade'])) ?></td>
+                <td><?= $item['fornecedor'] ?></td>
+                <td><?= $item['codigo_de_barra'] ?></td>
 
-<tbody>
+                <td>
 
-<?php foreach($estoque as $item): ?>
+                    <a href="estoque_editar.php?id=<?= $item['id'] ?>" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
 
-<tr>
+                    <a href="estoque_apagar.php?id=<?= $item['id'] ?>"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Deseja excluir este item?')">
 
-<td><?= $item['id'] ?></td>
+                        <i class="bi bi-trash"></i>
 
-<td><?= $item['medicamento'] ?></td>
+                    </a>
 
-<td><?= $item['quantidade'] ?></td>
+                </td>
 
-<td><?= $item['lote'] ?></td>
+            </tr>
 
-<td><?= date('d/m/Y',strtotime($item['validade'])) ?></td>
+        <?php endforeach; ?>
 
-<td><?= $item['fornecedor'] ?></td>
+        </tbody>
 
-<td><?= $item['codigo_de_barra'] ?></td>
-
-<td>
-
-<a href="estoque_editar.php?id=<?= $item['id'] ?>"
-class="btn btn-warning btn-sm">
-
-<i class="bi bi-pencil"></i>
-
-</a>
-
-<a href="estoque_apagar.php?id=<?= $item['id'] ?>"
-class="btn btn-danger btn-sm"
-onclick="return confirm('Deseja excluir este item?');">
-
-<i class="bi bi-trash"></i>
-
-</a>
-
-</td>
-
-</tr>
-
-<?php endforeach; ?>
-
-</tbody>
-
-</table>
+    </table>
 
 </div>
 
 </body>
 
-</html>
