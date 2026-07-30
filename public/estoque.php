@@ -1,6 +1,21 @@
 <?php
 require_once '../includes/auth.php';
 require_once '../config/database.php';
+if(isset($_POST['id_excluir'])){
+
+    $id = (int)$_POST['id_excluir'];
+
+    $delete = $pdo->prepare("
+        DELETE FROM estoque
+        WHERE id = ?
+    ");
+
+    $delete->execute([$id]);
+
+    header("Location: estoque.php");
+    exit;
+
+}
 
 $sql = "
 SELECT
@@ -276,7 +291,37 @@ body{
 
 }
 
+.alerta{
 
+width:90px;
+height:90px;
+margin:auto;
+border-radius:50%;
+background:#fff3cd;
+color:#856404;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:40px;
+
+}
+
+
+.info-box{
+
+background:#f8f9fa;
+border-radius:15px;
+padding:20px;
+margin-top:20px;
+
+}
+
+
+.info-box p{
+
+margin-bottom:10px;
+
+}
 
 </style>
 
@@ -481,13 +526,180 @@ class="btn btn-editar btn-sm">
 
 
 
-<a href="estoque_apagar.php?id=<?= $item['id'] ?>"
-class="btn btn-excluir btn-sm">
+<button
+type="button"
+class="btn btn-excluir btn-sm"
+data-bs-toggle="modal"
+data-bs-target="#modalExcluir<?= $item['id'] ?>">
 
 <i class="bi bi-trash"></i>
 
-</a>
+</button>
+<div class="modal fade" id="modalExcluir<?= $item['id'] ?>" tabindex="-1">
 
+<div class="modal-dialog modal-dialog-centered">
+
+<div class="modal-content">
+
+
+<div class="modal-header">
+
+<h5 class="modal-title text-danger">
+
+<i class="bi bi-exclamation-triangle-fill"></i>
+
+Confirmar Exclusão
+
+</h5>
+
+
+<button 
+type="button"
+class="btn-close"
+data-bs-dismiss="modal">
+
+</button>
+
+</div>
+
+
+
+<div class="modal-body text-center">
+
+
+<div class="alerta mb-4">
+
+<i class="bi bi-exclamation-triangle-fill"></i>
+
+</div>
+
+
+<h5 class="text-danger fw-bold">
+
+Confirmar Exclusão
+
+</h5>
+
+
+<p class="text-muted">
+
+Esta ação não poderá ser desfeita.
+
+</p>
+
+
+
+<div class="info-box text-start">
+
+
+<p>
+
+<strong>Medicamento:</strong>
+
+<?= htmlspecialchars($item['medicamento']) ?>
+
+</p>
+
+
+
+<p>
+
+<strong>Quantidade:</strong>
+
+<?= htmlspecialchars($item['quantidade']) ?>
+
+</p>
+
+
+
+<p>
+
+<strong>Lote:</strong>
+
+<?= htmlspecialchars($item['lote']) ?>
+
+</p>
+
+
+
+<p>
+
+<strong>Validade:</strong>
+
+<?= date('d/m/Y', strtotime($item['validade'])) ?>
+
+</p>
+
+
+
+<p>
+
+<strong>Fornecedor:</strong>
+
+<?= htmlspecialchars($item['fornecedor']) ?>
+
+</p>
+
+
+
+<p class="mb-0">
+
+<strong>Código de Barras:</strong>
+
+<?= htmlspecialchars($item['codigo_de_barra']) ?>
+
+</p>
+
+
+</div>
+
+
+</div>
+
+
+<div class="modal-footer">
+
+
+<button 
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+Cancelar
+
+</button>
+
+
+
+<form method="POST">
+
+    <input 
+    type="hidden" 
+    name="id_excluir" 
+    value="<?= $item['id'] ?>">
+
+    <button 
+    type="submit"
+    class="btn btn-danger">
+
+        <i class="bi bi-trash"></i>
+
+        Excluir
+
+    </button>
+
+</form>
+
+
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
 
 
 </td>
@@ -514,6 +726,7 @@ class="btn btn-excluir btn-sm">
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
