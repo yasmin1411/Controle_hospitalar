@@ -1,9 +1,9 @@
 <?php
 
 require_once '../includes/auth.php';
-require_once '../config/conexao.php';
+require_once '../config/database.php';
 
-$medicamentos = $pdo->query("SELECT id,nome FROM medicamento ORDER BY nome")->fetchAll();
+$medicamento = $pdo->query("SELECT id,nome FROM medicamento ORDER BY nome")->fetchAll();
 
 $fornecedores = $pdo->query("SELECT id,nome FROM fornecedor ORDER BY nome")->fetchAll();
 
@@ -75,7 +75,7 @@ Cadastrar Item no Estoque
 
 <option value="">Selecione</option>
 
-<?php foreach($medicamentos as $m): ?>
+<?php foreach($medicamento as $m): ?>
 
 <option value="<?= $m['id'] ?>">
 

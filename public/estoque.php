@@ -1,6 +1,6 @@
 <?php
 require_once '../includes/auth.php';
-require_once '../config/conexao.php';
+require_once '../config/database.php';
 
 $sql = "
 SELECT
@@ -114,15 +114,16 @@ Novo Item
 
 <td>
 
-<a href="estoque_editar.php?id=<?= $item['id'] ?>" class="btn btn-warning btn-sm">
+<a href="estoque_editar.php?id=<?= $item['id'] ?>"
+class="btn btn-warning btn-sm">
 
 <i class="bi bi-pencil"></i>
 
 </a>
 
-<a href="estoque_excluir.php?id=<?= $item['id'] ?>"
+<a href="estoque_apagar.php?id=<?= $item['id'] ?>"
 class="btn btn-danger btn-sm"
-onclick="return confirm('Deseja excluir este item?')">
+onclick="return confirm('Deseja excluir este item?');">
 
 <i class="bi bi-trash"></i>
 

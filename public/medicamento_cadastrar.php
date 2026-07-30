@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Prepara a query SQL para inserir um novo medicamento no banco
     $sql = $pdo->prepare("
-        INSERT INTO medicamentos
+        INSERT INTO medicamento
         (
             nome,
             fabricante,
@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $forma
     ]);
 
-    // Redireciona o usuário para a página de listagem de medicamentos
-    header("Location: medicamentos.php");
+    // Redireciona o usuário para a página de listagem de medicamento
+    header("Location: medicamento.php");
     exit;
 }
 
@@ -182,7 +182,7 @@ body{
 
             <h3>
                 <i class="bi bi-capsule"></i>
-                Cadastro de Medicamentos
+                Cadastro de Medicamento
             </h3>
 
             <p class="mb-0">
@@ -204,7 +204,7 @@ body{
 
             <div class="subtitulo">
 
-                Registro seguro e organizado de medicamentos hospitalares
+                Registro seguro e organizado de medicamento hospitalares
 
             </div>
 
@@ -324,7 +324,7 @@ body{
 
                 </button>
 
-                <a href="medicamentos.php" class="btn btn-secondary">
+                <a href="medicamento.php" class="btn btn-secondary">
 
                     <i class="bi bi-arrow-left"></i>
 
