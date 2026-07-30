@@ -801,7 +801,7 @@ class="form-control">
 <!-- RESPONSÁVEL -->
 <!-- ===================== -->
 
-<<div class="card mb-4" id="bloco_responsavel">
+<div class="card mb-4" id="bloco_responsavel">
 
 <div class="card-header header-responsavel">
 
