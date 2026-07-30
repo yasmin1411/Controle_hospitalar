@@ -8,7 +8,7 @@ require_once '../config/database.php';
 
 // Verifica se o ID foi enviado via GET e se não está vazio
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header("Location: medicamentos.php");
+    header("Location: medicamento.php");
     exit;
 }
 
@@ -16,7 +16,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $id = (int)$_GET['id'];
 
 // Prepara a consulta para buscar o medicamento no banco
-$sql = $pdo->prepare("SELECT * FROM medicamentos WHERE id = ?");
+$sql = $pdo->prepare("SELECT * FROM medicamento WHERE id = ?");
 
 // Executa a consulta passando o ID como parâmetro
 $sql->execute([$id]);
@@ -26,7 +26,7 @@ $medicamento = $sql->fetch(PDO::FETCH_ASSOC);
 
 // Se não encontrar o medicamento, redireciona para a listagem
 if (!$medicamento) {
-    header("Location: medicamentos.php");
+    header("Location: medicamento.php");
     exit;
 }
 
@@ -34,13 +34,13 @@ if (!$medicamento) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Prepara a query para excluir o medicamento do banco
-    $delete = $pdo->prepare("DELETE FROM medicamentos WHERE id = ?");
+    $delete = $pdo->prepare("DELETE FROM medicamento WHERE id = ?");
 
     // Executa a exclusão passando o ID
     $delete->execute([$id]);
 
     // Redireciona para a página de listagem após excluir
-    header("Location: medicamentos.php");
+    header("Location: medicamento.php");
     exit;
 }
 
@@ -229,7 +229,7 @@ body{
 
                     <!-- Botão cancelar e voltar -->
                     <a
-                        href="medicamentos.php"
+                        href="medicamento.php"
                         class="btn btn-secondary btn-cancelar">
 
                         <i class="bi bi-arrow-left"></i>

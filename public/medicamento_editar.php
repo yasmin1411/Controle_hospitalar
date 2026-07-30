@@ -8,7 +8,7 @@ require_once '../config/database.php';
 
 // Verifica se o parâmetro "id" foi enviado na URL
 if (!isset($_GET['id'])) {
-    header("Location: medicamentos.php");
+    header("Location: medicamento.php");
     exit;
 }
 
@@ -16,7 +16,7 @@ if (!isset($_GET['id'])) {
 $id = $_GET['id'];
 
 // Prepara a consulta para buscar os dados do medicamento específico
-$sql = $pdo->prepare("SELECT * FROM medicamentos WHERE id = ?");
+$sql = $pdo->prepare("SELECT * FROM medicamento WHERE id = ?");
 
 // Executa a consulta passando o ID como parâmetro
 $sql->execute([$id]);
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Prepara a query de atualização no banco de dados
     $update = $pdo->prepare("
-        UPDATE medicamentos
+        UPDATE medicamento
         SET
             nome = ?,
             fabricante = ?,
@@ -61,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $id
     ]);
 
-    // Redireciona de volta para a listagem de medicamentos
-    header("Location: medicamentos.php");
+    // Redireciona de volta para a listagem de medicamento
+    header("Location: medicamento.php");
     exit;
 }
 
@@ -298,7 +298,7 @@ body{
 
             <!-- Botão cancelar -->
             <a
-                href="medicamentos.php"
+                href="medicamento.php"
                 class="btn btn-secondary btn-cancelar">
 
                 <i class="bi bi-arrow-left"></i>

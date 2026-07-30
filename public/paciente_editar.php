@@ -3,7 +3,9 @@
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
+
 $id = $_GET['id'] ?? null;
+
 
 if (!$id) {
 
@@ -13,11 +15,13 @@ if (!$id) {
 }
 
 
+
 /*
-|--------------------------------------------------------------------------
-| BUSCA PACIENTE + ENDEREÇO + RESPONSÁVEL
-|--------------------------------------------------------------------------
+==================================================
+BUSCAR PACIENTE + ENDEREÇOS + RESPONSÁVEL
+==================================================
 */
+
 
 $sql = $pdo->prepare("
 
@@ -31,11 +35,13 @@ e.cep,
 e.cidade,
 e.complemento,
 
+
 r.nome AS responsavel_nome,
 r.cpf AS responsavel_cpf,
 r.telefone AS responsavel_telefone,
 r.grau_de_parentesco,
 r.data_de_nascimento AS responsavel_data,
+
 
 er.rua AS r_rua,
 er.numero AS r_numero,
@@ -43,31 +49,240 @@ er.cep AS r_cep,
 er.cidade AS r_cidade,
 er.complemento AS r_complemento
 
+
 FROM pacientes p
+
 
 INNER JOIN endereco e
 ON p.endereco_id = e.id
 
+
 LEFT JOIN responsavel r
 ON p.responsavel_id = r.id
 
+
 LEFT JOIN endereco er
 ON r.endereco_id = er.id
+
 
 WHERE p.id = ?
 
 ");
 
+
 $sql->execute([$id]);
+
 
 $paciente = $sql->fetch(PDO::FETCH_ASSOC);
 
-if (!$paciente){
+
+
+if (!$paciente) {
 
     die("Paciente não encontrado.");
 
 }
-<!DOCTYPE html>
+
+
+
+/*
+==================================================
+ATUALIZAR DADOS
+==================================================
+*/
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+
+try {
+
+
+$pdo->beginTransaction();
+
+
+
+/*
+==============================
+PACIENTE
+==============================
+*/
+
+
+$sql = $pdo->prepare("
+
+UPDATE pacientes SET
+
+nome=?,
+cpf=?,
+data_de_nascimento=?,
+telefone=?,
+cartao_cidadao=?
+
+WHERE id=?
+
+");
+
+
+
+$sql->execute([
+
+$_POST['nome'],
+$_POST['cpf'],
+$_POST['data_de_nascimento'],
+$_POST['telefone'],
+$_POST['cartao_cidadao'],
+$id
+
+]);
+
+
+
+
+
+/*
+==============================
+ENDEREÇO PACIENTE
+==============================
+*/
+
+
+$sql=$pdo->prepare("
+
+UPDATE endereco SET
+
+rua=?,
+numero=?,
+cep=?,
+cidade=?,
+complemento=?
+
+WHERE id=?
+
+");
+
+
+
+$sql->execute([
+
+$_POST['rua'],
+$_POST['numero'],
+$_POST['cep'],
+$_POST['cidade'],
+$_POST['complemento'],
+$paciente['endereco_id']
+
+]);
+
+
+
+
+
+
+/*
+==============================
+RESPONSÁVEL
+==============================
+*/
+
+
+if(!empty($paciente['responsavel_id'])){
+
+
+$sql=$pdo->prepare("
+
+UPDATE responsavel SET
+
+nome=?,
+cpf=?,
+telefone=?,
+grau_de_parentesco=?,
+data_de_nascimento=?
+
+WHERE id=?
+
+");
+
+
+
+$sql->execute([
+
+$_POST['responsavel_nome'],
+$_POST['responsavel_cpf'],
+$_POST['responsavel_telefone'],
+$_POST['grau_parentesco'],
+$_POST['responsavel_data'],
+$paciente['responsavel_id']
+
+]);
+
+
+
+
+
+
+$sql=$pdo->prepare("
+
+UPDATE endereco SET
+
+rua=?,
+numero=?,
+cep=?,
+cidade=?,
+complemento=?
+
+WHERE id=(
+
+SELECT endereco_id 
+FROM responsavel
+WHERE id=?
+
+)
+
+");
+
+
+
+$sql->execute([
+
+$_POST['r_rua'],
+$_POST['r_numero'],
+$_POST['r_cep'],
+$_POST['r_cidade'],
+$_POST['r_complemento'],
+$paciente['responsavel_id']
+
+]);
+
+
+}
+
+
+
+$pdo->commit();
+
+
+
+header("Location: pacientes.php");
+exit;
+
+
+
+}catch(Exception $e){
+
+
+$pdo->rollBack();
+
+die("Erro ao atualizar: ".$e->getMessage());
+
+
+}
+
+
+}
+
+
+?>
 <html lang="pt-BR">
 
 <head>
@@ -532,3 +747,341 @@ Atualize as informações do paciente cadastrado
     </div>
 
 </div>
+<!-- ================================================= -->
+<!-- DADOS DO RESPONSÁVEL -->
+<!-- ================================================= -->
+
+<div class="card mb-4" id="bloco_responsavel">
+
+    <div class="card-header header-responsavel">
+
+        <i class="bi bi-people-fill"></i>
+
+        Dados do Responsável
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+                    Nome
+                </label>
+
+                <input
+                    type="text"
+                    name="responsavel_nome"
+                    class="form-control"
+                    value="<?= htmlspecialchars($paciente['responsavel_nome'] ?? '') ?>">
+
+            </div>
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+                    CPF
+                </label>
+
+                <input
+                    type="text"
+                    name="responsavel_cpf"
+                    id="responsavel_cpf"
+                    class="form-control"
+                    value="<?= htmlspecialchars($paciente['responsavel_cpf'] ?? '') ?>">
+
+            </div>
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+                    Telefone
+                </label>
+
+                <input
+                    type="text"
+                    name="responsavel_telefone"
+                    id="responsavel_telefone"
+                    class="form-control"
+                    value="<?= htmlspecialchars($paciente['responsavel_telefone'] ?? '') ?>">
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+                    Grau de Parentesco
+                </label>
+
+                <select
+                    name="grau_parentesco"
+                    class="form-select">
+
+                    <option value="">Selecione...</option>
+
+                    <?php
+
+                    $graus = [
+                        "Pai",
+                        "Mãe",
+                        "Avô",
+                        "Avó",
+                        "Tio",
+                        "Tia",
+                        "Irmão",
+                        "Irmã",
+                        "Tutor Legal",
+                        "Outro"
+                    ];
+
+                    foreach($graus as $grau){
+
+                        $selected = ($paciente['grau_de_parentesco'] == $grau) ? 'selected' : '';
+
+                        echo "<option $selected>$grau</option>";
+
+                    }
+
+                    ?>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+                    Data de Nascimento
+                </label>
+
+                <input
+                    type="date"
+                    name="responsavel_data"
+                    class="form-control"
+                    value="<?= $paciente['responsavel_data'] ?>">
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- ================================================= -->
+<!-- ENDEREÇO DO RESPONSÁVEL -->
+<!-- ================================================= -->
+
+<div class="card mb-4">
+
+    <div class="card-header header-endereco-responsavel">
+
+        <i class="bi bi-geo-alt-fill"></i>
+
+        Endereço do Responsável
+
+    </div>
+
+
+    <div class="card-body">
+
+
+        <div class="row">
+
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+
+                    Rua
+
+                </label>
+
+
+                <input
+                    type="text"
+                    name="r_rua"
+                    class="form-control"
+                    value="<?= htmlspecialchars($paciente['r_rua'] ?? '') ?>"
+                    required>
+
+
+            </div>
+
+
+
+            <div class="col-md-2 mb-3">
+
+
+                <label class="form-label">
+
+                    Número
+
+                </label>
+
+
+                <input
+                    type="text"
+                    name="r_numero"
+                    class="form-control"
+                    value="<?= htmlspecialchars($paciente['r_numero'] ?? '') ?>"
+                    required>
+
+
+            </div>
+
+
+
+
+            <div class="col-md-4 mb-3">
+
+
+                <label class="form-label">
+
+                    CEP
+
+                </label>
+
+
+                <input
+                    type="text"
+                    id="r_cep"
+                    name="r_cep"
+                    class="form-control"
+                    value="<?= htmlspecialchars($paciente['r_cep'] ?? '') ?>"
+                    required>
+
+
+            </div>
+
+        </div>
+
+
+
+
+        <div class="row">
+
+
+            <div class="col-md-6 mb-3">
+
+
+                <label class="form-label">
+
+                    Cidade
+
+                </label>
+
+
+                <input
+                    type="text"
+                    name="r_cidade"
+                    class="form-control"
+                    value="<?= htmlspecialchars($paciente['r_cidade'] ?? '') ?>"
+                    required>
+
+
+            </div>
+
+
+
+
+            <div class="col-md-6 mb-3">
+
+
+                <label class="form-label">
+
+                    Complemento
+
+                </label>
+
+
+                <input
+                    type="text"
+                    name="r_complemento"
+                    class="form-control"
+                    value="<?= htmlspecialchars($paciente['r_complemento'] ?? '') ?>">
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+</div>
+<!-- ================================================= -->
+<!-- BOTÕES -->
+<!-- ================================================= -->
+
+<div class="d-flex justify-content-end gap-3 mt-4">
+
+
+    <a 
+        href="pacientes.php"
+        class="btn btn-secondary btn-voltar">
+
+        <i class="bi bi-arrow-left"></i>
+
+        Cancelar
+
+    </a>
+
+
+
+    <button
+        type="submit"
+        class="btn btn-sistema">
+
+        <i class="bi bi-check-circle"></i>
+
+        Salvar Alterações
+
+    </button>
+
+
+</div>
+
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+
+</html>
+<script>
+
+
+// ===============================
+// MÁSCARA CPF PACIENTE
+// ===============================
+
+document.getElementById('cpf').addEventListener('input', function(){
+
+    let v = this.value;
+
+    v = v.replace(/\D/g,"");
+
+    v = v.replace(/(\d{3})(\d)/,"$1.$2");
+
+    v = v.replace(/(\d{3})(\d)/,"$1.$2");
+
+    v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+
+    this.value = v;
+
+});
