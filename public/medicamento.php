@@ -16,10 +16,10 @@ if (!empty($pesquisa)) {
     // Monta o termo de busca com curingas para SQL LIKE
     $busca = "%{$pesquisa}%";
 
-    // Prepara a consulta SQL buscando em múltiplos campos da tabela medicamentos
+    // Prepara a consulta SQL buscando em múltiplos campos da tabela medicamento
     $sql = $pdo->prepare("
         SELECT *
-        FROM medicamentos
+        FROM medicamento
         WHERE nome LIKE ?
         OR fabricante LIKE ?
         OR dosagem LIKE ?
@@ -37,10 +37,10 @@ if (!empty($pesquisa)) {
 
 } else {
 
-    // Caso não haja pesquisa, lista todos os medicamentos ordenados por nome
+    // Caso não haja pesquisa, lista todos os medicamento ordenados por nome
     $sql = $pdo->prepare("
         SELECT *
-        FROM medicamentos
+        FROM medicamento
         ORDER BY nome
     ");
 
@@ -49,7 +49,7 @@ if (!empty($pesquisa)) {
 }
 
 // Recupera todos os resultados da consulta como array associativo
-$medicamentos = $sql->fetchAll(PDO::FETCH_ASSOC);
+$medicamento = $sql->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 
@@ -65,7 +65,7 @@ $medicamentos = $sql->fetchAll(PDO::FETCH_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Título da página -->
-<title>Controle de Medicamentos</title>
+<title>Controle de Medicamento</title>
 
 <!-- Importação do Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -220,7 +220,7 @@ body{
     border-radius:20px;
 }
 
-/* Caixa de total de medicamentos */
+/* Caixa de total de medicamento */
 .total-box{
     background:white;
     border-radius:18px;
@@ -264,21 +264,21 @@ body{
             </h3>
 
             <p class="mb-0">
-                Gerenciamento seguro e eficiente de medicamentos hospitalares.
+                Gerenciamento seguro e eficiente de medicamento hospitalares.
             </p>
 
         </div>
 
-        <!-- Exibição da quantidade total de medicamentos -->
+        <!-- Exibição da quantidade total de medicamento -->
         <div class="row mb-4">
 
             <div class="col-md-12">
 
                 <div class="total-box">
 
-                    <h2><?= count($medicamentos) ?></h2>
+                    <h2><?= count($medicamento) ?></h2>
 
-                    <p>Medicamentos Cadastrados</p>
+                    <p>Medicamento Cadastrados</p>
 
                 </div>
 
@@ -295,13 +295,13 @@ body{
 
                     <i class="bi bi-capsule-pill"></i>
 
-                    Controle de Medicamentos
+                    Controle de Medicamento
 
                 </h2>
 
                 <div class="subtitulo">
 
-                    Cadastro e consulta de medicamentos hospitalares
+                    Cadastro e consulta de medicamento hospitalares
 
                 </div>
 
@@ -380,11 +380,11 @@ body{
 
                 <tbody>
 
-                <!-- Verifica se existem medicamentos -->
-                <?php if(count($medicamentos) > 0): ?>
+                <!-- Verifica se existem medicamento -->
+                <?php if(count($medicamento) > 0): ?>
 
-                    <!-- Loop dos medicamentos -->
-                    <?php foreach($medicamentos as $m): ?>
+                    <!-- Loop dos medicamento -->
+                    <?php foreach($medicamento as $m): ?>
 
                         <tr>
 

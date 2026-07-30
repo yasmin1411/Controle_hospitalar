@@ -186,7 +186,7 @@ body{
 
 
 
-        <!-- Medicamentos -->
+        <!-- Medicamento -->
     
     
     
@@ -203,15 +203,15 @@ body{
 
                     </div>
 
-                    <h4>Medicamentos</h4>
+                    <h4>Medicamento</h4>
 
                     <p class="text-muted">
 
-                        Cadastro e gerenciamento de medicamentos hospitalares.
+                        Cadastro e gerenciamento de medicamento hospitalares.
 
                     </p>
 
-                    <a href="medicamentos.php"
+                    <a href="medicamento.php"
                        class="btn btn-modulo">
 
                         <i class="bi bi-arrow-right-circle"></i>
@@ -297,11 +297,10 @@ body{
 
                     </p>
 
-                    <span class="badge-dev">
-
-                        🚧 Disponível em breve
-
-                    </span>
+                    <a href="estoque.php" class="btn btn-modulo">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        Acessar módulo
+                    </a>
 
                 </div>
 
