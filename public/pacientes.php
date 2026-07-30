@@ -214,6 +214,150 @@ body{
     color:#6c757d;
 }
 
+
+/* ==============================
+   MODAL EXCLUSÃO PACIENTE
+============================== */
+
+
+.modal-content{
+
+background:white;
+
+border:none;
+
+border-radius:25px;
+
+box-shadow:0 15px 40px rgba(47,128,237,.12);
+
+padding:20px;
+
+}
+
+
+
+.modal-header{
+
+border:none;
+
+display:block;
+
+text-align:center;
+
+}
+
+
+
+.modal-alerta{
+
+width:90px;
+
+height:90px;
+
+margin:10px auto 20px;
+
+border-radius:50%;
+
+background:#fff3cd;
+
+color:#856404;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+font-size:40px;
+
+}
+
+
+
+.modal-title{
+
+color:#dc3545;
+
+font-weight:700;
+
+text-align:center;
+
+}
+
+
+
+.modal-body{
+
+background:#f8f9fa;
+
+border-radius:15px;
+
+padding:20px;
+
+margin:10px 0;
+
+text-align:center;
+
+}
+
+
+
+.modal-body strong{
+
+display:block;
+
+color:#2F80ED;
+
+font-size:20px;
+
+margin-top:10px;
+
+}
+
+
+
+.modal-footer{
+
+border:none;
+
+justify-content:center;
+
+}
+
+
+
+.btn-modal-excluir{
+
+background:#dc3545;
+
+border:none;
+
+color:white;
+
+border-radius:12px;
+
+padding:10px 18px;
+
+}
+
+
+
+.btn-modal-excluir:hover{
+
+background:#bb2d3b;
+
+color:white;
+
+}
+
+
+
+.btn-modal-cancelar{
+
+border-radius:12px;
+
+}
+
 </style>
 
 </head>
@@ -400,16 +544,126 @@ Novo Paciente
 
                         </a>
 
-                        <a
-                            href="paciente_apagar.php?id=<?= $p['id'] ?>"
-                            class="btn btn-excluir btn-sm"
-                            onclick="return confirm('Deseja realmente excluir este paciente?');">
+                        <button
+    type="button"
+    class="btn btn-excluir btn-sm"
+    data-bs-toggle="modal"
+    data-bs-target="#modalExcluir<?= $p['id'] ?>">
 
-                            <i class="bi bi-trash"></i>
-                            Excluir
+    <i class="bi bi-trash"></i>
+    Excluir
 
-                        </a>
+</button>
+<!-- MODAL EXCLUIR PACIENTE -->
 
+<div class="modal fade" id="modalExcluir<?= $p['id'] ?>" tabindex="-1">
+
+
+<div class="modal-dialog modal-dialog-centered">
+
+
+<div class="modal-content">
+
+
+<div class="modal-header">
+
+
+<div class="modal-alerta">
+
+<i class="bi bi-exclamation-triangle-fill"></i>
+
+</div>
+
+
+<h2 class="modal-title">
+
+Confirmar Exclusão
+
+</h2>
+
+
+</div>
+
+
+
+<div class="modal-body">
+
+
+<p>
+
+Esta ação não poderá ser desfeita.
+
+</p>
+
+
+<hr>
+
+
+<p>
+
+<strong>
+
+Paciente:
+
+</strong>
+
+
+<?= htmlspecialchars($p['nome']) ?>
+
+
+</p>
+
+
+
+</div>
+
+
+
+<div class="modal-footer">
+
+
+<a
+href="paciente_apagar.php?id=<?= $p['id'] ?>"
+class="btn btn-modal-excluir">
+
+
+<i class="bi bi-trash"></i>
+
+Excluir Paciente
+
+
+</a>
+
+
+
+<button
+
+type="button"
+
+class="btn btn-secondary btn-modal-cancelar"
+
+data-bs-dismiss="modal">
+
+
+<i class="bi bi-arrow-left"></i>
+
+Cancelar
+
+
+</button>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
                     </div>
 
                 </td>
@@ -443,6 +697,8 @@ Novo Paciente
 </div>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
