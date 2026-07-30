@@ -148,55 +148,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // ======================================
 
         $sql = $pdo->prepare("
-            INSERT INTO responsavel
-            (
-                nome,
-                cpf,
-                telefone,
-                grau_de_parentesco,
-                data_de_nascimento,
-                endereco_id
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
+    INSERT INTO responsavel
+    (
+        nome,
+        cpf,
+        telefone,
+        grau_de_parentesco,
+        data_de_nascimento,
+        endereco_id
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+");
 
-        $sql->execute([
-            $responsavel_nome,
-            $responsavel_cpf,
-            $responsavel_telefone,
-            $grau_parentesco,
-            $responsavel_data,
-            $enderecoResponsavel
-        ]);
+$sql->execute([
+    $responsavel_nome,
+    $responsavel_cpf,
+    $responsavel_telefone,
+    $grau_parentesco,
+    $responsavel_data,
+    $enderecoResponsavel
+]);
 
-        $responsavelID = null;
-
-        if ($precisaResponsavel) {
-        
-            $sql = $pdo->prepare("
-                INSERT INTO responsavel
-                (
-                    nome,
-                    cpf,
-                    telefone,
-                    grau_de_parentesco,
-                    data_de_nascimento,
-                    endereco_id
-                )
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
-        
-            $sql->execute([
-                $responsavel_nome,
-                $responsavel_cpf,
-                $responsavel_telefone,
-                $grau_parentesco,
-                $responsavel_data,
-                $enderecoResponsavel
-            ]);
-        
-            $responsavelID = $pdo->lastInsertId();
-        }
+$responsavelID = $pdo->lastInsertId();
 
         // ======================================
         // CADASTRA PACIENTE
