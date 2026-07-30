@@ -148,55 +148,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // ======================================
 
         $sql = $pdo->prepare("
-            INSERT INTO responsavel
-            (
-                nome,
-                cpf,
-                telefone,
-                grau_de_parentesco,
-                data_de_nascimento,
-                endereco_id
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
+    INSERT INTO responsavel
+    (
+        nome,
+        cpf,
+        telefone,
+        grau_de_parentesco,
+        data_de_nascimento,
+        endereco_id
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+");
 
-        $sql->execute([
-            $responsavel_nome,
-            $responsavel_cpf,
-            $responsavel_telefone,
-            $grau_parentesco,
-            $responsavel_data,
-            $enderecoResponsavel
-        ]);
+$sql->execute([
+    $responsavel_nome,
+    $responsavel_cpf,
+    $responsavel_telefone,
+    $grau_parentesco,
+    $responsavel_data,
+    $enderecoResponsavel
+]);
 
-        $responsavelID = null;
-
-        if ($precisaResponsavel) {
-        
-            $sql = $pdo->prepare("
-                INSERT INTO responsavel
-                (
-                    nome,
-                    cpf,
-                    telefone,
-                    grau_de_parentesco,
-                    data_de_nascimento,
-                    endereco_id
-                )
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
-        
-            $sql->execute([
-                $responsavel_nome,
-                $responsavel_cpf,
-                $responsavel_telefone,
-                $grau_parentesco,
-                $responsavel_data,
-                $enderecoResponsavel
-            ]);
-        
-            $responsavelID = $pdo->lastInsertId();
-        }
+$responsavelID = $pdo->lastInsertId();
 
         // ======================================
         // CADASTRA PACIENTE
@@ -672,7 +645,7 @@ Telefone
 type="text"
 id="telefone"
 name="telefone"
-class="form-control"
+class="form-control"                                                    
 required>
 
 </div>
@@ -828,7 +801,7 @@ class="form-control">
 <!-- RESPONSÁVEL -->
 <!-- ===================== -->
 
-<<div class="card mb-4" id="bloco_responsavel">
+<div class="card mb-4" id="bloco_responsavel">
 
 <div class="card-header header-responsavel">
 
@@ -838,7 +811,7 @@ class="form-control">
 
 <i class="bi bi-people-fill"></i>
 
-Dados do Responsável
+Responsável / Filiação
 
 </h5>
 
@@ -876,18 +849,13 @@ Informações do responsável legal pelo paciente
 
             <div class="col-md-6 mb-3">
                 <label>Grau de Parentesco</label>
-                <select name="grau_parentesco" class="form-select" required>
-                    <option value="">Selecione...</option>
-                    <option>Pai</option>
-                    <option>Mãe</option>
-                    <option>Avô</option>
-                    <option>Avó</option>
-                    <option>Tio</option>
-                    <option>Tia</option>
-                    <option>Irmão</option>
-                    <option>Irmã</option>
-                    <option>Tutor Legal</option>
-                    <option>Outro</option>
+                <select
+            name="grau_parentesco"
+            id="grau_parentesco"
+            class="form-select">
+
+            <option value="">Selecione...</option>
+
                 </select>
             </div>
 
@@ -1081,32 +1049,61 @@ document.getElementById('cep').addEventListener('blur', function () {
 
 
 <script>
-const dataNascimento = document.getElementById('data_de_nascimento');
-const blocoResponsavel = document.getElementById('bloco_responsavel');
+const dataNascimento = document.getElementById("data_de_nascimento");
+const parentesco = document.getElementById("grau_parentesco");
 
 function verificarIdade() {
 
-    if (!dataNascimento.value) return;
+    if (!dataNascimento.value) {
 
-    const data = new Date(dataNascimento.value);
+        parentesco.innerHTML = `
+            <option value="">Selecione...</option>
+        `;
+
+        return;
+    }
+
+    const nascimento = new Date(dataNascimento.value);
     const hoje = new Date();
 
-    let idade = hoje.getFullYear() - data.getFullYear();
-    const m = hoje.getMonth() - data.getMonth();
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
 
-    if (m < 0 || (m === 0 && hoje.getDate() < data.getDate())) {
+    const mes = hoje.getMonth() - nascimento.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
         idade--;
     }
 
-    if (!blocoResponsavel) return; // 🔥 EVITA ERRO
+    parentesco.innerHTML = '<option value="">Selecione...</option>';
 
     if (idade < 18) {
-        blocoResponsavel.style.display = 'block';
+
+        parentesco.innerHTML += `
+            <option value="Pai">Pai</option>
+            <option value="Mãe">Mãe</option>
+            <option value="Tutor Legal">Tutor Legal</option>
+        `;
+
     } else {
-        blocoResponsavel.style.display = 'none';
+
+        parentesco.innerHTML += `
+            <option value="Pai">Pai</option>
+            <option value="Mãe">Mãe</option>
+            <option value="Avô">Avô</option>
+            <option value="Avó">Avó</option>
+            <option value="Tio">Tio</option>
+            <option value="Tia">Tia</option>
+            <option value="Irmão">Irmão</option>
+            <option value="Irmã">Irmã</option>
+            <option value="Tutor Legal">Tutor Legal</option>
+            <option value="Outro">Outro</option>
+        `;
+
     }
+
 }
 
-dataNascimento.addEventListener('change', verificarIdade);
-window.addEventListener('load', verificarIdade);
+dataNascimento.addEventListener("change", verificarIdade);
+
+window.addEventListener("load", verificarIdade);
 </script>
