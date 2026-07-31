@@ -355,42 +355,42 @@ body{
 
 
         
-        <!-- Internações -->
-        
-        
-        
-        
-        <div class="col-md-4">
+     <!-- Internações -->
 
-            <div class="card modulo-card">
+<div class="col-md-4">
 
-                <div class="card-body text-center p-4">
+<div class="card modulo-card">
 
-                    <div class="icone-modulo vermelho">
+    <div class="card-body text-center p-4">
 
-                        <i class="bi bi-hospital-fill"></i>
+        <div class="icone-modulo vermelho">
 
-                    </div>
-
-                    <h4>Internações</h4>
-
-                    <p class="text-muted">
-
-                        Controle de internações hospitalares.
-
-                    </p>
-
-                    <span class="badge-dev">
-
-                        🚧 Disponível em breve
-
-                    </span>
-
-                </div>
-
-            </div>
+            <i class="bi bi-hospital-fill"></i>
 
         </div>
+
+        <h4>Internações</h4>
+
+        <p class="text-muted">
+
+            Cadastro e gerenciamento de internações hospitalares.
+
+        </p>
+
+        <a href="internacoes.php"
+           class="btn btn-modulo">
+
+            <i class="bi bi-arrow-right-circle"></i>
+
+            Acessar módulo
+
+        </a>
+
+    </div>
+
+</div>
+
+</div>
 
 
 
