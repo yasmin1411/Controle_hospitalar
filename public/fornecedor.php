@@ -6,7 +6,7 @@ require_once __DIR__ . '/../config/database.php';
 
 /*
 |--------------------------------------------------------------------------
-| Busca fornecedores com seus endereços
+| BUSCA FORNECEDORES ATIVOS COM SEUS ENDEREÇOS
 |--------------------------------------------------------------------------
 */
 
@@ -34,25 +34,26 @@ if (!empty($pesquisa)) {
             e.cep,
             e.complemento
 
-
         FROM fornecedor f
 
-
         LEFT JOIN endereco e
-
-        ON e.id = f.endereco_id
-
+            ON e.id = f.endereco_id
 
         WHERE
 
-            f.nome LIKE ?
+            f.ativo = 1
 
-            OR f.cnpj LIKE ?
+            AND (
 
-            OR f.telefone LIKE ?
+                f.nome LIKE ?
 
-            OR f.email LIKE ?
+                OR f.cnpj LIKE ?
 
+                OR f.telefone LIKE ?
+
+                OR f.email LIKE ?
+
+            )
 
         ORDER BY f.nome
 
@@ -88,14 +89,12 @@ if (!empty($pesquisa)) {
             e.cep,
             e.complemento
 
-
         FROM fornecedor f
 
-
         LEFT JOIN endereco e
+            ON e.id = f.endereco_id
 
-        ON e.id = f.endereco_id
-
+        WHERE f.ativo = 1
 
         ORDER BY f.nome
 
@@ -107,42 +106,36 @@ if (!empty($pesquisa)) {
 }
 
 
-
 $fornecedores = $sql->fetchAll(PDO::FETCH_ASSOC);
 
-
-
 ?>
-
 
 <!DOCTYPE html>
 
 <html lang="pt-br">
 
-
 <head>
-
 
 <meta charset="UTF-8">
 
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 
 <title>Controle de Fornecedores</title>
 
 
+<link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+>
 
 
 <style>
-
 
 :root{
 
@@ -151,7 +144,6 @@ href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.m
     --azul-claro:#56CCF2;
 
 }
-
 
 
 body{
@@ -163,7 +155,6 @@ body{
     min-height:100vh;
 
 }
-
 
 
 .card-principal{
@@ -181,7 +172,6 @@ body{
 }
 
 
-
 .titulo{
 
     color:var(--azul-principal);
@@ -193,7 +183,6 @@ body{
 }
 
 
-
 .subtitulo{
 
     color:#6c757d;
@@ -203,27 +192,23 @@ body{
 }
 
 
-
 .info-card{
 
-
-    background:linear-gradient(135deg,var(--azul-principal),var(--azul-claro));
-
+    background:linear-gradient(
+        135deg,
+        var(--azul-principal),
+        var(--azul-claro)
+    );
 
     color:white;
 
-
     border-radius:20px;
-
 
     padding:25px;
 
-
     margin-bottom:30px;
 
-
 }
-
 
 
 .info-card h3{
@@ -233,285 +218,197 @@ body{
 }
 
 
-
 .total-box{
-
 
     background:white;
 
-
     border-radius:18px;
-
 
     padding:20px;
 
-
     text-align:center;
-
 
     box-shadow:0 5px 20px rgba(0,0,0,.06);
 
-
     margin-bottom:25px;
 
-
 }
-
 
 
 .total-box h2{
 
-
     color:var(--azul-principal);
-
 
     margin:0;
 
-
     font-weight:700;
 
-
 }
-
 
 
 .total-box p{
 
-
     margin:0;
-
 
     color:#6c757d;
 
-
 }
-
 
 
 .btn-azul{
 
-
     background:var(--azul-principal);
-
 
     border:none;
 
-
     color:white;
-
 
     border-radius:12px;
 
-
     font-weight:600;
 
-
 }
-
 
 
 .btn-azul:hover{
 
-
     background:#1c6ad6;
-
 
     color:white;
 
-
 }
-
 
 
 .form-control{
 
-
     border-radius:12px;
-
 
     border:1px solid #dbe7ff;
 
-
 }
-
 
 
 .form-control:focus{
 
-
     border-color:var(--azul-principal);
-
 
     box-shadow:0 0 0 .2rem rgba(47,128,237,.15);
 
-
 }
-
 
 
 .btn-editar{
 
-
     background:#e8f3ff;
-
 
     color:#2F80ED;
 
-
     border:none;
-
 
     border-radius:12px;
 
-
     padding:8px 14px;
 
-
 }
-
 
 
 .btn-editar:hover{
 
-
     background:#2F80ED;
 
-
     color:white;
-
 
 }
 
 
+/* BOTÃO DESATIVAR */
 
-.btn-excluir{
+.btn-desativar{
 
+    background:#fff3cd;
 
-    background:#fff1f2;
-
-
-    color:#dc3545;
-
+    color:#856404;
 
     border:none;
 
-
     border-radius:12px;
-
 
     padding:8px 14px;
 
-
 }
 
 
+.btn-desativar:hover{
 
-.btn-excluir:hover{
+    background:#ffc107;
 
-
-    background:#dc3545;
-
-
-    color:white;
-
+    color:#212529;
 
 }
-
 
 
 .table{
 
-
     overflow:hidden;
-
 
     border-radius:15px;
 
-
     background:white;
 
-
 }
-
 
 
 .table thead th{
 
-
     background:var(--azul-principal)!important;
-
 
     color:white;
 
-
     border:none;
-
 
     padding:15px;
 
-
 }
-
 
 
 .table tbody td{
 
-
     padding:15px;
-
 
     vertical-align:middle;
 
-
 }
-
 
 
 .table-hover tbody tr:hover{
 
-
     background:#f5f9ff;
-
 
     transition:.2s;
 
-
 }
-
 
 
 .badge-cidade{
 
-
     background:#e8f3ff;
-
 
     color:#2F80ED;
 
-
     padding:8px 12px;
-
 
     border-radius:20px;
 
-
     font-size:12px;
-
 
 }
 
-
-
 </style>
-
-
 
 </head>
 
 
-
 <body>
-
 
 
 <div class="container py-5">
@@ -520,9 +417,11 @@ body{
 <div class="card-principal">
 
 
+<!-- ================================================= -->
+<!-- CABEÇALHO -->
+<!-- ================================================= -->
 
 <div class="info-card">
-
 
 <h3>
 
@@ -539,18 +438,16 @@ Gerenciamento seguro e eficiente de fornecedores hospitalares.
 
 </p>
 
-
 </div>
 
 
-
-
+<!-- ================================================= -->
+<!-- TOTAL -->
+<!-- ================================================= -->
 
 <div class="row mb-4">
 
-
 <div class="col-md-12">
-
 
 <div class="total-box">
 
@@ -567,18 +464,16 @@ Fornecedores cadastrados
 
 </p>
 
+</div>
+
+</div>
 
 </div>
 
 
-</div>
-
-
-</div>
-
-
-
-
+<!-- ================================================= -->
+<!-- TÍTULO -->
+<!-- ================================================= -->
 
 <div class="d-flex justify-content-between align-items-center mb-4">
 
@@ -592,6 +487,7 @@ Controle de Fornecedores
 
 </h2>
 
+
 <div class="subtitulo">
 
 Cadastro e consulta de fornecedores hospitalares
@@ -599,6 +495,7 @@ Cadastro e consulta de fornecedores hospitalares
 </div>
 
 </div>
+
 
 <a href="dashboard.php" class="btn btn-secondary">
 
@@ -609,6 +506,11 @@ Voltar
 </a>
 
 </div>
+
+
+<!-- ================================================= -->
+<!-- PESQUISA -->
+<!-- ================================================= -->
 
 <form method="GET" class="row g-2 mb-4">
 
@@ -624,13 +526,22 @@ class="form-control form-control-lg"
 
 placeholder="Pesquisar fornecedor, CNPJ, telefone ou e-mail..."
 
-value="<?= htmlspecialchars($pesquisa) ?>">
+value="<?= htmlspecialchars($pesquisa) ?>"
+
+>
 
 </div>
 
+
 <div class="col-md-2">
 
-<button type="submit" class="btn btn-azul btn-lg w-100">
+<button
+
+type="submit"
+
+class="btn btn-azul btn-lg w-100"
+
+>
 
 <i class="bi bi-search"></i>
 
@@ -640,10 +551,12 @@ Buscar
 
 </div>
 
-
-
 </form>
 
+
+<!-- ================================================= -->
+<!-- NOVO FORNECEDOR -->
+<!-- ================================================= -->
 
 <div class="mb-4">
 
@@ -656,17 +569,18 @@ Novo Fornecedor
 </a>
 
 </div>
-<!-- Tabela de fornecedores -->
+
+
+<!-- ================================================= -->
+<!-- TABELA DE FORNECEDORES -->
+<!-- ================================================= -->
 
 <div class="table-responsive">
-
 
 <table class="table table-hover align-middle">
 
 
-
 <thead>
-
 
 <tr>
 
@@ -680,30 +594,23 @@ Novo Fornecedor
 
 <th>Cidade</th>
 
-<th width="180">Ações</th>
-
+<th width="200">Ações</th>
 
 </tr>
 
-
 </thead>
-
 
 
 <tbody>
 
 
-
 <?php if(count($fornecedores) > 0): ?>
-
 
 
 <?php foreach($fornecedores as $f): ?>
 
 
-
 <tr>
-
 
 
 <td>
@@ -717,15 +624,11 @@ Novo Fornecedor
 </td>
 
 
-
-
 <td>
 
 <?= htmlspecialchars($f['cnpj']) ?>
 
 </td>
-
-
 
 
 <td>
@@ -735,8 +638,6 @@ Novo Fornecedor
 </td>
 
 
-
-
 <td>
 
 <?= htmlspecialchars($f['email']) ?>
@@ -744,64 +645,55 @@ Novo Fornecedor
 </td>
 
 
-
-
 <td>
-
 
 <span class="badge-cidade">
 
-
 <?= htmlspecialchars($f['cidade'] ?? 'Não informado') ?>
 
-
 </span>
-
 
 </td>
 
 
-
-
 <td>
-
 
 
 <div class="d-flex gap-2">
 
 
-
-<!-- Botão editar -->
+<!-- ================================================= -->
+<!-- EDITAR -->
+<!-- ================================================= -->
 
 <a
 
 href="fornecedor_editar.php?id=<?= $f['id'] ?>"
 
-class="btn btn-editar btn-sm">
+class="btn btn-editar btn-sm"
 
+>
 
 <i class="bi bi-pencil-square"></i>
 
-
 Editar
-
 
 </a>
 
 
-
-
-<!-- Botão excluir -->
+<!-- ================================================= -->
+<!-- DESATIVAR -->
+<!-- ================================================= -->
 
 <button
 
 type="button"
 
-class="btn btn-excluir btn-sm"
+class="btn btn-desativar btn-sm"
 
 data-bs-toggle="modal"
 
-data-bs-target="#modalExcluir"
+data-bs-target="#modalDesativar"
 
 data-id="<?= $f['id'] ?>"
 
@@ -811,20 +703,18 @@ data-cnpj="<?= htmlspecialchars($f['cnpj']) ?>"
 
 data-telefone="<?= htmlspecialchars($f['telefone']) ?>"
 
-data-email="<?= htmlspecialchars($f['email']) ?>">
+data-email="<?= htmlspecialchars($f['email']) ?>"
 
+>
 
+<i class="bi bi-person-dash"></i>
 
-<i class="bi bi-trash"></i>
-
-
-Excluir
-
+Desativar
 
 </button>
 
-</div>
 
+</div>
 
 </td>
 
@@ -835,27 +725,21 @@ Excluir
 <?php endforeach; ?>
 
 
-
 <?php else: ?>
-
 
 
 <tr>
 
-
 <td colspan="6" class="text-center text-muted py-4">
-
 
 <i class="bi bi-search"></i>
 
-
 Nenhum fornecedor encontrado.
-
 
 </td>
 
-
 </tr>
+
 
 <?php endif; ?>
 
@@ -866,21 +750,35 @@ Nenhum fornecedor encontrado.
 
 </div>
 
-</div>
 
 </div>
 
+</div>
 
-<!-- Modal de exclusão -->
 
-<div class="modal fade" id="modalExcluir" tabindex="-1">
+<!-- ================================================= -->
+<!-- MODAL DE DESATIVAÇÃO -->
+<!-- ================================================= -->
+
+<div
+
+class="modal fade"
+
+id="modalDesativar"
+
+tabindex="-1"
+
+>
 
 <div class="modal-dialog modal-dialog-centered">
 
 <div class="modal-content border-0 rounded-4 shadow">
 
+
 <div class="modal-body text-center p-4">
 
+
+<!-- ÍCONE -->
 
 <div style="
 
@@ -902,31 +800,39 @@ align-items:center;
 
 justify-content:center;
 
-font-size:40px;">
+font-size:40px;
+
+">
 
 
-<i class="bi bi-exclamation-triangle-fill"></i>
-
+<i class="bi bi-person-dash"></i>
 
 </div>
 
 
-<h3 class="text-danger fw-bold mt-3">
+<!-- TÍTULO -->
 
+<h3 class="fw-bold mt-3">
 
-Confirmar Exclusão
-
+Confirmar Desativação
 
 </h3>
 
+
+<!-- TEXTO -->
+
 <p class="text-muted">
 
+O fornecedor será desativado e deixará de aparecer
 
-Esta ação não poderá ser desfeita.
+na lista de fornecedores ativos.
 
+Os dados serão mantidos no sistema.
 
 </p>
 
+
+<!-- DADOS -->
 
 <div class="bg-light rounded-4 p-3 my-3 text-start">
 
@@ -935,49 +841,45 @@ Esta ação não poderá ser desfeita.
 
 <strong>Fornecedor:</strong>
 
-
 <span id="nomeFornecedor"></span>
-
 
 </p>
 
 
 <p>
 
-
 <strong>CNPJ:</strong>
-
 
 <span id="cnpjFornecedor"></span>
 
 </p>
 
-<p>
 
+<p>
 
 <strong>Telefone:</strong>
 
-
 <span id="telefoneFornecedor"></span>
-
 
 </p>
 
-<p class="mb-0">
 
+<p class="mb-0">
 
 <strong>Email:</strong>
 
-
 <span id="emailFornecedor"></span>
-
 
 </p>
 
 
 </div>
 
-<form id="formExcluir" method="POST">
+
+<!-- FORMULÁRIO -->
+
+<form id="formDesativar" method="POST">
+
 
 <button
 
@@ -985,102 +887,113 @@ type="button"
 
 class="btn btn-secondary"
 
-data-bs-dismiss="modal">
+data-bs-dismiss="modal"
 
+>
 
 Cancelar
 
 </button>
 
+
 <button
 
 type="submit"
 
-class="btn btn-danger">
+class="btn btn-warning"
 
+>
 
-<i class="bi bi-trash"></i>
+<i class="bi bi-person-dash"></i>
 
-
-Excluir Fornecedor
-
+Desativar Fornecedor
 
 </button>
 
+
 </form>
 
-</div>
 
 </div>
 
 </div>
 
 </div>
-<!-- Bootstrap JS -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</div>
 
+
+<!-- ================================================= -->
+<!-- BOOTSTRAP JS -->
+<!-- ================================================= -->
+
+<script
+
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+
+></script>
 
 
 <script>
 
 
-// Captura o modal de exclusão
+// =====================================================
+// MODAL DE DESATIVAÇÃO
+// =====================================================
 
-const modalExcluir = document.getElementById('modalExcluir');
-
-
-// Evento executado quando o modal abre
-
-modalExcluir.addEventListener('show.bs.modal', function(event){
-
-    // Botão que abriu o modal
-
-    const botao = event.relatedTarget;
-
-    // Captura informações do fornecedor
-
-    const id = botao.getAttribute('data-id');
-
-    const nome = botao.getAttribute('data-nome');
-
-    const cnpj = botao.getAttribute('data-cnpj');
-
-    const telefone = botao.getAttribute('data-telefone');
-
-    const email = botao.getAttribute('data-email');
+const modalDesativar = document.getElementById('modalDesativar');
 
 
-    // Preenche os dados no modal
+modalDesativar.addEventListener(
+
+    'show.bs.modal',
+
+    function(event) {
 
 
-    document.getElementById('nomeFornecedor').innerText = nome;
+        // Botão que abriu o modal
+
+        const botao = event.relatedTarget;
 
 
-    document.getElementById('cnpjFornecedor').innerText = cnpj;
+        // Dados do fornecedor
+
+        const id = botao.getAttribute('data-id');
+
+        const nome = botao.getAttribute('data-nome');
+
+        const cnpj = botao.getAttribute('data-cnpj');
+
+        const telefone = botao.getAttribute('data-telefone');
+
+        const email = botao.getAttribute('data-email');
 
 
-    document.getElementById('telefoneFornecedor').innerText = telefone;
+        // Preenche o modal
+
+        document.getElementById('nomeFornecedor').innerText = nome;
+
+        document.getElementById('cnpjFornecedor').innerText = cnpj;
+
+        document.getElementById('telefoneFornecedor').innerText = telefone;
+
+        document.getElementById('emailFornecedor').innerText = email;
 
 
-    document.getElementById('emailFornecedor').innerText = email;
+        // Define o arquivo responsável pela desativação
+
+        document.getElementById('formDesativar').action =
+
+            'fornecedor_desativar.php?id=' + id;
 
 
-    // Define o caminho da exclusão
+    }
 
-
-    document.getElementById('formExcluir').action =
-
-        'fornecedor_apagar.php?id=' + id;
-
-
-});
-
+);
 
 </script>
 
 
 </body>
-
 
 </html>
