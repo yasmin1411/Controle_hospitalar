@@ -125,6 +125,11 @@ body{
 
 <body>
 
+
+<!-- =====================================================
+     MENU SUPERIOR
+===================================================== -->
+
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
 
     <div class="container-fluid px-4">
@@ -137,6 +142,7 @@ body{
 
         </a>
 
+
         <div class="d-flex align-items-center">
 
             <span class="text-white me-3">
@@ -146,6 +152,7 @@ body{
                 <?= $_SESSION['nome']; ?>
 
             </span>
+
 
             <a href="logout.php"
                class="btn btn-danger">
@@ -162,281 +169,320 @@ body{
 
 </nav>
 
+
 <div class="container py-5">
 
-    <div class="hero-card">
 
-        <h1 class="hero-title">
+<!-- =====================================================
+     BOAS-VINDAS
+===================================================== -->
 
-            Olá, <?= $_SESSION['nome']; ?> 
+<div class="hero-card">
 
-        </h1>
+    <h1 class="hero-title">
 
-        <p class="hero-subtitle mb-0">
+        Olá, <?= $_SESSION['nome']; ?>
 
-            Bem-vindo ao sistema de gestão hospitalar.
-            Selecione um módulo para começar.
+    </h1>
 
-        </p>
+    <p class="hero-subtitle mb-0">
 
-    </div>
+        Bem-vindo ao sistema de gestão hospitalar.
+        Selecione um módulo para começar.
 
-    <div class="row g-4">
-
-
-
-
-        <!-- Medicamento -->
-    
-    
-    
-    
-        <div class="col-md-4">
-
-            <div class="card modulo-card">
-
-                <div class="card-body text-center p-4">
-
-                    <div class="icone-modulo azul">
-
-                        <i class="bi bi-capsule-pill"></i>
-
-                    </div>
-
-                    <h4>Medicamento</h4>
-
-                    <p class="text-muted">
-
-                        Cadastro e gerenciamento de medicamento hospitalares.
-
-                    </p>
-
-                    <a href="medicamento.php"
-                       class="btn btn-modulo">
-
-                        <i class="bi bi-arrow-right-circle"></i>
-
-                        Acessar módulo
-
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-
-
-        <!-- Pacientes -->
-
-
-
-
-        <div class="col-md-4">
-
-<div class="card modulo-card">
-
-    <div class="card-body text-center p-4">
-
-        <div class="icone-modulo verde">
-
-            <i class="bi bi-person-heart"></i>
-
-        </div>
-
-        <h4>Pacientes</h4>
-
-        <p class="text-muted">
-
-            Cadastro e gerenciamento de pacientes.
-
-        </p>
-
-        <a href="pacientes.php"
-           class="btn btn-modulo">
-
-            <i class="bi bi-arrow-right-circle"></i>
-
-            Acessar módulo
-
-        </a>
-
-    </div>
-
-</div>
+    </p>
 
 </div>
 
 
+<!-- =====================================================
+     MÓDULOS
+===================================================== -->
+
+<div class="row g-4">
 
 
-    <!-- Estoque -->
-    
-    
-    
-    <div class="col-md-4">
-
-            <div class="card modulo-card">
-
-                <div class="card-body text-center p-4">
-
-                    <div class="icone-modulo laranja">
-
-                        <i class="bi bi-box-seam"></i>
-
-                    </div>
-
-                    <h4>Estoque</h4>
-
-                    <p class="text-muted">
-
-                        Controle de entradas e saídas.
-
-                    </p>
-
-                    <a href="estoque.php" class="btn btn-modulo">
-                        <i class="bi bi-arrow-right-circle"></i>
-                        Acessar módulo
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- Fornecedor -->
-        
-        
-        
-        
-        <div class="col-md-4">
-
-            <div class="card modulo-card">
-
-                <div class="card-body text-center p-4">
-
-                    <div class="icone-modulo roxo">
-
-                        <i class="bi bi-building"></i>
-
-                    </div>
-
-                    <h4>Fornecedor</h4>
-
-                    <p class="text-muted">
-
-                        Cadastro e gerenciamento de fornecedor.
-
-                    </p>
-
-                    <a href="fornecedor.php"
-   class="btn btn-modulo">
-
-    <i class="bi bi-arrow-right-circle"></i>
-
-    Acessar módulo
-
-</a>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-
-        
-     <!-- Internações -->
+<!-- =====================================================
+     MEDICAMENTO
+===================================================== -->
 
 <div class="col-md-4">
 
-<div class="card modulo-card">
+    <div class="card modulo-card">
 
-    <div class="card-body text-center p-4">
+        <div class="card-body text-center p-4">
 
-        <div class="icone-modulo vermelho">
+            <div class="icone-modulo azul">
 
-            <i class="bi bi-hospital-fill"></i>
-
-        </div>
-
-        <h4>Internações</h4>
-
-        <p class="text-muted">
-
-            Cadastro e gerenciamento de internações hospitalares.
-
-        </p>
-
-        <a href="internacoes.php"
-           class="btn btn-modulo">
-
-            <i class="bi bi-arrow-right-circle"></i>
-
-            Acessar módulo
-
-        </a>
-
-    </div>
-
-</div>
-
-</div>
-
-
-
-
-
-        <!-- Relatórios -->
-        
-        
-        
-        
-        
-        <div class="col-md-4">
-
-            <div class="card modulo-card">
-
-                <div class="card-body text-center p-4">
-
-                    <div class="icone-modulo azul-escuro">
-
-                        <i class="bi bi-bar-chart-line"></i>
-
-                    </div>
-
-                    <h4>Relatórios</h4>
-
-                    <p class="text-muted">
-
-                        Consultas e relatórios do sistema.
-
-                    </p>
-
-                    <span class="badge-dev">
-
-                        🚧 Disponível em breve
-
-                    </span>
-
-                </div>
+                <i class="bi bi-capsule-pill"></i>
 
             </div>
 
+            <h4>Medicamento</h4>
+
+            <p class="text-muted">
+
+                Cadastro e gerenciamento de medicamentos hospitalares.
+
+            </p>
+
+            <a href="medicamento.php"
+               class="btn btn-modulo">
+
+                <i class="bi bi-arrow-right-circle"></i>
+
+                Acessar módulo
+
+            </a>
+
         </div>
 
     </div>
 
 </div>
+
+
+<!-- =====================================================
+     PACIENTES
+===================================================== -->
+
+<div class="col-md-4">
+
+    <div class="card modulo-card">
+
+        <div class="card-body text-center p-4">
+
+            <div class="icone-modulo verde">
+
+                <i class="bi bi-person-heart"></i>
+
+            </div>
+
+            <h4>Pacientes</h4>
+
+            <p class="text-muted">
+
+                Cadastro e gerenciamento de pacientes.
+
+            </p>
+
+            <a href="pacientes.php"
+               class="btn btn-modulo">
+
+                <i class="bi bi-arrow-right-circle"></i>
+
+                Acessar módulo
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ESTOQUE
+===================================================== -->
+
+<div class="col-md-4">
+
+    <div class="card modulo-card">
+
+        <div class="card-body text-center p-4">
+
+            <div class="icone-modulo laranja">
+
+                <i class="bi bi-box-seam"></i>
+
+            </div>
+
+            <h4>Estoque</h4>
+
+            <p class="text-muted">
+
+                Controle de entradas e saídas.
+
+            </p>
+
+            <a href="estoque.php"
+               class="btn btn-modulo">
+
+                <i class="bi bi-arrow-right-circle"></i>
+
+                Acessar módulo
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     FORNECEDORES
+===================================================== -->
+
+<div class="col-md-4">
+
+    <div class="card modulo-card">
+
+        <div class="card-body text-center p-4">
+
+            <div class="icone-modulo roxo">
+
+                <i class="bi bi-building"></i>
+
+            </div>
+
+            <h4>Fornecedor</h4>
+
+            <p class="text-muted">
+
+                Cadastro e gerenciamento de fornecedores.
+
+            </p>
+
+            <a href="fornecedor.php"
+               class="btn btn-modulo">
+
+                <i class="bi bi-arrow-right-circle"></i>
+
+                Acessar módulo
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     INTERNAÇÕES
+===================================================== -->
+
+<div class="col-md-4">
+
+    <div class="card modulo-card">
+
+        <div class="card-body text-center p-4">
+
+            <div class="icone-modulo vermelho">
+
+                <i class="bi bi-hospital-fill"></i>
+
+            </div>
+
+            <h4>Internações</h4>
+
+            <p class="text-muted">
+
+                Cadastro e gerenciamento de internações hospitalares.
+
+            </p>
+
+            <a href="internacoes.php"
+               class="btn btn-modulo">
+
+                <i class="bi bi-arrow-right-circle"></i>
+
+                Acessar módulo
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     FUNCIONÁRIOS
+===================================================== -->
+
+<div class="col-md-4">
+
+    <div class="card modulo-card">
+
+        <div class="card-body text-center p-4">
+
+            <div class="icone-modulo azul-escuro">
+
+                <i class="bi bi-people-fill"></i>
+
+            </div>
+
+            <h4>Funcionários</h4>
+
+            <p class="text-muted">
+
+                Cadastro e gerenciamento dos profissionais do hospital.
+
+            </p>
+
+            <a href="funcionarios.php"
+               class="btn btn-modulo">
+
+                <i class="bi bi-arrow-right-circle"></i>
+
+                Acessar módulo
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     RELATÓRIOS
+===================================================== -->
+
+<div class="col-md-4">
+
+    <div class="card modulo-card">
+
+        <div class="card-body text-center p-4">
+
+            <div class="icone-modulo azul-escuro">
+
+                <i class="bi bi-bar-chart-line"></i>
+
+            </div>
+
+            <h4>Relatórios</h4>
+
+            <p class="text-muted">
+
+                Consultas e relatórios do sistema.
+
+            </p>
+
+            <span class="badge-dev">
+
+                🚧 Disponível em breve
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+</div>
+
 
 </body>
 
