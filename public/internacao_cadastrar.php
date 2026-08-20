@@ -3,85 +3,181 @@
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
+
+/*
+|--------------------------------------------------------------------------
+| CARREGAR PACIENTES, MÉDICOS E ENFERMEIROS
+|--------------------------------------------------------------------------
+*/
+
 try {
 
-    // Lista pacientes
+    // Pacientes
     $pacientes = $pdo->query("
-        SELECT id, nome
+        SELECT
+            id,
+            nome
         FROM pacientes
         ORDER BY nome
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // Lista médicos
+
+    // Médicos ativos
     $medicos = $pdo->query("
-        SELECT id, nome
+        SELECT
+            id,
+            nome,
+            crm
         FROM medico
+        WHERE status = 'Ativo'
         ORDER BY nome
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-} catch(PDOException $e){
+
+    // Enfermeiros ativos
+    $enfermeiros = $pdo->query("
+        SELECT
+            id,
+            nome,
+            coren
+        FROM enfermeiro
+        WHERE status = 'Ativo'
+        ORDER BY nome
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+
+} catch (PDOException $e) {
 
     die("Erro ao carregar dados: " . $e->getMessage());
 
 }
 
-if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
-    $paciente_id = $_POST['paciente_id'];
-    $medico_id = $_POST['medico_id'];
-    $data_entrada = $_POST['data_entrada'];
-    $data_saida = !empty($_POST['data_saida']) ? $_POST['data_saida'] : NULL;
-    $quarto = $_POST['quarto'];
-    $leito = $_POST['leito'];
-    $motivos = $_POST['motivos'];
-    $observacoes = $_POST['observacoes'];
-    $enfermeiro = $_POST['enfermeiro_responsavel'];
-    $quadro_clinico = $_POST['quadro_clinico'];
-    $status = $_POST['status'];
+/*
+|--------------------------------------------------------------------------
+| CADASTRAR INTERNAÇÃO
+|--------------------------------------------------------------------------
+*/
 
-    try{
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RECEBER DADOS
+    |--------------------------------------------------------------------------
+    */
+
+    $paciente_id = $_POST['paciente_id'] ?? '';
+
+    $medico_id = $_POST['medico_id'] ?? '';
+
+    $enfermeiro_id = $_POST['enfermeiro_id'] ?? '';
+
+    $data_entrada = $_POST['data_entrada'] ?? '';
+
+    $quarto = trim($_POST['quarto'] ?? '');
+
+    $leito = trim($_POST['leito'] ?? '');
+
+    $motivos = trim($_POST['motivos'] ?? '');
+
+    $observacoes = trim($_POST['observacoes'] ?? '');
+
+    $quadro_clinico = trim($_POST['quadro_clinico'] ?? '');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDAÇÕES
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        empty($paciente_id) ||
+        empty($medico_id) ||
+        empty($enfermeiro_id) ||
+        empty($data_entrada) ||
+        empty($quarto) ||
+        empty($leito) ||
+        empty($quadro_clinico)
+    ) {
+
+        die("Preencha todos os campos obrigatórios.");
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CADASTRAR INTERNAÇÃO
+    |--------------------------------------------------------------------------
+    */
+
+    try {
 
         $sql = $pdo->prepare("
             INSERT INTO internacoes
             (
                 paciente_id,
                 medico_id,
+                enfermeiro_id,
                 data_entrada,
                 data_saida,
                 quarto,
                 leito,
                 motivos,
                 observacoes,
-                enfermeiro_responsavel,
                 quadro_clinico,
                 status
             )
             VALUES
             (
-                ?,?,?,?,?,?,?,?,?,?,?
+                ?,
+                ?,
+                ?,
+                ?,
+                NULL,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                'Internado'
             )
         ");
+
 
         $sql->execute([
             $paciente_id,
             $medico_id,
+            $enfermeiro_id,
             $data_entrada,
-            $data_saida,
             $quarto,
             $leito,
             $motivos,
             $observacoes,
-            $enfermeiro,
-            $quadro_clinico,
-            $status
+            $quadro_clinico
         ]);
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | REDIRECIONAR APÓS CADASTRO
+        |--------------------------------------------------------------------------
+        */
+
         header("Location: internacoes.php");
+
         exit;
 
-    }catch(PDOException $e){
 
-        die("Erro ao cadastrar: " . $e->getMessage());
+    } catch (PDOException $e) {
+
+        die(
+            "Erro ao cadastrar internação: " .
+            $e->getMessage()
+        );
 
     }
 
@@ -89,197 +185,293 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
 ?>
 
+
 <!DOCTYPE html>
+
 <html lang="pt-br">
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<title>Nova Internação</title>
-
-<style>
-
-body{
-    font-family:Arial;
-    margin:30px;
-}
-
-label{
-    display:block;
-    margin-top:10px;
-}
-
-input,
-select,
-textarea{
-    width:350px;
-    padding:8px;
-    box-sizing:border-box;
-    font-size:16px;
-    margin-bottom:10px;
-}
-
-select{
-    height:40px;
-}
-button{
-    margin-top:20px;
-    padding:10px 20px;
-}
-
-</style>
+    <title>Nova Internação</title>
 
 </head>
 
+
 <body>
+
 
 <h2>Nova Internação</h2>
 
+
 <form method="POST">
 
-<label>Paciente</label>
 
-<select name="paciente_id" required>
+    <!-- ====================================================== -->
+    <!-- PACIENTE -->
+    <!-- ====================================================== -->
 
-<option value="">Selecione</option>
+    <label>Paciente</label>
 
-<?php foreach($pacientes as $p): ?>
+    <br>
 
-<option value="<?= $p['id'] ?>">
+    <select name="paciente_id" required>
 
-<?= htmlspecialchars($p['nome']) ?>
+        <option value="">
+            Selecione o paciente
+        </option>
 
-</option>
+        <?php foreach ($pacientes as $p): ?>
 
-<?php endforeach; ?>
+            <option value="<?= $p['id'] ?>">
 
-</select>
+                <?= htmlspecialchars($p['nome']) ?>
 
-<label>Médico</label>
+            </option>
 
-<select name="medico_id" required>
+        <?php endforeach; ?>
 
-<option value="">Selecione</option>
+    </select>
 
-<?php foreach($medicos as $m): ?>
+    <br><br>
 
-<option value="<?= $m['id'] ?>">
 
-<?= htmlspecialchars($m['nome']) ?>
+    <!-- ====================================================== -->
+    <!-- MÉDICO -->
+    <!-- ====================================================== -->
 
-</option>
+    <label>Médico responsável</label>
 
-<?php endforeach; ?>
+    <br>
 
-</select>
+    <select name="medico_id" required>
 
-<label>Data de Entrada</label>
+        <option value="">
+            Selecione o médico
+        </option>
 
-<input
-type="date"
-name="data_entrada"
-required>
+        <?php foreach ($medicos as $m): ?>
 
-<label>Data de Saída</label>
+            <option value="<?= $m['id'] ?>">
 
-<input
-type="date"
-name="data_saida">
+                <?= htmlspecialchars($m['nome']) ?>
 
-<label>Quarto</label>
+                - CRM:
 
-<input
-type="text"
-name="quarto"
-required>
+                <?= htmlspecialchars($m['crm']) ?>
 
-<label>Leito</label>
+            </option>
 
-<input
-type="text"
-name="leito"
-required>
+        <?php endforeach; ?>
 
-<label>Motivo</label>
+    </select>
 
-<textarea
-name="motivos"
-rows="3"></textarea>
+    <br><br>
 
-<label>Observações</label>
 
-<textarea
-name="observacoes"
-rows="3"></textarea>
+    <!-- ====================================================== -->
+    <!-- ENFERMEIRO -->
+    <!-- ====================================================== -->
 
-<label>Enfermeiro Responsável</label>
+    <label>Enfermeiro responsável</label>
 
-<input
-type="text"
-name="enfermeiro_responsavel">
+    <br>
 
-<label>Quadro Clínico</label>
+    <select name="enfermeiro_id" required>
 
-<select name="quadro_clinico" required>
+        <option value="">
+            Selecione o enfermeiro
+        </option>
 
-    <option value="">Selecione</option>
+        <?php foreach ($enfermeiros as $e): ?>
 
-    <option value="Estável">Estável</option>
+            <option value="<?= $e['id'] ?>">
 
-    <option value="Grave">Grave</option>
+                <?= htmlspecialchars($e['nome']) ?>
 
-    <option value="Gravíssimo">Gravíssimo</option>
+                - COREN:
 
-    <option value="Crítico">Crítico</option>
+                <?= htmlspecialchars($e['coren']) ?>
 
-    <option value="Em Recuperação">Em Recuperação</option>
+            </option>
 
-    <option value="Pós-operatório">Pós-operatório</option>
+        <?php endforeach; ?>
 
-    <option value="Em Observação">Em Observação</option>
+    </select>
 
-    <option value="Sedado">Sedado</option>
+    <br><br>
 
-    <option value="Intubado">Intubado</option>
 
-    <option value="Consciente">Consciente</option>
+    <!-- ====================================================== -->
+    <!-- DATA DE ENTRADA -->
+    <!-- ====================================================== -->
 
-    <option value="Inconsciente">Inconsciente</option>
+    <label>Data de Entrada</label>
 
-    <option value="Com Ventilação Mecânica">Com Ventilação Mecânica</option>
+    <br>
 
-</select>
+    <input
+        type="date"
+        name="data_entrada"
+        required
+    >
 
-<label>Status</label>
+    <br><br>
 
-<select name="status" required>
 
-    <option value="">Selecione</option>
+    <!-- ====================================================== -->
+    <!-- QUARTO -->
+    <!-- ====================================================== -->
 
-    <option value="Estável">Estável</option>
+    <label>Quarto</label>
 
-    <option value="Instável">Instável</option>
+    <br>
 
-    <option value="Transferido">Transferido</option>
+    <input
+        type="text"
+        name="quarto"
+        required
+    >
 
-    <option value="Alta">Alta</option>
+    <br><br>
 
-</select>
 
-<br>
+    <!-- ====================================================== -->
+    <!-- LEITO -->
+    <!-- ====================================================== -->
 
-<button type="submit">
-Salvar
-</button>
+    <label>Leito</label>
 
-<a href="internacoes.php">
-<button type="button">
-Cancelar
-</button>
-</a>
+    <br>
+
+    <input
+        type="text"
+        name="leito"
+        required
+    >
+
+    <br><br>
+
+
+    <!-- ====================================================== -->
+    <!-- MOTIVO -->
+    <!-- ====================================================== -->
+
+    <label>Motivo da internação</label>
+
+    <br>
+
+    <textarea
+        name="motivos"
+        rows="4"
+    ></textarea>
+
+    <br><br>
+
+
+    <!-- ====================================================== -->
+    <!-- OBSERVAÇÕES -->
+    <!-- ====================================================== -->
+
+    <label>Observações</label>
+
+    <br>
+
+    <textarea
+        name="observacoes"
+        rows="4"
+    ></textarea>
+
+    <br><br>
+
+
+    <!-- ====================================================== -->
+    <!-- QUADRO CLÍNICO -->
+    <!-- ====================================================== -->
+
+    <label>Quadro Clínico</label>
+
+    <br>
+
+    <select
+        name="quadro_clinico"
+        required
+    >
+
+        <option value="">
+            Selecione
+        </option>
+
+        <option value="Estável">
+            Estável
+        </option>
+
+        <option value="Grave">
+            Grave
+        </option>
+
+        <option value="Gravíssimo">
+            Gravíssimo
+        </option>
+
+        <option value="Crítico">
+            Crítico
+        </option>
+
+        <option value="Em Recuperação">
+            Em Recuperação
+        </option>
+
+        <option value="Pós-operatório">
+            Pós-operatório
+        </option>
+
+        <option value="Em Observação">
+            Em Observação
+        </option>
+
+        <option value="Sedado">
+            Sedado
+        </option>
+
+        <option value="Intubado">
+            Intubado
+        </option>
+
+        <option value="Consciente">
+            Consciente
+        </option>
+
+        <option value="Inconsciente">
+            Inconsciente
+        </option>
+
+        <option value="Com Ventilação Mecânica">
+            Com Ventilação Mecânica
+        </option>
+
+    </select>
+
+    <br><br>
+
+
+    <!-- ====================================================== -->
+    <!-- BOTÃO -->
+    <!-- ====================================================== -->
+
+    <button type="submit">
+        Salvar internação
+    </button>
+
+
+    <a href="internacoes.php">
+        Cancelar
+    </a>
+
 
 </form>
+
 
 </body>
 

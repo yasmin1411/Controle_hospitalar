@@ -568,6 +568,14 @@ Novo Fornecedor
 
 </a>
 
+<a
+    href="fornecedor_desativados.php"
+    class="btn btn-outline-danger"
+>
+    <i class="bi bi-person-x"></i>
+    Fornecedores Desativados
+</a>
+
 </div>
 
 
@@ -876,40 +884,28 @@ Os dados serão mantidos no sistema.
 </div>
 
 
+
 <!-- FORMULÁRIO -->
+<form id="formDesativar" action="fornecedor_desativar.php" method="POST">
 
-<form id="formDesativar" method="POST">
+    <!-- Campo oculto com o ID do fornecedor -->
+    <input type="hidden" name="id" id="idFornecedorDesativar">
 
+    <button
+        type="button"
+        class="btn btn-secondary"
+        data-bs-dismiss="modal"
+    >
+        Cancelar
+    </button>
 
-<button
-
-type="button"
-
-class="btn btn-secondary"
-
-data-bs-dismiss="modal"
-
->
-
-Cancelar
-
-</button>
-
-
-<button
-
-type="submit"
-
-class="btn btn-warning"
-
->
-
-<i class="bi bi-person-dash"></i>
-
-Desativar Fornecedor
-
-</button>
-
+    <button
+        type="submit"
+        class="btn btn-warning"
+    >
+        <i class="bi bi-person-dash"></i>
+        Desativar Fornecedor
+    </button>
 
 </form>
 
@@ -943,52 +939,29 @@ src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.j
 
 const modalDesativar = document.getElementById('modalDesativar');
 
-
 modalDesativar.addEventListener(
-
     'show.bs.modal',
-
     function(event) {
 
-
         // Botão que abriu o modal
-
         const botao = event.relatedTarget;
 
-
         // Dados do fornecedor
-
         const id = botao.getAttribute('data-id');
-
         const nome = botao.getAttribute('data-nome');
-
         const cnpj = botao.getAttribute('data-cnpj');
-
         const telefone = botao.getAttribute('data-telefone');
-
         const email = botao.getAttribute('data-email');
 
-
-        // Preenche o modal
-
+        // Preenche os dados do modal
         document.getElementById('nomeFornecedor').innerText = nome;
-
         document.getElementById('cnpjFornecedor').innerText = cnpj;
-
         document.getElementById('telefoneFornecedor').innerText = telefone;
-
         document.getElementById('emailFornecedor').innerText = email;
 
-
-        // Define o arquivo responsável pela desativação
-
-        document.getElementById('formDesativar').action =
-
-            'fornecedor_desativar.php?id=' + id;
-
-
+        // Coloca o ID no campo oculto do formulário
+        document.getElementById('idFornecedorDesativar').value = id;
     }
-
 );
 
 </script>

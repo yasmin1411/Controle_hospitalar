@@ -3,32 +3,67 @@
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
+
 $pesquisa = $_GET['pesquisa'] ?? '';
+
 
 try {
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | PESQUISA
+    |--------------------------------------------------------------------------
+    */
+
     if (!empty($pesquisa)) {
+
 
         $sql = $pdo->prepare("
             SELECT
                 i.*,
+
                 p.nome AS paciente,
-                m.nome AS medico
+
+                m.nome AS medico,
+
+                e.nome AS enfermeiro
+
             FROM internacoes i
-            INNER JOIN pacientes p ON p.id = i.paciente_id
-            INNER JOIN medico m ON m.id = i.medico_id
+
+            INNER JOIN pacientes p
+                ON p.id = i.paciente_id
+
+            INNER JOIN medico m
+                ON m.id = i.medico_id
+
+            LEFT JOIN enfermeiro e
+                ON e.id = i.enfermeiro_id
+
             WHERE
+
                 p.nome LIKE ?
+
                 OR m.nome LIKE ?
+
+                OR e.nome LIKE ?
+
                 OR i.status LIKE ?
+
                 OR i.quarto LIKE ?
+
                 OR i.leito LIKE ?
-            ORDER BY i.data_entrada DESC
+
+            ORDER BY
+                i.data_entrada DESC
         ");
+
 
         $busca = "%{$pesquisa}%";
 
+
         $sql->execute([
+            $busca,
             $busca,
             $busca,
             $busca,
@@ -36,195 +71,416 @@ try {
             $busca
         ]);
 
+
     } else {
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LISTAR TODAS
+        |--------------------------------------------------------------------------
+        */
 
         $sql = $pdo->query("
             SELECT
                 i.*,
+
                 p.nome AS paciente,
-                m.nome AS medico
+
+                m.nome AS medico,
+
+                e.nome AS enfermeiro
+
             FROM internacoes i
-            INNER JOIN pacientes p ON p.id = i.paciente_id
-            INNER JOIN medico m ON m.id = i.medico_id
-            ORDER BY i.data_entrada DESC
+
+            INNER JOIN pacientes p
+                ON p.id = i.paciente_id
+
+            INNER JOIN medico m
+                ON m.id = i.medico_id
+
+            LEFT JOIN enfermeiro e
+                ON e.id = i.enfermeiro_id
+
+            ORDER BY
+                i.data_entrada DESC
         ");
 
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESULTADOS
+    |--------------------------------------------------------------------------
+    */
+
     $internacoes = $sql->fetchAll(PDO::FETCH_ASSOC);
 
-} catch(PDOException $e){
 
-    die("Erro: " . $e->getMessage());
+} catch (PDOException $e) {
+
+
+    die(
+        "Erro ao carregar internações: " .
+        $e->getMessage()
+    );
 
 }
 
 ?>
 
+
 <!DOCTYPE html>
+
 <html lang="pt-br">
+
+
 <head>
 
-<meta charset="UTF-8">
-<title>Internações</title>
+    <meta charset="UTF-8">
 
-<style>
+    <title>Internações</title>
 
-body{
-    font-family:Arial;
-    margin:30px;
-}
 
-table{
-    width:100%;
-    border-collapse:collapse;
-}
+    <style>
 
-th,td{
-    border:1px solid #ccc;
-    padding:8px;
-    text-align:center;
-}
+        body {
 
-th{
-    background:#007bff;
-    color:white;
-}
+            font-family: Arial;
 
-a{
-    text-decoration:none;
-}
+            margin: 30px;
 
-.botao{
-    padding:8px 12px;
-    background:#007bff;
-    color:white;
-    border-radius:5px;
-}
+        }
 
-</style>
+
+        table {
+
+            width: 100%;
+
+            border-collapse: collapse;
+
+        }
+
+
+        th,
+        td {
+
+            border: 1px solid #ccc;
+
+            padding: 8px;
+
+            text-align: center;
+
+        }
+
+
+        th {
+
+            background: #007bff;
+
+            color: white;
+
+        }
+
+
+        a {
+
+            text-decoration: none;
+
+        }
+
+
+        .botao {
+
+            padding: 8px 12px;
+
+            background: #007bff;
+
+            color: white;
+
+            border-radius: 5px;
+
+        }
+
+
+        .botao-alta {
+
+            color: green;
+
+            font-weight: bold;
+
+        }
+
+
+    </style>
+
 
 </head>
 
+
 <body>
+
 
 <h2>Controle de Internações</h2>
 
+
+<!-- ========================================================== -->
+<!-- PESQUISA -->
+<!-- ========================================================== -->
+
 <form method="GET">
 
-<input
-type="text"
-name="pesquisa"
-placeholder="Pesquisar..."
-value="<?= htmlspecialchars($pesquisa) ?>">
+    <input
+        type="text"
+        name="pesquisa"
+        placeholder="Pesquisar paciente, médico, enfermeiro, quarto, leito ou status..."
+        value="<?= htmlspecialchars($pesquisa) ?>"
+    >
 
-<button type="submit">
-Pesquisar
-</button>
+    <button type="submit">
+        Pesquisar
+    </button>
 
 </form>
 
+
 <br>
 
-<a class="botao" href="internacao_cadastrar.php">
-Nova Internação
+
+<!-- ========================================================== -->
+<!-- BOTÕES -->
+<!-- ========================================================== -->
+
+<a
+    class="botao"
+    href="internacao_cadastrar.php"
+>
+    Nova Internação
 </a>
 
-<a class="botao" href="dashboard.php">
-Voltar
+
+<a
+    class="botao"
+    href="dashboard.php"
+>
+    Voltar
 </a>
+
 
 <br><br>
 
+
+<!-- ========================================================== -->
+<!-- TABELA -->
+<!-- ========================================================== -->
+
 <table>
 
-<tr>
 
-<th>Paciente</th>
-<th>Médico</th>
-<th>Entrada</th>
-<th>Saída</th>
-<th>Quarto</th>
-<th>Leito</th>
-<th>quadro clinico</th>
-<th>Status</th>
-<th>Ações</th>
+    <tr>
 
-</tr>
+        <th>Paciente</th>
 
-<?php foreach($internacoes as $i): ?>
+        <th>Médico</th>
 
-<tr>
+        <th>Enfermeiro</th>
 
-<td><?= htmlspecialchars($i['paciente']) ?></td>
+        <th>Entrada</th>
 
-<td><?= htmlspecialchars($i['medico']) ?></td>
+        <th>Saída</th>
 
-<td><?= htmlspecialchars($i['data_entrada']) ?></td>
+        <th>Quarto</th>
 
-<td>
+        <th>Leito</th>
 
-<?php
+        <th>Quadro Clínico</th>
 
-if($i['data_saida']){
+        <th>Status</th>
 
-    echo htmlspecialchars($i['data_saida']);
+        <th>Ações</th>
 
-}else{
+    </tr>
 
-    echo "-";
 
-}
+    <?php foreach ($internacoes as $i): ?>
 
-?>
 
-</td>
+        <tr>
 
-<td><?= htmlspecialchars($i['quarto']) ?></td>
 
-<td><?= htmlspecialchars($i['leito']) ?></td>
+            <!-- PACIENTE -->
 
-<td><?= htmlspecialchars($i['quadro clinico']) ?></td>
+            <td>
 
-<td><?= htmlspecialchars($i['status']) ?></td>
+                <?= htmlspecialchars($i['paciente']) ?>
 
-<td>
+            </td>
 
-<a href="internacao_editar.php?id=<?= $i['id'] ?>">
-Editar
-</a>
 
-|
+            <!-- MÉDICO -->
 
-<a
-href="internacao_apagar.php?id=<?= $i['id'] ?>"
-onclick="return confirm('Deseja realmente excluir esta internação?')">
+            <td>
 
-Excluir
+                <?= htmlspecialchars($i['medico']) ?>
 
-</a>
+            </td>
 
-</td>
 
-</tr>
+            <!-- ENFERMEIRO -->
 
-<?php endforeach; ?>
+            <td>
 
-<?php if(count($internacoes)==0): ?>
+                <?php if (!empty($i['enfermeiro'])): ?>
 
-<tr>
+                    <?= htmlspecialchars($i['enfermeiro']) ?>
 
-<td colspan="8">
+                <?php else: ?>
 
-Nenhuma internação encontrada.
+                    -
 
-</td>
+                <?php endif; ?>
 
-</tr>
+            </td>
 
-<?php endif; ?>
+
+            <!-- ENTRADA -->
+
+            <td>
+
+                <?= htmlspecialchars($i['data_entrada']) ?>
+
+            </td>
+
+
+            <!-- SAÍDA -->
+
+            <td>
+
+                <?php if (!empty($i['data_saida'])): ?>
+
+                    <?= htmlspecialchars($i['data_saida']) ?>
+
+                <?php else: ?>
+
+                    -
+
+                <?php endif; ?>
+
+            </td>
+
+
+            <!-- QUARTO -->
+
+            <td>
+
+                <?= htmlspecialchars($i['quarto']) ?>
+
+            </td>
+
+
+            <!-- LEITO -->
+
+            <td>
+
+                <?= htmlspecialchars($i['leito']) ?>
+
+            </td>
+
+
+            <!-- QUADRO CLÍNICO -->
+
+            <td>
+
+                <?= htmlspecialchars($i['quadro_clinico']) ?>
+
+            </td>
+
+
+            <!-- STATUS -->
+
+            <td>
+
+                <?= htmlspecialchars($i['status']) ?>
+
+            </td>
+
+
+            <!-- AÇÕES -->
+
+            <td>
+
+
+                <a
+                    href="internacao_editar.php?id=<?= $i['id'] ?>"
+                >
+                    Editar
+                </a>
+
+
+                <?php
+
+                /*
+                |--------------------------------------------------------------------------
+                | BOTÃO DAR ALTA
+                |--------------------------------------------------------------------------
+                |
+                | Só aparece enquanto não existe data de saída
+                | e a internação ainda não está como Alta.
+                |
+                */
+
+                if (
+                    empty($i['data_saida']) &&
+                    $i['status'] !== 'Alta'
+                ):
+
+                ?>
+
+                    |
+
+                    <a
+                        class="botao-alta"
+                        href="internacao_alta.php?id=<?= $i['id'] ?>"
+                        onclick="return confirm('Deseja realmente dar alta para este paciente?')"
+                    >
+
+                        Dar Alta
+
+                    </a>
+
+                <?php endif; ?>
+
+
+            </td>
+
+
+        </tr>
+
+
+    <?php endforeach; ?>
+
+
+    <?php if (count($internacoes) === 0): ?>
+
+
+        <tr>
+
+            <td colspan="10">
+
+                Nenhuma internação encontrada.
+
+            </td>
+
+        </tr>
+
+
+    <?php endif; ?>
+
 
 </table>
 
+
 </body>
+
 </html>

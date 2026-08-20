@@ -1,73 +1,19 @@
 <?php
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../config/database.php';
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
 
-require_once '../includes/auth.php';
-require_once '../config/database.php';
-
-
-/*
-|--------------------------------------------------------------------------
-| RECEBE O ID DO FORNECEDOR
-|--------------------------------------------------------------------------
-*/
-
-$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
-
-if (!$id) {
-
-    header('Location: fornecedor.php');
-
-    exit;
-
+    if ($id > 0) {
+        // Atualiza a tabela "fornecedor" no seu banco
+        $stmt = $pdo->prepare("UPDATE fornecedor SET ativo = 0 WHERE id = :id");
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+    }
 }
 
-
-try {
-
-    /*
-    |--------------------------------------------------------------------------
-    | DESATIVA O FORNECEDOR
-    |--------------------------------------------------------------------------
-    */
-
-    $sql = $pdo->prepare("
-
-        UPDATE fornecedor
-
-        SET ativo = 0
-
-        WHERE id = ?
-
-    ");
-
-
-    $sql->execute([$id]);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | VOLTA PARA A LISTA
-    |--------------------------------------------------------------------------
-    */
-
-    header('Location: fornecedor.php');
-
-    exit;
-
-
-} catch (PDOException $e) {
-
-    die(
-
-        'Erro ao desativar fornecedor: ' .
-
-        htmlspecialchars($e->getMessage())
-
-    );
-
-}
-
+// Redireciona para a página de fornecedores desativados
+header("Location: fornecedor_desativados.php");
+exit();
 ?>
