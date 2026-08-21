@@ -4,11 +4,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
 
-/*
-|--------------------------------------------------------------------------
-| FILTROS
-|--------------------------------------------------------------------------
-*/
+
 
 $pesquisa = trim($_GET['pesquisa'] ?? '');
 $funcao = trim($_GET['funcao'] ?? '');
@@ -16,243 +12,66 @@ $funcao = trim($_GET['funcao'] ?? '');
 $funcionarios = [];
 
 
-/*
-|--------------------------------------------------------------------------
-| BUSCAR FUNCIONÁRIOS
-|--------------------------------------------------------------------------
-*/
+
 
 try {
 
-    /*
-    |--------------------------------------------------------------------------
-    | MÉDICOS
-    |--------------------------------------------------------------------------
-    */
+
 
     $sql = "
         SELECT
-            id,
-            nome,
-            crm AS registro,
-            telefone,
-            email,
-            cpf,
-            data_nascimento,
-            sexo,
-            status,
-            endereco_id,
-            'Médico' AS funcao,
-            'medico' AS tabela_origem
-        FROM medico
-        WHERE status = 'Ativo'
+            f.id,
+            f.nome,
+            f.funcao,
+            f.registro,
+            f.telefone,
+            f.email,
+            f.cpf,
+            f.data_nascimento,
+            f.sexo,
+            f.status,
+            f.ativo,
+            f.endereco_id
+        FROM funcionario f
+        WHERE f.ativo = 1
     ";
 
-    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($resultados as $funcionario) {
-        $funcionarios[] = $funcionario;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ENFERMEIROS
-    |--------------------------------------------------------------------------
-    */
-
-    $sql = "
-        SELECT
-            id,
-            nome,
-            coren AS registro,
-            telefone,
-            email,
-            cpf,
-            data_nascimento,
-            sexo,
-            status,
-            endereco_id,
-            'Enfermeiro' AS funcao,
-            'enfermeiro' AS tabela_origem
-        FROM enfermeiro
-        WHERE status = 'Ativo'
-    ";
-
-    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($resultados as $funcionario) {
-        $funcionarios[] = $funcionario;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FARMACÊUTICOS
-    |--------------------------------------------------------------------------
-    */
-
-    $sql = "
-        SELECT
-            id,
-            nome,
-            crf AS registro,
-            telefone,
-            email,
-            cpf,
-            data_nascimento,
-            sexo,
-            status,
-            endereco_id,
-            'Farmacêutico' AS funcao,
-            'farmaceutico' AS tabela_origem
-        FROM farmaceutico
-        WHERE status = 'Ativo'
-    ";
-
-    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($resultados as $funcionario) {
-        $funcionarios[] = $funcionario;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CIRURGIÕES
-    |--------------------------------------------------------------------------
-    */
-
-    $sql = "
-        SELECT
-            id,
-            nome,
-            crm AS registro,
-            telefone,
-            email,
-            cpf,
-            data_nascimento,
-            sexo,
-            status,
-            endereco_id,
-            'Cirurgião' AS funcao,
-            'cirurgiao' AS tabela_origem
-        FROM cirurgiao
-        WHERE status = 'Ativo'
-    ";
-
-    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($resultados as $funcionario) {
-        $funcionarios[] = $funcionario;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ANESTESISTAS
-    |--------------------------------------------------------------------------
-    */
-
-    $sql = "
-        SELECT
-            id,
-            nome,
-            crm AS registro,
-            telefone,
-            email,
-            cpf,
-            data_nascimento,
-            sexo,
-            status,
-            endereco_id,
-            'Anestesista' AS funcao,
-            'anestesista' AS tabela_origem
-        FROM anestesista
-        WHERE status = 'Ativo'
-    ";
-
-    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($resultados as $funcionario) {
-        $funcionarios[] = $funcionario;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PESQUISA
-    |--------------------------------------------------------------------------
-    */
+    $parametros = [];
 
     if ($pesquisa !== '') {
 
-        $funcionarios = array_filter(
-            $funcionarios,
-            function ($funcionario) use ($pesquisa) {
+        $sql .= "
+            AND (
+                f.nome LIKE :pesquisa
+                OR f.registro LIKE :pesquisa
+                OR f.cpf LIKE :pesquisa
+                OR f.email LIKE :pesquisa
+                OR f.telefone LIKE :pesquisa
+            )
+        ";
 
-                return
-                    stripos($funcionario['nome'], $pesquisa) !== false ||
-                    stripos($funcionario['registro'] ?? '', $pesquisa) !== false ||
-                    stripos($funcionario['cpf'] ?? '', $pesquisa) !== false ||
-                    stripos($funcionario['email'] ?? '', $pesquisa) !== false ||
-                    stripos($funcionario['telefone'] ?? '', $pesquisa) !== false;
-            }
-        );
+        $parametros[':pesquisa'] = '%' . $pesquisa . '%';
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | FILTRO POR FUNÇÃO
-    |--------------------------------------------------------------------------
-    */
-
+    
     if ($funcao !== '') {
 
-        $funcionarios = array_filter(
-            $funcionarios,
-            function ($funcionario) use ($funcao) {
+        $sql .= " AND f.funcao = :funcao";
 
-                return $funcionario['funcao'] === $funcao;
-            }
-        );
+        $parametros[':funcao'] = $funcao;
     }
 
+    $sql .= " ORDER BY f.nome ASC";
 
-    /*
-    |--------------------------------------------------------------------------
-    | REINDEXAR
-    |--------------------------------------------------------------------------
-    */
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($parametros);
 
-    $funcionarios = array_values($funcionarios);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ORDENAR
-    |--------------------------------------------------------------------------
-    */
-
-    usort(
-        $funcionarios,
-        function ($a, $b) {
-
-            return strcasecmp(
-                $a['nome'],
-                $b['nome']
-            );
-        }
-    );
-
+    $funcionarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
 
-    die(
-        "Erro ao buscar funcionários: " .
-        $e->getMessage()
-    );
+    die("Erro ao buscar funcionários: " . $e->getMessage());
 
 }
 
@@ -264,259 +83,133 @@ try {
 
 <head>
 
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Funcionários</title>
-
-
-<!-- BOOTSTRAP -->
-
-<link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
->
-
-
-<!-- ÍCONES -->
-
-<link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
->
-
-
-<style>
-
-/* =====================================================
-   GERAL
-===================================================== */
-
-body {
-
-    background:#f5f7fb;
-
-    font-family:'Segoe UI', sans-serif;
-
-    min-height:100vh;
-
-}
-
-
-/* =====================================================
-   CONTAINER
-===================================================== */
-
-.container-principal {
-
-    background:white;
-
-    border-radius:20px;
-
-    padding:30px;
-
-    margin-top:40px;
-
-    margin-bottom:40px;
-
-    box-shadow:0 5px 20px rgba(0,0,0,.08);
-
-}
-
-
-/* =====================================================
-   TÍTULO
-===================================================== */
-
-.titulo {
-
-    font-weight:700;
-
-    color:#2F80ED;
-
-    margin-bottom:5px;
-
-}
-
-
-.subtitulo {
-
-    color:#6c757d;
-
-    font-size:14px;
-
-}
-
-
-/* =====================================================
-   CONTADOR
-===================================================== */
-
-.contador {
-
-    background:#f5f9ff;
-
-    border:1px solid #e0ecff;
-
-    border-radius:15px;
-
-    padding:18px;
-
-    text-align:center;
-
-}
-
-
-.contador h2 {
-
-    color:#2F80ED;
-
-    font-weight:700;
-
-    margin:0;
-
-}
-
-
-.contador p {
-
-    margin:0;
-
-    color:#6c757d;
-
-}
-
-
-/* =====================================================
-   BOTÕES
-===================================================== */
-
-.btn-principal {
-
-    background:#2F80ED;
-
-    color:white;
-
-    border:none;
-
-    border-radius:10px;
-
-}
-
-
-.btn-principal:hover {
-
-    background:#1c6ad6;
-
-    color:white;
-
-}
-
-
-.btn-editar {
-
-    background:#e8f3ff;
-
-    color:#2F80ED;
-
-    border:none;
-
-    border-radius:8px;
-
-}
-
-
-.btn-editar:hover {
-
-    background:#2F80ED;
-
-    color:white;
-
-}
-
-
-/* =====================================================
-   FORMULÁRIOS
-===================================================== */
-
-.form-control,
-.form-select {
-
-    border-radius:10px;
-
-}
-
-
-.form-control:focus,
-.form-select:focus {
-
-    border-color:#2F80ED;
-
-    box-shadow:0 0 0 .2rem rgba(47,128,237,.15);
-
-}
-
-
-/* =====================================================
-   TABELA
-===================================================== */
-
-.table {
-
-    margin-top:20px;
-
-}
-
-
-.table thead th {
-
-    background:#2F80ED;
-
-    color:white;
-
-    border:none;
-
-    padding:13px;
-
-}
-
-
-.table tbody td {
-
-    padding:13px;
-
-    vertical-align:middle;
-
-}
-
-
-.table-hover tbody tr:hover {
-
-    background:#f5f9ff;
-
-}
-
-
-/* =====================================================
-   FUNÇÃO
-===================================================== */
-
-.badge-funcao {
-
-    background:#e8f3ff;
-
-    color:#2F80ED;
-
-    padding:7px 10px;
-
-    border-radius:15px;
-
-    font-size:12px;
-
-}
-
-</style>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Funcionários</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <style>
+
+        body {
+            background: #f5f7fb;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+
+        .container-principal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.08);
+        }
+
+        .titulo {
+            font-weight: 700;
+            color: #2F80ED;
+            margin-bottom: 5px;
+        }
+
+        .subtitulo {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .contador {
+            background: #f5f9ff;
+            border: 1px solid #e0ecff;
+            border-radius: 15px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .contador h2 {
+            color: #2F80ED;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .contador p {
+            margin: 0;
+            color: #6c757d;
+        }
+
+        .btn-principal {
+            background: #2F80ED;
+            color: white;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .btn-principal:hover {
+            background: #1c6ad6;
+            color: white;
+        }
+
+        .btn-editar {
+            background: #e8f3ff;
+            color: #2F80ED;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .btn-editar:hover {
+            background: #2F80ED;
+            color: white;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2F80ED;
+            box-shadow: 0 0 0 .2rem rgba(47,128,237,.15);
+        }
+
+        .table {
+            margin-top: 20px;
+        }
+
+        .table thead th {
+            background: #2F80ED;
+            color: white;
+            border: none;
+            padding: 13px;
+        }
+
+        .table tbody td {
+            padding: 13px;
+            vertical-align: middle;
+        }
+
+        .table-hover tbody tr:hover {
+            background: #f5f9ff;
+        }
+
+        .badge-funcao {
+            background: #e8f3ff;
+            color: #2F80ED;
+            padding: 7px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+    </style>
 
 </head>
 
@@ -526,375 +219,317 @@ body {
 
 <div class="container">
 
+    <div class="container-principal">
 
-<div class="container-principal">
+        <!-- CABEÇALHO -->
 
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-<!-- =====================================================
-     CABEÇALHO
-===================================================== -->
+            <div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="titulo">
 
-<div>
+                    <i class="bi bi-people"></i>
 
-<h2 class="titulo">
+                    Funcionários
 
-<i class="bi bi-people"></i>
+                </h2>
 
-Funcionários
+                <div class="subtitulo">
 
-</h2>
+                    Cadastro e gerenciamento dos profissionais do hospital
 
-<div class="subtitulo">
+                </div>
 
-Cadastro e gerenciamento dos profissionais do hospital
+            </div>
 
-</div>
+            <a
+                href="dashboard.php"
+                class="btn btn-secondary"
+            >
 
-</div>
+                <i class="bi bi-arrow-left"></i>
 
+                Voltar
 
-<a
-    href="dashboard.php"
-    class="btn btn-secondary"
->
+            </a>
 
-<i class="bi bi-arrow-left"></i>
+        </div>
 
-Voltar
 
-</a>
+        <!-- CONTADOR -->
 
-</div>
+        <div class="row mb-4">
 
+            <div class="col-md-12">
 
-<!-- =====================================================
-     CONTADOR
-===================================================== -->
+                <div class="contador">
 
-<div class="row mb-4">
+                    <h2>
+                        <?= count($funcionarios) ?>
+                    </h2>
 
-<div class="col-md-12">
+                    <p>
+                        Funcionários ativos
+                    </p>
 
-<div class="contador">
+                </div>
 
-<h2>
+            </div>
 
-<?= count($funcionarios) ?>
+        </div>
 
-</h2>
 
-<p>
+        <!-- PESQUISA -->
 
-Funcionários ativos
+        <form
+            method="GET"
+            class="row g-2 mb-4"
+        >
 
-</p>
+            <div class="col-md-7">
 
-</div>
+                <input
+                    type="text"
+                    name="pesquisa"
+                    class="form-control form-control-lg"
+                    placeholder="Pesquisar por nome, CPF, registro, telefone ou e-mail..."
+                    value="<?= htmlspecialchars($pesquisa) ?>"
+                >
 
-</div>
+            </div>
 
-</div>
+            <div class="col-md-3">
 
+                <select
+                    name="funcao"
+                    class="form-select form-select-lg"
+                >
 
-<!-- =====================================================
-     PESQUISA E FILTRO
-===================================================== -->
+                    <option value="">
+                        Todas as funções
+                    </option>
 
-<form
-    method="GET"
-    class="row g-2 mb-4"
->
+                    <option
+                        value="Médico"
+                        <?= $funcao === 'Médico' ? 'selected' : '' ?>
+                    >
+                        Médico
+                    </option>
 
+                    <option
+                        value="Enfermeiro"
+                        <?= $funcao === 'Enfermeiro' ? 'selected' : '' ?>
+                    >
+                        Enfermeiro
+                    </option>
 
-<div class="col-md-7">
+                    <option
+                        value="Farmacêutico"
+                        <?= $funcao === 'Farmacêutico' ? 'selected' : '' ?>
+                    >
+                        Farmacêutico
+                    </option>
 
-<input
+                    <option
+                        value="Cirurgião"
+                        <?= $funcao === 'Cirurgião' ? 'selected' : '' ?>
+                    >
+                        Cirurgião
+                    </option>
 
-    type="text"
+                    <option
+                        value="Anestesista"
+                        <?= $funcao === 'Anestesista' ? 'selected' : '' ?>
+                    >
+                        Anestesista
+                    </option>
 
-    name="pesquisa"
+                </select>
 
-    class="form-control form-control-lg"
+            </div>
 
-    placeholder="Pesquisar por nome, CPF, registro, telefone ou e-mail..."
+            <div class="col-md-2">
 
-    value="<?= htmlspecialchars($pesquisa) ?>"
+                <button
+                    type="submit"
+                    class="btn btn-principal btn-lg w-100"
+                >
 
->
+                    <i class="bi bi-search"></i>
 
-</div>
+                    Buscar
 
+                </button>
 
-<div class="col-md-3">
+            </div>
 
-<select
-    name="funcao"
-    class="form-select form-select-lg"
->
+        </form>
 
-<option value="">
-    Todas as funções
-</option>
 
-<option
-    value="Médico"
-    <?= $funcao === 'Médico' ? 'selected' : '' ?>
->
-    Médico
-</option>
+        <!-- BOTÕES -->
 
-<option
-    value="Enfermeiro"
-    <?= $funcao === 'Enfermeiro' ? 'selected' : '' ?>
->
-    Enfermeiro
-</option>
+        <div class="mb-4">
 
-<option
-    value="Farmacêutico"
-    <?= $funcao === 'Farmacêutico' ? 'selected' : '' ?>
->
-    Farmacêutico
-</option>
+            <a
+                href="funcionario_novo.php"
+                class="btn btn-principal"
+            >
 
-<option
-    value="Cirurgião"
-    <?= $funcao === 'Cirurgião' ? 'selected' : '' ?>
->
-    Cirurgião
-</option>
+                <i class="bi bi-person-plus"></i>
 
-<option
-    value="Anestesista"
-    <?= $funcao === 'Anestesista' ? 'selected' : '' ?>
->
-    Anestesista
-</option>
+                Novo Funcionário
 
-</select>
+            </a>
 
-</div>
+            <a
+                href="funcionarios_desativados.php"
+                class="btn btn-outline-danger"
+            >
 
+                <i class="bi bi-person-x"></i>
 
-<div class="col-md-2">
+                Funcionários Desativados
 
-<button
-    type="submit"
-    class="btn btn-principal btn-lg w-100"
->
+            </a>
 
-<i class="bi bi-search"></i>
+        </div>
 
-Buscar
 
-</button>
+        <!-- TABELA -->
 
-</div>
+        <div class="table-responsive">
 
+            <table class="table table-hover align-middle">
 
-</form>
+                <thead>
 
+                    <tr>
 
-<!-- =====================================================
-     BOTÕES
-===================================================== -->
+                        <th>Nome</th>
 
-<div class="mb-4">
+                        <th>Função</th>
 
+                        <th>Registro</th>
 
-<a
-    href="funcionario_novo.php"
-    class="btn btn-principal"
->
+                        <th>Telefone</th>
 
-<i class="bi bi-person-plus"></i>
+                        <th>E-mail</th>
 
-Novo Funcionário
+                        <th width="160">Ações</th>
 
-</a>
+                    </tr>
 
+                </thead>
 
-<a
-    href="funcionarios_desativados.php"
-    class="btn btn-outline-danger"
->
+                <tbody>
 
-<i class="bi bi-person-x"></i>
+                <?php if (count($funcionarios) > 0): ?>
 
-Funcionários Desativados
+                    <?php foreach ($funcionarios as $f): ?>
 
-</a>
+                        <tr>
 
+                            <td>
 
-</div>
+                                <strong>
+                                    <?= htmlspecialchars($f['nome']) ?>
+                                </strong>
 
+                            </td>
 
-<!-- =====================================================
-     TABELA
-===================================================== -->
+                            <td>
 
-<div class="table-responsive">
+                                <span class="badge-funcao">
 
+                                    <?= htmlspecialchars($f['funcao']) ?>
 
-<table class="table table-hover align-middle">
+                                </span>
 
+                            </td>
 
-<thead>
+                            <td>
 
-<tr>
+                                <?= htmlspecialchars(
+                                    $f['registro'] ?: 'Não informado'
+                                ) ?>
 
-<th>Nome</th>
+                            </td>
 
-<th>Função</th>
+                            <td>
 
-<th>Registro</th>
+                                <?= htmlspecialchars(
+                                    $f['telefone'] ?: 'Não informado'
+                                ) ?>
 
-<th>Telefone</th>
+                            </td>
 
-<th>E-mail</th>
+                            <td>
 
-<th width="160">Ações</th>
+                                <?= htmlspecialchars(
+                                    $f['email'] ?: 'Não informado'
+                                ) ?>
 
-</tr>
+                            </td>
 
-</thead>
+                            <td>
 
+                                <div class="d-flex gap-2">
 
-<tbody>
+                                    <a
+                                        href="funcionario_visualizar.php?id=<?= $f['id'] ?>"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        title="Visualizar"
+                                    >
 
+                                        <i class="bi bi-eye"></i>
 
-<?php if (count($funcionarios) > 0): ?>
+                                    </a>
 
+                                    <a
+                                        href="funcionario_editar.php?id=<?= $f['id'] ?>"
+                                        class="btn btn-editar btn-sm"
+                                        title="Editar"
+                                    >
 
-<?php foreach ($funcionarios as $f): ?>
+                                        <i class="bi bi-pencil-square"></i>
 
+                                    </a>
 
-<tr>
+                                </div>
 
+                            </td>
 
-<!-- NOME -->
+                        </tr>
 
-<td>
+                    <?php endforeach; ?>
 
-<strong>
+                <?php else: ?>
 
-<?= htmlspecialchars($f['nome']) ?>
+                    <tr>
 
-</strong>
+                        <td
+                            colspan="6"
+                            class="text-center text-muted py-4"
+                        >
 
-</td>
+                            <i class="bi bi-search"></i>
 
+                            Nenhum funcionário encontrado.
 
-<!-- FUNÇÃO -->
+                        </td>
 
-<td>
+                    </tr>
 
-<span class="badge-funcao">
+                <?php endif; ?>
 
-<?= htmlspecialchars($f['funcao']) ?>
+                </tbody>
 
-</span>
+            </table>
 
-</td>
+        </div>
 
-
-<!-- REGISTRO -->
-
-<td>
-
-<?= htmlspecialchars($f['registro'] ?? 'Não informado') ?>
-
-</td>
-
-
-<!-- TELEFONE -->
-
-<td>
-
-<?= htmlspecialchars($f['telefone'] ?? 'Não informado') ?>
-
-</td>
-
-
-<!-- EMAIL -->
-
-<td>
-
-<?= htmlspecialchars($f['email'] ?? 'Não informado') ?>
-
-</td>
-
-
-<!-- AÇÕES -->
-
-<td>
-
-<div class="d-flex gap-2">
-
-
-<a
-    href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-    class="btn btn-sm btn-outline-secondary"
->
-
-<i class="bi bi-eye"></i>
-
-</a>
-
-
-<a
-    href="funcionario_editar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-    class="btn btn-editar btn-sm"
->
-
-<i class="bi bi-pencil-square"></i>
-
-</a>
-
-
-</div>
-
-</td>
-
-
-</tr>
-
-
-<?php endforeach; ?>
-
-
-<?php else: ?>
-
-
-<tr>
-
-<td
-    colspan="6"
-    class="text-center text-muted py-4"
->
-
-<i class="bi bi-search"></i>
-
-Nenhum funcionário encontrado.
-
-</td>
-
-</tr>
-
-
-<?php endif; ?>
-
-
-</tbody>
-
-</table>
-
-</div>
-
-
-</div>
+    </div>
 
 </div>
 

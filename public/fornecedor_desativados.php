@@ -48,7 +48,7 @@ try {
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Fornecedores Desativados</title>
+    <title> Fornecedores Desativados</title>
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -284,7 +284,7 @@ try {
                                     <a
                                         href="fornecedor_reativar.php?id=<?= $fornecedor['id'] ?>"
                                         class="btn btn-success btn-sm"
-                                        title="Reativar fornecedor"
+                                      title="Reativar fornecedor"
                                         onclick="return confirm('Deseja realmente reativar este fornecedor?');"
                                     >
 

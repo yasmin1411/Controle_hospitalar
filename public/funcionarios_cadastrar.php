@@ -1,19 +1,10 @@
 <?php
 
-require_once '../includes/auth.php';
-require_once '../config/database.php';
-
-
-/*
-|--------------------------------------------------------------------------
-| VERIFICAR MÉTODO
-|--------------------------------------------------------------------------
-*/
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-
-    exit("Acesso inválido.");
-
+    exit('Acesso inválido.');
 }
 
 
@@ -24,15 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 */
 
 $nome = trim($_POST['nome'] ?? '');
-
 $funcao = trim($_POST['funcao'] ?? '');
-
 $registro = trim($_POST['registro'] ?? '');
-
 $telefone = trim($_POST['telefone'] ?? '');
-
 $email = trim($_POST['email'] ?? '');
-
 $cpf = trim($_POST['cpf'] ?? '');
 
 $data_nascimento = !empty($_POST['data_nascimento'])
@@ -40,7 +26,6 @@ $data_nascimento = !empty($_POST['data_nascimento'])
     : null;
 
 $sexo = trim($_POST['sexo'] ?? '');
-
 $status = trim($_POST['status'] ?? '');
 
 
@@ -51,14 +36,25 @@ $status = trim($_POST['status'] ?? '');
 */
 
 $rua = trim($_POST['rua'] ?? '');
-
 $numero = trim($_POST['numero'] ?? '');
-
 $cep = trim($_POST['cep'] ?? '');
-
 $cidade = trim($_POST['cidade'] ?? '');
-
 $complemento = trim($_POST['complemento'] ?? '');
+
+
+/*
+|--------------------------------------------------------------------------
+| FUNÇÕES PERMITIDAS
+|--------------------------------------------------------------------------
+*/
+
+$funcoesPermitidas = [
+    'Médico',
+    'Enfermeiro',
+    'Farmacêutico',
+    'Cirurgião',
+    'Anestesista'
+];
 
 
 /*
@@ -68,96 +64,50 @@ $complemento = trim($_POST['complemento'] ?? '');
 */
 
 if ($nome === '') {
-    exit("O nome é obrigatório.");
+    exit('O nome é obrigatório.');
 }
 
-if ($funcao === '') {
-    exit("A função é obrigatória.");
+if (!in_array($funcao, $funcoesPermitidas, true)) {
+    exit('Função inválida.');
 }
 
 if ($registro === '') {
-    exit("O registro profissional é obrigatório.");
+    exit('O registro profissional é obrigatório.');
 }
 
-if ($status === '') {
-    exit("O status é obrigatório.");
+if ($status !== 'Ativo' && $status !== 'Inativo') {
+    exit('Status inválido.');
 }
 
 if ($rua === '') {
-    exit("A rua é obrigatória.");
+    exit('A rua é obrigatória.');
 }
 
 if ($numero === '') {
-    exit("O número é obrigatório.");
+    exit('O número é obrigatório.');
 }
 
 if ($cep === '') {
-    exit("O CEP é obrigatório.");
+    exit('O CEP é obrigatório.');
 }
 
 if ($cidade === '') {
-    exit("A cidade é obrigatória.");
+    exit('A cidade é obrigatória.');
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| DEFINIR TABELA E CAMPO DO REGISTRO
+| DEFINIR ATIVO
 |--------------------------------------------------------------------------
 */
 
-switch ($funcao) {
-
-    case 'Médico':
-
-        $tabela = 'medico';
-        $campo_registro = 'crm';
-
-        break;
-
-
-    case 'Enfermeiro':
-
-        $tabela = 'enfermeiro';
-        $campo_registro = 'coren';
-
-        break;
-
-
-    case 'Farmacêutico':
-
-        $tabela = 'farmaceutico';
-        $campo_registro = 'crf';
-
-        break;
-
-
-    case 'Cirurgião':
-
-        $tabela = 'cirurgiao';
-        $campo_registro = 'crm';
-
-        break;
-
-
-    case 'Anestesista':
-
-        $tabela = 'anestesista';
-        $campo_registro = 'crm';
-
-        break;
-
-
-    default:
-
-        exit("Função inválida.");
-
-}
+$ativo = ($status === 'Ativo') ? 1 : 0;
 
 
 /*
 |--------------------------------------------------------------------------
-| INICIAR TRANSAÇÃO
+| CADASTRAR
 |--------------------------------------------------------------------------
 */
 
@@ -182,105 +132,105 @@ try {
             complemento
         )
         VALUES
-        (?, ?, ?, ?, ?)
+        (
+            :rua,
+            :numero,
+            :cep,
+            :cidade,
+            :complemento
+        )
     ");
 
-
     $sqlEndereco->execute([
-        $rua,
-        $numero,
-        $cep,
-        $cidade,
-        $complemento
+        ':rua' => $rua,
+        ':numero' => $numero,
+        ':cep' => $cep,
+        ':cidade' => $cidade,
+        ':complemento' => $complemento
     ]);
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | 2. PEGAR ID DO ENDEREÇO
-    |--------------------------------------------------------------------------
-    */
 
     $endereco_id = $pdo->lastInsertId();
 
 
     /*
     |--------------------------------------------------------------------------
-    | 3. CADASTRAR FUNCIONÁRIO
+    | 2. CADASTRAR FUNCIONÁRIO
     |--------------------------------------------------------------------------
     */
 
-    $sqlFuncionario = "
-        INSERT INTO {$tabela}
+    $sqlFuncionario = $pdo->prepare("
+        INSERT INTO funcionario
         (
             nome,
-            {$campo_registro},
+            funcao,
+            registro,
             telefone,
             email,
             cpf,
             data_nascimento,
             sexo,
             status,
+            ativo,
             endereco_id
         )
         VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ";
+        (
+            :nome,
+            :funcao,
+            :registro,
+            :telefone,
+            :email,
+            :cpf,
+            :data_nascimento,
+            :sexo,
+            :status,
+            :ativo,
+            :endereco_id
+        )
+    ");
 
-
-    $stmt = $pdo->prepare($sqlFuncionario);
-
-
-    $stmt->execute([
-        $nome,
-        $registro,
-        $telefone,
-        $email,
-        $cpf,
-        $data_nascimento,
-        $sexo,
-        $status,
-        $endereco_id
+    $sqlFuncionario->execute([
+        ':nome' => $nome,
+        ':funcao' => $funcao,
+        ':registro' => $registro,
+        ':telefone' => $telefone,
+        ':email' => $email,
+        ':cpf' => $cpf,
+        ':data_nascimento' => $data_nascimento,
+        ':sexo' => $sexo,
+        ':status' => $status,
+        ':ativo' => $ativo,
+        ':endereco_id' => $endereco_id
     ]);
 
 
     /*
     |--------------------------------------------------------------------------
-    | 4. CONFIRMAR TRANSAÇÃO e FINALIZAR
+    | 3. FINALIZAR
     |--------------------------------------------------------------------------
     */
 
     $pdo->commit();
 
-echo "<script>
-    alert('Funcionário cadastrado com sucesso!');
-    window.location.href = 'funcionarios.php';
-</script>";
+    echo "
+        <script>
+            alert('Funcionário cadastrado com sucesso!');
+            window.location.href = 'funcionarios.php';
+        </script>
+    ";
 
-exit;
+    exit;
 
 
 } catch (PDOException $e) {
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | DESFAZER TRANSAÇÃO EM CASO DE ERRO
-    |--------------------------------------------------------------------------
-    */
-
     if ($pdo->inTransaction()) {
-
         $pdo->rollBack();
-
     }
 
-
     die(
-        "Erro ao cadastrar funcionário: " .
-        $e->getMessage()
+        'Erro ao cadastrar funcionário: ' .
+        htmlspecialchars($e->getMessage())
     );
-
 }
-
-?>
