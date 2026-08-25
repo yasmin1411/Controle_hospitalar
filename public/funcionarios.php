@@ -529,7 +529,124 @@ try {
 
         </div>
 
+<<<<<<< HEAD
     </div>
+=======
+
+<!-- REGISTRO -->
+
+<td>
+
+<?= htmlspecialchars($f['registro'] ?? 'Não informado') ?>
+
+</td>
+
+
+<!-- TELEFONE -->
+
+<td>
+
+<?= htmlspecialchars($f['telefone'] ?? 'Não informado') ?>
+
+</td>
+
+
+<!-- EMAIL -->
+
+<td>
+
+<?= htmlspecialchars($f['email'] ?? 'Não informado') ?>
+
+</td>
+
+
+<!-- AÇÕES -->
+
+<td>
+
+<div class="d-flex gap-2">
+
+    <!-- VISUALIZAR -->
+
+    <a
+        href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+        class="btn btn-sm btn-outline-secondary"
+        title="Visualizar"
+    >
+
+        <i class="bi bi-eye"></i>
+
+    </a>
+
+
+    <!-- EDITAR -->
+
+    <a
+        href="funcionario_editar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+        class="btn btn-editar btn-sm"
+        title="Editar"
+    >
+
+        <i class="bi bi-pencil-square"></i>
+
+    </a>
+
+
+    <!-- DESATIVAR -->
+
+    <a
+        href="funcionario_desativar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+        class="btn btn-sm btn-outline-danger"
+        title="Desativar"
+        onclick="return confirm('Deseja realmente desativar este funcionário?');"
+    >
+
+        <i class="bi bi-person-dash"></i>
+
+    </a>
+
+</div>
+
+</td>
+
+
+</tr>
+
+
+<?php endforeach; ?>
+
+
+<?php else: ?>
+
+
+<tr>
+
+<td
+    colspan="6"
+    class="text-center text-muted py-4"
+>
+
+<i class="bi bi-search"></i>
+
+Nenhum funcionário encontrado.
+
+</td>
+
+</tr>
+
+
+<?php endif; ?>
+
+
+</tbody>
+
+</table>
+
+</div>
+
+
+</div>
+>>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8
 
 </div>
 
