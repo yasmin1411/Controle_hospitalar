@@ -264,259 +264,737 @@ try {
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Funcionários</title>
+    <title>Funcionários</title>
 
 
-<!-- BOOTSTRAP -->
+    <!-- BOOTSTRAP -->
 
-<link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
 
-<!-- ÍCONES -->
+    <!-- ÍCONES -->
 
-<link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
 
 
-<style>
+    <style>
 
-/* =====================================================
-   GERAL
-===================================================== */
+        :root {
 
-body {
+            --azul-principal: #2F80ED;
+            --azul-claro: #56CCF2;
 
-    background:#f5f7fb;
+        }
 
-    font-family:'Segoe UI', sans-serif;
 
-    min-height:100vh;
+        * {
 
-}
+            box-sizing: border-box;
 
+        }
 
-/* =====================================================
-   CONTAINER
-===================================================== */
 
-.container-principal {
+        html {
 
-    background:white;
+            font-size: 14px;
 
-    border-radius:20px;
+        }
 
-    padding:30px;
 
-    margin-top:40px;
+        body {
 
-    margin-bottom:40px;
+            margin: 0;
 
-    box-shadow:0 5px 20px rgba(0,0,0,.08);
+            min-height: 100vh;
 
-}
+            background:
+                linear-gradient(
+                    135deg,
+                    #eef5ff,
+                    #dbeeff
+                );
 
+            font-family: 'Segoe UI', sans-serif;
 
-/* =====================================================
-   TÍTULO
-===================================================== */
+            color: #2c3e50;
 
-.titulo {
+            font-size: 14px;
 
-    font-weight:700;
+        }
 
-    color:#2F80ED;
 
-    margin-bottom:5px;
+        /* =====================================================
+           CONTAINER PRINCIPAL
+        ===================================================== */
 
-}
+        .container-principal {
 
+            max-width: 1350px;
 
-.subtitulo {
+            margin: 0 auto;
 
-    color:#6c757d;
+            padding: 30px 20px 50px;
 
-    font-size:14px;
+        }
 
-}
 
+        .card-principal {
 
-/* =====================================================
-   CONTADOR
-===================================================== */
+            background: #ffffff;
 
-.contador {
+            border: none;
 
-    background:#f5f9ff;
+            border-radius: 25px;
 
-    border:1px solid #e0ecff;
+            box-shadow:
+                0 15px 40px rgba(47, 128, 237, 0.12);
 
-    border-radius:15px;
+            padding: 30px;
 
-    padding:18px;
+        }
 
-    text-align:center;
 
-}
+        /* =====================================================
+           CABEÇALHO
+        ===================================================== */
 
+        .info-card {
 
-.contador h2 {
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--azul-principal),
+                    var(--azul-claro)
+                );
 
-    color:#2F80ED;
+            color: white;
 
-    font-weight:700;
+            border-radius: 22px;
 
-    margin:0;
+            padding: 28px 30px;
 
-}
+            margin-bottom: 30px;
 
+            box-shadow:
+                0 12px 30px rgba(47, 128, 237, 0.18);
 
-.contador p {
+        }
 
-    margin:0;
 
-    color:#6c757d;
+        .info-card h2 {
 
-}
+            font-weight: 700;
 
+            font-size: 27px;
 
-/* =====================================================
-   BOTÕES
-===================================================== */
+            margin-bottom: 5px;
 
-.btn-principal {
+        }
 
-    background:#2F80ED;
 
-    color:white;
+        .info-card p {
 
-    border:none;
+            font-size: 14px;
 
-    border-radius:10px;
+            opacity: .95;
 
-}
+        }
 
 
-.btn-principal:hover {
+        /* =====================================================
+           TÍTULO
+        ===================================================== */
 
-    background:#1c6ad6;
+        .titulo {
 
-    color:white;
+            color: var(--azul-principal);
 
-}
+            font-weight: 700;
 
+            font-size: 30px;
 
-.btn-editar {
+            margin-bottom: 5px;
 
-    background:#e8f3ff;
+        }
 
-    color:#2F80ED;
 
-    border:none;
+        .subtitulo {
 
-    border-radius:8px;
+            color: #6c757d;
 
-}
+            font-size: 14px;
 
+        }
 
-.btn-editar:hover {
 
-    background:#2F80ED;
+        /* =====================================================
+           CONTADOR
+        ===================================================== */
 
-    color:white;
+        .contador {
 
-}
+            background: white;
 
+            border-radius: 20px;
 
-/* =====================================================
-   FORMULÁRIOS
-===================================================== */
+            padding: 22px;
 
-.form-control,
-.form-select {
+            text-align: center;
 
-    border-radius:10px;
+            box-shadow:
+                0 7px 25px rgba(0, 0, 0, 0.06);
 
-}
+            border: 1px solid #edf1f6;
 
+            transition: .25s;
 
-.form-control:focus,
-.form-select:focus {
+        }
 
-    border-color:#2F80ED;
 
-    box-shadow:0 0 0 .2rem rgba(47,128,237,.15);
+        .contador:hover {
 
-}
+            transform: translateY(-2px);
 
+            box-shadow:
+                0 12px 30px rgba(47, 128, 237, 0.10);
 
-/* =====================================================
-   TABELA
-===================================================== */
+        }
 
-.table {
 
-    margin-top:20px;
+        .icone-contador {
 
-}
+            width: 50px;
 
+            height: 50px;
 
-.table thead th {
+            border-radius: 15px;
 
-    background:#2F80ED;
+            background: #e8f3ff;
 
-    color:white;
+            color: var(--azul-principal);
 
-    border:none;
+            display: flex;
 
-    padding:13px;
+            align-items: center;
 
-}
+            justify-content: center;
 
+            margin: 0 auto 10px;
 
-.table tbody td {
+            font-size: 24px;
 
-    padding:13px;
+        }
 
-    vertical-align:middle;
 
-}
+        .contador h2 {
 
+            color: var(--azul-principal);
 
-.table-hover tbody tr:hover {
+            font-weight: 700;
 
-    background:#f5f9ff;
+            font-size: 26px;
 
-}
+            margin: 0;
 
+        }
 
-/* =====================================================
-   FUNÇÃO
-===================================================== */
 
-.badge-funcao {
+        .contador p {
 
-    background:#e8f3ff;
+            margin: 5px 0 0;
 
-    color:#2F80ED;
+            color: #6c757d;
 
-    padding:7px 10px;
+        }
 
-    border-radius:15px;
 
-    font-size:12px;
+        /* =====================================================
+           BOTÕES
+        ===================================================== */
 
-}
+        .btn-principal {
 
-</style>
+            background: var(--azul-principal);
+
+            color: white;
+
+            border: none;
+
+            border-radius: 12px;
+
+            font-weight: 600;
+
+            padding: 10px 18px;
+
+            transition: .25s;
+
+        }
+
+
+        .btn-principal:hover {
+
+            background: #1c6ad6;
+
+            color: white;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        .btn-voltar {
+
+            background: #f1f3f5;
+
+            color: #6c757d;
+
+            border: none;
+
+            border-radius: 12px;
+
+            padding: 10px 18px;
+
+            font-weight: 600;
+
+            transition: .25s;
+
+        }
+
+
+        .btn-voltar:hover {
+
+            background: #e2e6ea;
+
+            color: #495057;
+
+        }
+
+
+        .btn-editar {
+
+            background: #e8f3ff;
+
+            color: var(--azul-principal);
+
+            border: none;
+
+            border-radius: 10px;
+
+            width: 38px;
+
+            height: 36px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            transition: .25s;
+
+        }
+
+
+        .btn-editar:hover {
+
+            background: var(--azul-principal);
+
+            color: white;
+
+        }
+
+
+        .btn-visualizar {
+
+            background: #f1f3f5;
+
+            color: #6c757d;
+
+            border: none;
+
+            border-radius: 10px;
+
+            width: 38px;
+
+            height: 36px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            transition: .25s;
+
+        }
+
+
+        .btn-visualizar:hover {
+
+            background: #6c757d;
+
+            color: white;
+
+        }
+
+
+        .btn-desativar {
+
+            background: #fff1f2;
+
+            color: #dc3545;
+
+            border: none;
+
+            border-radius: 10px;
+
+            width: 38px;
+
+            height: 36px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            transition: .25s;
+
+        }
+
+
+        .btn-desativar:hover {
+
+            background: #dc3545;
+
+            color: white;
+
+        }
+
+
+        /* =====================================================
+           PESQUISA
+        ===================================================== */
+
+        .campo-pesquisa,
+        .campo-funcao {
+
+            border: 1px solid #dbe7ff;
+
+            border-radius: 12px;
+
+            min-height: 46px;
+
+            font-size: 14px;
+
+        }
+
+
+        .campo-pesquisa:focus,
+        .campo-funcao:focus {
+
+            border-color: var(--azul-principal);
+
+            box-shadow:
+                0 0 0 .2rem rgba(47, 128, 237, .15);
+
+        }
+
+
+        /* =====================================================
+           ÁREA DE BOTÕES
+        ===================================================== */
+
+        .area-acoes {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 12px;
+
+            margin-bottom: 22px;
+
+        }
+
+
+        .grupo-acoes {
+
+            display: flex;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+
+        }
+
+
+        .btn-desativados {
+
+            border-radius: 12px;
+
+            font-weight: 600;
+
+            padding: 10px 18px;
+
+        }
+
+
+        /* =====================================================
+           TABELA
+        ===================================================== */
+
+        .tabela-container {
+
+            border-radius: 18px;
+
+            overflow: hidden;
+
+            border: 1px solid #e3e9f2;
+
+            background: white;
+
+        }
+
+
+        .tabela-container table {
+
+            margin: 0;
+
+        }
+
+
+        .tabela-container thead th {
+
+            background: var(--azul-principal);
+
+            color: white;
+
+            border: none;
+
+            padding: 15px 12px;
+
+            font-weight: 600;
+
+            white-space: nowrap;
+
+        }
+
+
+        .tabela-container tbody td {
+
+            padding: 14px 12px;
+
+            vertical-align: middle;
+
+            border-color: #edf1f6;
+
+        }
+
+
+        .tabela-container tbody tr {
+
+            transition: .2s;
+
+        }
+
+
+        .tabela-container tbody tr:hover {
+
+            background: #f5f9ff;
+
+        }
+
+
+        /* =====================================================
+           NOME
+        ===================================================== */
+
+        .nome-funcionario {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            font-weight: 600;
+
+        }
+
+
+        .icone-funcionario {
+
+            width: 34px;
+
+            height: 34px;
+
+            border-radius: 10px;
+
+            background: #e8f3ff;
+
+            color: var(--azul-principal);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+        }
+
+
+        /* =====================================================
+           FUNÇÃO
+        ===================================================== */
+
+        .badge-funcao {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            background: #e8f3ff;
+
+            color: var(--azul-principal);
+
+            padding: 7px 11px;
+
+            border-radius: 20px;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            white-space: nowrap;
+
+        }
+
+
+        /* =====================================================
+           ESTADO VAZIO
+        ===================================================== */
+
+        .estado-vazio {
+
+            padding: 35px 20px;
+
+        }
+
+
+        .icone-vazio {
+
+            width: 70px;
+
+            height: 70px;
+
+            border-radius: 50%;
+
+            background: #e8f3ff;
+
+            color: #8bbcf5;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            margin: 0 auto 15px;
+
+            font-size: 32px;
+
+        }
+
+
+        .estado-vazio h4 {
+
+            color: #34495e;
+
+            font-weight: 700;
+
+            margin-bottom: 7px;
+
+        }
+
+
+        /* =====================================================
+           RESPONSIVIDADE
+        ===================================================== */
+
+        @media (max-width: 768px) {
+
+            .container-principal {
+
+                padding: 15px 10px 30px;
+
+            }
+
+
+            .card-principal {
+
+                padding: 20px;
+
+                border-radius: 18px;
+
+            }
+
+
+            .info-card {
+
+                padding: 22px;
+
+            }
+
+
+            .titulo {
+
+                font-size: 26px;
+
+            }
+
+
+            .area-acoes {
+
+                align-items: stretch;
+
+            }
+
+
+            .grupo-acoes {
+
+                width: 100%;
+
+            }
+
+
+            .grupo-acoes a {
+
+                flex: 1;
+
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -524,401 +1002,460 @@ body {
 <body>
 
 
-<div class="container">
-
-
 <div class="container-principal">
 
+    <div class="card-principal">
 
-<!-- =====================================================
-     CABEÇALHO
-===================================================== -->
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- =====================================================
+             CABEÇALHO
+        ====================================================== -->
 
-<div>
+        <div class="info-card">
 
-<h2 class="titulo">
+            <h2>
 
-<i class="bi bi-people"></i>
+                <i class="bi bi-people-fill"></i>
 
-Funcionários
+                Gestão de Funcionários
 
-</h2>
+            </h2>
 
-<div class="subtitulo">
+            <p class="mb-0">
 
-Cadastro e gerenciamento dos profissionais do hospital
+                Cadastro, consulta e gerenciamento dos profissionais
+                do hospital.
 
-</div>
+            </p>
 
-</div>
+        </div>
 
 
-<a
-    href="dashboard.php"
-    class="btn btn-secondary"
->
+        <!-- =====================================================
+             TÍTULO
+        ====================================================== -->
 
-<i class="bi bi-arrow-left"></i>
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
-Voltar
+            <div>
 
-</a>
+                <h1 class="titulo">
 
-</div>
+                    <i class="bi bi-person-badge"></i>
 
+                    Funcionários
 
-<!-- =====================================================
-     CONTADOR
-===================================================== -->
+                </h1>
 
-<div class="row mb-4">
+                <p class="subtitulo mb-0">
 
-<div class="col-md-12">
+                    Consulte e gerencie os profissionais ativos do hospital.
 
-<div class="contador">
+                </p>
 
-<h2>
+            </div>
 
-<?= count($funcionarios) ?>
 
-</h2>
+            <a
+                href="dashboard.php"
+                class="btn btn-voltar"
+            >
 
-<p>
+                <i class="bi bi-arrow-left"></i>
 
-Funcionários ativos
+                Voltar ao Menu
 
-</p>
+            </a>
 
-</div>
+        </div>
 
-</div>
 
-</div>
+        <!-- =====================================================
+             CONTADOR
+        ====================================================== -->
 
+        <div class="row mb-4">
 
-<!-- =====================================================
-     PESQUISA E FILTRO
-===================================================== -->
+            <div class="col-md-12">
 
-<form
-    method="GET"
-    class="row g-2 mb-4"
->
+                <div class="contador">
 
+                    <div class="icone-contador">
 
-<div class="col-md-7">
+                        <i class="bi bi-people-fill"></i>
 
-<input
+                    </div>
 
-    type="text"
+                    <h2>
 
-    name="pesquisa"
+                        <?= count($funcionarios) ?>
 
-    class="form-control form-control-lg"
+                    </h2>
 
-    placeholder="Pesquisar por nome, CPF, registro, telefone ou e-mail..."
+                    <p>
 
-    value="<?= htmlspecialchars($pesquisa) ?>"
+                        Funcionários ativos
 
->
+                    </p>
 
-</div>
+                </div>
 
+            </div>
 
-<div class="col-md-3">
+        </div>
 
-<select
-    name="funcao"
-    class="form-select form-select-lg"
->
 
-<option value="">
-    Todas as funções
-</option>
+        <!-- =====================================================
+             PESQUISA E FILTRO
+        ====================================================== -->
 
-<option
-    value="Médico"
-    <?= $funcao === 'Médico' ? 'selected' : '' ?>
->
-    Médico
-</option>
+        <form
+            method="GET"
+            class="row g-2 mb-4"
+        >
 
-<option
-    value="Enfermeiro"
-    <?= $funcao === 'Enfermeiro' ? 'selected' : '' ?>
->
-    Enfermeiro
-</option>
+            <div class="col-md-7">
 
-<option
-    value="Farmacêutico"
-    <?= $funcao === 'Farmacêutico' ? 'selected' : '' ?>
->
-    Farmacêutico
-</option>
+                <input
+                    type="text"
+                    name="pesquisa"
+                    class="form-control campo-pesquisa"
+                    placeholder="Pesquisar por nome, CPF, registro, telefone ou e-mail..."
+                    value="<?= htmlspecialchars($pesquisa) ?>"
+                >
 
-<option
-    value="Cirurgião"
-    <?= $funcao === 'Cirurgião' ? 'selected' : '' ?>
->
-    Cirurgião
-</option>
+            </div>
 
-<option
-    value="Anestesista"
-    <?= $funcao === 'Anestesista' ? 'selected' : '' ?>
->
-    Anestesista
-</option>
 
-</select>
+            <div class="col-md-3">
 
-</div>
+                <select
+                    name="funcao"
+                    class="form-select campo-funcao"
+                >
 
+                    <option value="">
+                        Todas as funções
+                    </option>
 
-<div class="col-md-2">
+                    <option
+                        value="Médico"
+                        <?= $funcao === 'Médico' ? 'selected' : '' ?>
+                    >
+                        Médico
+                    </option>
 
-<button
-    type="submit"
-    class="btn btn-principal btn-lg w-100"
->
+                    <option
+                        value="Enfermeiro"
+                        <?= $funcao === 'Enfermeiro' ? 'selected' : '' ?>
+                    >
+                        Enfermeiro
+                    </option>
 
-<i class="bi bi-search"></i>
+                    <option
+                        value="Farmacêutico"
+                        <?= $funcao === 'Farmacêutico' ? 'selected' : '' ?>
+                    >
+                        Farmacêutico
+                    </option>
 
-Buscar
+                    <option
+                        value="Cirurgião"
+                        <?= $funcao === 'Cirurgião' ? 'selected' : '' ?>
+                    >
+                        Cirurgião
+                    </option>
 
-</button>
+                    <option
+                        value="Anestesista"
+                        <?= $funcao === 'Anestesista' ? 'selected' : '' ?>
+                    >
+                        Anestesista
+                    </option>
 
-</div>
+                </select>
 
+            </div>
 
-</form>
 
+            <div class="col-md-2">
 
-<!-- =====================================================
-     BOTÕES
-===================================================== -->
+                <button
+                    type="submit"
+                    class="btn btn-principal w-100"
+                    style="min-height:46px;"
+                >
 
-<div class="mb-4">
+                    <i class="bi bi-search"></i>
 
+                    Buscar
 
-<a
-    href="funcionario_novo.php"
-    class="btn btn-principal"
->
+                </button>
 
-<i class="bi bi-person-plus"></i>
+            </div>
 
-Novo Funcionário
+        </form>
 
-</a>
 
+        <!-- =====================================================
+             BOTÕES
+        ====================================================== -->
 
-<a
-    href="funcionarios_desativados.php"
-    class="btn btn-outline-danger"
->
+        <div class="area-acoes">
 
-<i class="bi bi-person-x"></i>
+            <div class="grupo-acoes">
 
-Funcionários Desativados
+                <a
+                    href="funcionario_novo.php"
+                    class="btn btn-principal"
+                >
 
-</a>
+                    <i class="bi bi-person-plus"></i>
 
+                    Novo Funcionário
 
-</div>
+                </a>
 
 
-<!-- =====================================================
-     TABELA
-===================================================== -->
+                <a
+                    href="funcionarios_desativados.php"
+                    class="btn btn-outline-danger btn-desativados"
+                >
 
-<div class="table-responsive">
+                    <i class="bi bi-person-x"></i>
 
+                    Funcionários Desativados
 
-<table class="table table-hover align-middle">
+                </a>
 
+            </div>
 
-<thead>
+        </div>
 
-<tr>
 
-<th>Nome</th>
+        <!-- =====================================================
+             TABELA
+        ====================================================== -->
 
-<th>Função</th>
+        <div class="table-responsive tabela-container">
 
-<th>Registro</th>
+            <table class="table table-hover align-middle mb-0">
 
-<th>Telefone</th>
+                <thead>
 
-<th>E-mail</th>
+                    <tr>
 
-<th width="160">Ações</th>
+                        <th>Nome</th>
 
-</tr>
+                        <th>Função</th>
 
-</thead>
+                        <th>Registro</th>
 
+                        <th>Telefone</th>
 
-<tbody>
+                        <th>E-mail</th>
 
+                        <th width="160">Ações</th>
 
-<?php if (count($funcionarios) > 0): ?>
+                    </tr>
 
+                </thead>
 
-<?php foreach ($funcionarios as $f): ?>
 
+                <tbody>
 
-<tr>
 
+                <?php if (count($funcionarios) > 0): ?>
 
-<!-- NOME -->
 
-<td>
+                    <?php foreach ($funcionarios as $f): ?>
 
-<strong>
 
-<?= htmlspecialchars($f['nome']) ?>
+                        <tr>
 
-</strong>
 
-</td>
+                            <!-- NOME -->
 
+                            <td>
 
-<!-- FUNÇÃO -->
+                                <div class="nome-funcionario">
 
-<td>
+                                    <div class="icone-funcionario">
 
-<span class="badge-funcao">
+                                        <i class="bi bi-person"></i>
 
-<?= htmlspecialchars($f['funcao']) ?>
+                                    </div>
 
-</span>
+                                    <strong>
 
-</td>
+                                        <?= htmlspecialchars($f['nome']) ?>
 
+                                    </strong>
 
-<!-- REGISTRO -->
+                                </div>
 
-<td>
+                            </td>
 
-<?= htmlspecialchars($f['registro'] ?? 'Não informado') ?>
 
-</td>
+                            <!-- FUNÇÃO -->
 
+                            <td>
 
-<!-- TELEFONE -->
+                                <span class="badge-funcao">
 
-<td>
+                                    <i class="bi bi-briefcase"></i>
 
-<?= htmlspecialchars($f['telefone'] ?? 'Não informado') ?>
+                                    <?= htmlspecialchars($f['funcao']) ?>
 
-</td>
+                                </span>
 
+                            </td>
 
-<!-- EMAIL -->
 
-<td>
+                            <!-- REGISTRO -->
 
-<?= htmlspecialchars($f['email'] ?? 'Não informado') ?>
+                            <td>
 
-</td>
+                                <?= htmlspecialchars(
+                                    $f['registro'] ?? 'Não informado'
+                                ) ?>
 
+                            </td>
 
-<!-- AÇÕES -->
 
-<td>
+                            <!-- TELEFONE -->
 
-<div class="d-flex gap-2">
+                            <td>
 
-    <!-- VISUALIZAR -->
+                                <?= htmlspecialchars(
+                                    $f['telefone'] ?? 'Não informado'
+                                ) ?>
 
-    <a
-        href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-        class="btn btn-sm btn-outline-secondary"
-        title="Visualizar"
-    >
+                            </td>
 
-        <i class="bi bi-eye"></i>
 
-    </a>
+                            <!-- EMAIL -->
 
+                            <td>
 
-    <!-- EDITAR -->
+                                <?= htmlspecialchars(
+                                    $f['email'] ?? 'Não informado'
+                                ) ?>
 
-    <a
-        href="funcionario_editar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-        class="btn btn-editar btn-sm"
-        title="Editar"
-    >
+                            </td>
 
-        <i class="bi bi-pencil-square"></i>
 
-    </a>
+                            <!-- AÇÕES -->
 
+                            <td>
 
-    <!-- DESATIVAR -->
+                                <div class="d-flex gap-2">
 
-    <a
-        href="funcionario_desativar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-        class="btn btn-sm btn-outline-danger"
-        title="Desativar"
-        onclick="return confirm('Deseja realmente desativar este funcionário?');"
-    >
 
-        <i class="bi bi-person-dash"></i>
+                                    <!-- VISUALIZAR -->
 
-    </a>
+                                    <a
+                                        href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+                                        class="btn btn-visualizar"
+                                        title="Visualizar funcionário"
+                                    >
 
-</div>
+                                        <i class="bi bi-eye"></i>
 
-</td>
+                                    </a>
 
 
-</tr>
+                                    <!-- EDITAR -->
 
+                                    <a
+                                        href="funcionario_editar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+                                        class="btn btn-editar"
+                                        title="Editar funcionário"
+                                    >
 
-<?php endforeach; ?>
+                                        <i class="bi bi-pencil-square"></i>
 
+                                    </a>
 
-<?php else: ?>
 
+                                    <!-- DESATIVAR -->
 
-<tr>
+                                    <a
+                                        href="funcionario_desativar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+                                        class="btn btn-desativar"
+                                        title="Desativar funcionário"
+                                        onclick="return confirm('Deseja realmente desativar este funcionário?');"
+                                    >
 
-<td
-    colspan="6"
-    class="text-center text-muted py-4"
->
+                                        <i class="bi bi-person-dash"></i>
 
-<i class="bi bi-search"></i>
+                                    </a>
 
-Nenhum funcionário encontrado.
 
-</td>
+                                </div>
 
-</tr>
+                            </td>
 
 
-<?php endif; ?>
+                        </tr>
 
 
-</tbody>
+                    <?php endforeach; ?>
 
-</table>
 
-</div>
+                <?php else: ?>
 
 
-</div>
+                    <tr>
 
-</div>
+                        <td
+                            colspan="6"
+                            class="text-center"
+                        >
+
+                            <div class="estado-vazio">
+
+                                <div class="icone-vazio">
+
+                                    <i class="bi bi-people"></i>
+
+                                </div>
+
+                                <h4>
+
+                                    Nenhum funcionário encontrado.
+
+                                </h4>
+
+                                <p class="text-muted mb-0">
+
+                                    Tente alterar os filtros ou realizar
+                                    uma nova pesquisa.
+
+                                </p>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                <?php endif; ?>
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
 
 
 </body>
 
 </html>
-
-funcionarios.php
