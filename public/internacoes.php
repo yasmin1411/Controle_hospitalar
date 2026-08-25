@@ -942,41 +942,58 @@ font-size: 14px;
              TÍTULO + NOVA INTERNAÇÃO
         ======================================================= -->
 
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+
+<div>
+
+    <h1 class="titulo">
+
+        <i class="bi bi-person-badge"></i>
+
+        Controle de Internações
+
+    </h1>
+
+    <p class="subtitulo mb-0">
+
+        Cadastro, acompanhamento e controle dos pacientes internados.
+
+    </p>
+
+</div>
+
+<div class="d-flex gap-2">
+
+<!-- VOLTAR AO MENU -->
+
+<a
+        href="dashboard.php"
+        class="btn btn-secondary btn-voltar"
+    >
+
+        <i class="bi bi-arrow-left"></i>
+
+        Voltar ao Menu
+
+    </a>
+
+    <!-- NOVA INTERNAÇÃO -->
+
+    <a
+        href="internacao_cadastrar.php"
+        class="btn btn-azul"
+    >
+
+        <i class="bi bi-plus-circle"></i>
+
+        Nova Internação
+
+    </a>
 
 
-            <div>
+</div>
 
-                <h1 class="titulo">
-
-                    <i class="bi bi-person-badge"></i>
-
-                    Controle de Internações
-
-                </h1>
-
-                <p class="subtitulo mb-0">
-
-                    Cadastro, acompanhamento e controle dos pacientes internados.
-
-                </p>
-
-            </div>
-
-
-            <a
-                href="internacao_cadastrar.php"
-                class="btn btn-azul"
-            >
-
-                <i class="bi bi-plus-circle"></i>
-
-                Nova Internação
-
-            </a>
-
-
-        </div>
+</div>
 
 
         <!-- ======================================================
@@ -1474,32 +1491,6 @@ font-size: 14px;
             </table>
 
         </div>
-
-
-        <!-- ======================================================
-             VOLTAR
-        ======================================================= -->
-
-        <div class="mt-4">
-
-            <a
-                href="dashboard.php"
-                class="btn btn-secondary btn-voltar"
-            >
-
-                <i class="bi bi-arrow-left"></i>
-
-                Voltar ao Menu
-
-            </a>
-
-        </div>
-
-
-    </div>
-
-</div>
-
 
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
