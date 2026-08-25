@@ -1,10 +1,19 @@
 <?php
 
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../config/database.php';
+require_once '../includes/auth.php';
+require_once '../config/database.php';
+
+
+/*
+|--------------------------------------------------------------------------
+| VERIFICAR MÉTODO
+|--------------------------------------------------------------------------
+*/
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    exit('Acesso inválido.');
+
+    exit("Acesso inválido.");
+
 }
 
 
@@ -15,10 +24,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 */
 
 $nome = trim($_POST['nome'] ?? '');
+
 $funcao = trim($_POST['funcao'] ?? '');
+
 $registro = trim($_POST['registro'] ?? '');
+
 $telefone = trim($_POST['telefone'] ?? '');
+
 $email = trim($_POST['email'] ?? '');
+
 $cpf = trim($_POST['cpf'] ?? '');
 
 $data_nascimento = !empty($_POST['data_nascimento'])
@@ -26,6 +40,7 @@ $data_nascimento = !empty($_POST['data_nascimento'])
     : null;
 
 $sexo = trim($_POST['sexo'] ?? '');
+
 $status = trim($_POST['status'] ?? '');
 
 
@@ -36,25 +51,14 @@ $status = trim($_POST['status'] ?? '');
 */
 
 $rua = trim($_POST['rua'] ?? '');
+
 $numero = trim($_POST['numero'] ?? '');
+
 $cep = trim($_POST['cep'] ?? '');
+
 $cidade = trim($_POST['cidade'] ?? '');
+
 $complemento = trim($_POST['complemento'] ?? '');
-
-
-/*
-|--------------------------------------------------------------------------
-| FUNÇÕES PERMITIDAS
-|--------------------------------------------------------------------------
-*/
-
-$funcoesPermitidas = [
-    'Médico',
-    'Enfermeiro',
-    'Farmacêutico',
-    'Cirurgião',
-    'Anestesista'
-];
 
 
 /*
@@ -64,37 +68,6 @@ $funcoesPermitidas = [
 */
 
 if ($nome === '') {
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-    exit('O nome é obrigatório.');
-}
-
-if (!in_array($funcao, $funcoesPermitidas, true)) {
-    exit('Função inválida.');
-}
-
-if ($registro === '') {
-    exit('O registro profissional é obrigatório.');
-}
-
-if ($status !== 'Ativo' && $status !== 'Inativo') {
-    exit('Status inválido.');
-}
-
-if ($rua === '') {
-    exit('A rua é obrigatória.');
-}
-
-if ($numero === '') {
-    exit('O número é obrigatório.');
-}
-
-if ($cep === '') {
-    exit('O CEP é obrigatório.');
-}
-
-if ($cidade === '') {
-    exit('A cidade é obrigatória.');
-=======
 
     exit("O nome é obrigatório.");
 
@@ -140,19 +113,15 @@ if ($cidade === '') {
 
     exit("A cidade é obrigatória.");
 
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| DEFINIR ATIVO
+| DEFINIR TABELA E CAMPO DO REGISTRO
 |--------------------------------------------------------------------------
 */
 
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-$ativo = ($status === 'Ativo') ? 1 : 0;
-=======
 switch ($funcao) {
 
 
@@ -206,16 +175,11 @@ switch ($funcao) {
         exit("Função inválida.");
 
 }
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
 
 
 /*
 |--------------------------------------------------------------------------
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-| CADASTRAR
-=======
 | PROCESSAMENTO
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
 |--------------------------------------------------------------------------
 */
 
@@ -341,31 +305,12 @@ try {
         )
 
         VALUES
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-        (
-            :rua,
-            :numero,
-            :cep,
-            :cidade,
-            :complemento
-        )
-=======
         (?, ?, ?, ?, ?)
 
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
     ");
 
+
     $sqlEndereco->execute([
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-        ':rua' => $rua,
-        ':numero' => $numero,
-        ':cep' => $cep,
-        ':cidade' => $cidade,
-        ':complemento' => $complemento
-    ]);
-
-
-=======
 
         $rua,
         $numero,
@@ -382,20 +327,11 @@ try {
     |--------------------------------------------------------------------------
     */
 
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
     $endereco_id = $pdo->lastInsertId();
 
 
     /*
     |--------------------------------------------------------------------------
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-    | 2. CADASTRAR FUNCIONÁRIO
-    |--------------------------------------------------------------------------
-    */
-
-    $sqlFuncionario = $pdo->prepare("
-        INSERT INTO funcionario
-=======
     | 6. CADASTRAR FUNCIONÁRIO
     |--------------------------------------------------------------------------
     */
@@ -403,51 +339,19 @@ try {
     $sqlFuncionario = "
 
         INSERT INTO {$tabela}
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
         (
             nome,
-            funcao,
-            registro,
+            {$campo_registro},
             telefone,
             email,
             cpf,
             data_nascimento,
             sexo,
             status,
-            ativo,
             endereco_id
         )
 
         VALUES
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-        (
-            :nome,
-            :funcao,
-            :registro,
-            :telefone,
-            :email,
-            :cpf,
-            :data_nascimento,
-            :sexo,
-            :status,
-            :ativo,
-            :endereco_id
-        )
-    ");
-
-    $sqlFuncionario->execute([
-        ':nome' => $nome,
-        ':funcao' => $funcao,
-        ':registro' => $registro,
-        ':telefone' => $telefone,
-        ':email' => $email,
-        ':cpf' => $cpf,
-        ':data_nascimento' => $data_nascimento,
-        ':sexo' => $sexo,
-        ':status' => $status,
-        ':ativo' => $ativo,
-        ':endereco_id' => $endereco_id
-=======
         (?, ?, ?, ?, ?, ?, ?, ?, ?)
 
     ";
@@ -468,31 +372,17 @@ try {
         $status,
         $endereco_id
 
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
     ]);
 
 
     /*
     |--------------------------------------------------------------------------
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-    | 3. FINALIZAR
-=======
     | 7. CONFIRMAR
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
     |--------------------------------------------------------------------------
     */
 
     $pdo->commit();
 
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-    echo "
-        <script>
-            alert('Funcionário cadastrado com sucesso!');
-            window.location.href = 'funcionarios.php';
-        </script>
-    ";
-
-=======
 
     /*
     |--------------------------------------------------------------------------
@@ -508,14 +398,11 @@ try {
 
     </script>";
 
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
     exit;
 
 
 } catch (PDOException $e) {
 
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-=======
 
     /*
     |--------------------------------------------------------------------------
@@ -523,13 +410,12 @@ try {
     |--------------------------------------------------------------------------
     */
 
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
     if ($pdo->inTransaction()) {
+
         $pdo->rollBack();
+
     }
 
-<<<<<<< HEAD:public/funcionarios_cadastrar.php
-=======
 
     /*
     |--------------------------------------------------------------------------
@@ -561,9 +447,13 @@ try {
     |--------------------------------------------------------------------------
     */
 
->>>>>>> 637c9e1a4a17dfef8294c278b75b11d55e6d16b8:public/funcionario_cadastrar.php
     die(
-        'Erro ao cadastrar funcionário: ' .
-        htmlspecialchars($e->getMessage())
+        "Erro ao cadastrar funcionário: " .
+        $e->getMessage()
     );
+
 }
+
+?>
+
+funcionario_cadastrar.php
