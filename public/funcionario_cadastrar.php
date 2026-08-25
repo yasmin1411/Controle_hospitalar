@@ -68,35 +68,51 @@ $complemento = trim($_POST['complemento'] ?? '');
 */
 
 if ($nome === '') {
+
     exit("O nome é obrigatório.");
+
 }
 
 if ($funcao === '') {
+
     exit("A função é obrigatória.");
+
 }
 
 if ($registro === '') {
+
     exit("O registro profissional é obrigatório.");
+
 }
 
 if ($status === '') {
+
     exit("O status é obrigatório.");
+
 }
 
 if ($rua === '') {
+
     exit("A rua é obrigatória.");
+
 }
 
 if ($numero === '') {
+
     exit("O número é obrigatório.");
+
 }
 
 if ($cep === '') {
+
     exit("O CEP é obrigatório.");
+
 }
 
 if ($cidade === '') {
+
     exit("A cidade é obrigatória.");
+
 }
 
 
@@ -108,9 +124,11 @@ if ($cidade === '') {
 
 switch ($funcao) {
 
+
     case 'Médico':
 
         $tabela = 'medico';
+
         $campo_registro = 'crm';
 
         break;
@@ -119,6 +137,7 @@ switch ($funcao) {
     case 'Enfermeiro':
 
         $tabela = 'enfermeiro';
+
         $campo_registro = 'coren';
 
         break;
@@ -127,6 +146,7 @@ switch ($funcao) {
     case 'Farmacêutico':
 
         $tabela = 'farmaceutico';
+
         $campo_registro = 'crf';
 
         break;
@@ -135,6 +155,7 @@ switch ($funcao) {
     case 'Cirurgião':
 
         $tabela = 'cirurgiao';
+
         $campo_registro = 'crm';
 
         break;
@@ -143,6 +164,7 @@ switch ($funcao) {
     case 'Anestesista':
 
         $tabela = 'anestesista';
+
         $campo_registro = 'crm';
 
         break;
@@ -157,22 +179,122 @@ switch ($funcao) {
 
 /*
 |--------------------------------------------------------------------------
-| INICIAR TRANSAÇÃO
+| PROCESSAMENTO
 |--------------------------------------------------------------------------
 */
 
 try {
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | 1. VERIFICAR REGISTRO PROFISSIONAL
+    |--------------------------------------------------------------------------
+    */
+
+    $sqlVerificaRegistro = $pdo->prepare("
+        SELECT id, nome
+        FROM {$tabela}
+        WHERE {$campo_registro} = ?
+        LIMIT 1
+    ");
+
+    $sqlVerificaRegistro->execute([
+        $registro
+    ]);
+
+    $funcionarioExistente = $sqlVerificaRegistro->fetch(PDO::FETCH_ASSOC);
+
+
+    if ($funcionarioExistente) {
+
+        echo "<script>
+
+            alert(
+                'Não foi possível cadastrar este funcionário.\\n\\n" .
+                addslashes($campo_registro) .
+                " " .
+                addslashes($registro) .
+                " já está cadastrado para: " .
+                addslashes($funcionarioExistente['nome']) .
+                ".'
+            );
+
+            window.history.back();
+
+        </script>";
+
+        exit;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | 2. VERIFICAR CPF
+    |--------------------------------------------------------------------------
+    |
+    | O CPF também possui UNIQUE nas suas tabelas.
+    | Só fazemos a verificação se ele foi preenchido.
+    |
+    */
+
+    if ($cpf !== '') {
+
+
+        $sqlVerificaCpf = $pdo->prepare("
+            SELECT id, nome
+            FROM {$tabela}
+            WHERE cpf = ?
+            LIMIT 1
+        ");
+
+        $sqlVerificaCpf->execute([
+            $cpf
+        ]);
+
+        $funcionarioCpf = $sqlVerificaCpf->fetch(PDO::FETCH_ASSOC);
+
+
+        if ($funcionarioCpf) {
+
+            echo "<script>
+
+                alert(
+                    'Não foi possível cadastrar este funcionário.\\n\\n" .
+                    "O CPF informado já está cadastrado para: " .
+                    addslashes($funcionarioCpf['nome']) .
+                    ".'
+                );
+
+                window.history.back();
+
+            </script>";
+
+            exit;
+
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | 3. INICIAR TRANSAÇÃO
+    |--------------------------------------------------------------------------
+    */
 
     $pdo->beginTransaction();
 
 
     /*
     |--------------------------------------------------------------------------
-    | 1. CADASTRAR ENDEREÇO
+    | 4. CADASTRAR ENDEREÇO
     |--------------------------------------------------------------------------
     */
 
     $sqlEndereco = $pdo->prepare("
+
         INSERT INTO endereco
         (
             rua,
@@ -181,23 +303,27 @@ try {
             cidade,
             complemento
         )
+
         VALUES
         (?, ?, ?, ?, ?)
+
     ");
 
 
     $sqlEndereco->execute([
+
         $rua,
         $numero,
         $cep,
         $cidade,
         $complemento
+
     ]);
 
 
     /*
     |--------------------------------------------------------------------------
-    | 2. PEGAR ID DO ENDEREÇO
+    | 5. PEGAR ID DO ENDEREÇO
     |--------------------------------------------------------------------------
     */
 
@@ -206,11 +332,12 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | 3. CADASTRAR FUNCIONÁRIO
+    | 6. CADASTRAR FUNCIONÁRIO
     |--------------------------------------------------------------------------
     */
 
     $sqlFuncionario = "
+
         INSERT INTO {$tabela}
         (
             nome,
@@ -223,8 +350,10 @@ try {
             status,
             endereco_id
         )
+
         VALUES
         (?, ?, ?, ?, ?, ?, ?, ?, ?)
+
     ";
 
 
@@ -232,6 +361,7 @@ try {
 
 
     $stmt->execute([
+
         $nome,
         $registro,
         $telefone,
@@ -241,23 +371,34 @@ try {
         $sexo,
         $status,
         $endereco_id
+
     ]);
 
 
     /*
     |--------------------------------------------------------------------------
-    | 4. CONFIRMAR TRANSAÇÃO e FINALIZAR
+    | 7. CONFIRMAR
     |--------------------------------------------------------------------------
     */
 
     $pdo->commit();
 
-echo "<script>
-    alert('Funcionário cadastrado com sucesso!');
-    window.location.href = 'funcionarios.php';
-</script>";
 
-exit;
+    /*
+    |--------------------------------------------------------------------------
+    | 8. SUCESSO
+    |--------------------------------------------------------------------------
+    */
+
+    echo "<script>
+
+        alert('Funcionário cadastrado com sucesso!');
+
+        window.location.href = 'funcionarios.php';
+
+    </script>";
+
+    exit;
 
 
 } catch (PDOException $e) {
@@ -265,7 +406,7 @@ exit;
 
     /*
     |--------------------------------------------------------------------------
-    | DESFAZER TRANSAÇÃO EM CASO DE ERRO
+    | DESFAZER TRANSAÇÃO
     |--------------------------------------------------------------------------
     */
 
@@ -275,6 +416,36 @@ exit;
 
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRATAMENTO DE DUPLICIDADE
+    |--------------------------------------------------------------------------
+    */
+
+    if ($e->getCode() == 23000) {
+
+        echo "<script>
+
+            alert(
+                'Não foi possível cadastrar o funcionário.\\n\\n' +
+                'O registro profissional ou CPF informado já está cadastrado.'
+            );
+
+            window.history.back();
+
+        </script>";
+
+        exit;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | OUTROS ERROS
+    |--------------------------------------------------------------------------
+    */
 
     die(
         "Erro ao cadastrar funcionário: " .

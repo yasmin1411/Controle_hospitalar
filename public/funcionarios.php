@@ -833,26 +833,44 @@ Funcionários Desativados
 
 <div class="d-flex gap-2">
 
+    <!-- VISUALIZAR -->
 
-<a
-    href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-    class="btn btn-sm btn-outline-secondary"
->
+    <a
+        href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+        class="btn btn-sm btn-outline-secondary"
+        title="Visualizar"
+    >
 
-<i class="bi bi-eye"></i>
+        <i class="bi bi-eye"></i>
 
-</a>
+    </a>
 
 
-<a
-    href="funcionario_editar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-    class="btn btn-editar btn-sm"
->
+    <!-- EDITAR -->
 
-<i class="bi bi-pencil-square"></i>
+    <a
+        href="funcionario_editar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+        class="btn btn-editar btn-sm"
+        title="Editar"
+    >
 
-</a>
+        <i class="bi bi-pencil-square"></i>
 
+    </a>
+
+
+    <!-- DESATIVAR -->
+
+    <a
+        href="funcionario_desativar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+        class="btn btn-sm btn-outline-danger"
+        title="Desativar"
+        onclick="return confirm('Deseja realmente desativar este funcionário?');"
+    >
+
+        <i class="bi bi-person-dash"></i>
+
+    </a>
 
 </div>
 
