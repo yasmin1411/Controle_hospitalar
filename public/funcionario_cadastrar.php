@@ -456,4 +456,3 @@ try {
 
 ?>
 
-funcionario_cadastrar.php
