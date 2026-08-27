@@ -10,7 +10,11 @@ require_once '../config/database.php';
 |--------------------------------------------------------------------------
 */
 
-$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+$id = filter_input(
+    INPUT_GET,
+    'id',
+    FILTER_VALIDATE_INT
+);
 
 $tabela = $_GET['tabela'] ?? '';
 
@@ -60,22 +64,44 @@ if (!in_array($tabela, $tabelasPermitidas, true)) {
 
 try {
 
+
     /*
-    |----------------------------------------------------------------------
-    | Verificar se o funcionário realmente existe
-    |----------------------------------------------------------------------
+    |--------------------------------------------------------------------------
+    | VERIFICAR SE O FUNCIONÁRIO EXISTE
+    |--------------------------------------------------------------------------
     */
 
     $sql = $pdo->prepare("
-        SELECT id, nome, status
+
+        SELECT
+            id,
+            nome,
+            status
+
         FROM {$tabela}
+
         WHERE id = ?
+
     ");
 
-    $sql->execute([$id]);
 
-    $funcionario = $sql->fetch(PDO::FETCH_ASSOC);
+    $sql->execute([
 
+        $id
+
+    ]);
+
+
+    $funcionario = $sql->fetch(
+        PDO::FETCH_ASSOC
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FUNCIONÁRIO NÃO ENCONTRADO
+    |--------------------------------------------------------------------------
+    */
 
     if (!$funcionario) {
 
@@ -85,46 +111,75 @@ try {
 
 
     /*
-    |----------------------------------------------------------------------
-    | Alterar status para Ativo
-    |----------------------------------------------------------------------
+    |--------------------------------------------------------------------------
+    | ALTERAR STATUS PARA ATIVO
+    |--------------------------------------------------------------------------
     */
 
     $sql = $pdo->prepare("
+
         UPDATE {$tabela}
+
         SET status = 'Ativo'
+
         WHERE id = ?
+
     ");
 
-    $sql->execute([$id]);
+
+    $sql->execute([
+
+        $id
+
+    ]);
 
 
     /*
-    |----------------------------------------------------------------------
-    | Verificar se a alteração realmente aconteceu
-    |----------------------------------------------------------------------
+    |--------------------------------------------------------------------------
+    | VERIFICAR SE A ALTERAÇÃO ACONTECEU
+    |--------------------------------------------------------------------------
     */
 
-    if ($sql->rowCount() === 0 && $funcionario['status'] !== 'Ativo') {
+    if (
+        $sql->rowCount() === 0
+        &&
+        $funcionario['status'] !== 'Ativo'
+    ) {
 
-        exit('Não foi possível reativar o funcionário.');
+        exit(
+            'Não foi possível reativar o funcionário.'
+        );
 
     }
 
 
     /*
-    |----------------------------------------------------------------------
-    | Mensagem e retorno
-    |----------------------------------------------------------------------
+    |--------------------------------------------------------------------------
+    | GUARDAR MENSAGEM DE SUCESSO NA SESSÃO
+    |--------------------------------------------------------------------------
+    |
+    | Não usamos mais alert().
+    | A mensagem será exibida de forma profissional
+    | na página funcionarios_desativados.php.
+    |
     */
 
-    echo "<script>
+    $_SESSION['sucesso_reativacao'] = [
 
-        alert('Funcionário reativado com sucesso!');
+        'nome' => $funcionario['nome']
 
-        window.location.href = 'funcionarios_desativados.php';
+    ];
 
-    </script>";
+
+    /*
+    |--------------------------------------------------------------------------
+    | VOLTAR PARA FUNCIONÁRIOS DESATIVADOS
+    |--------------------------------------------------------------------------
+    */
+
+    header(
+        'Location: funcionarios_desativados.php'
+    );
 
     exit;
 
@@ -132,8 +187,10 @@ try {
 } catch (PDOException $e) {
 
     die(
+
         'Erro ao reativar funcionário: ' .
         $e->getMessage()
+
     );
 
 }

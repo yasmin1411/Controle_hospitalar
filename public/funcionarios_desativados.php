@@ -8,11 +8,27 @@ $funcao = trim($_GET['funcao'] ?? '');
 
 $funcionarios = [];
 
+/*
+|--------------------------------------------------------------------------
+| MENSAGEM DE SUCESSO
+|--------------------------------------------------------------------------
+*/
+
+$mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+unset($_SESSION['mensagem_sucesso']);
+
+
+/*
+|--------------------------------------------------------------------------
+| BUSCAR FUNCIONÁRIOS DESATIVADOS
+|--------------------------------------------------------------------------
+*/
+
 try {
 
     /*
     |--------------------------------------------------------------------------
-    | MÉDICOS DESATIVADOS
+    | MÉDICOS
     |--------------------------------------------------------------------------
     */
 
@@ -43,7 +59,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | ENFERMEIROS DESATIVADOS
+    | ENFERMEIROS
     |--------------------------------------------------------------------------
     */
 
@@ -74,7 +90,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | FARMACÊUTICOS DESATIVADOS
+    | FARMACÊUTICOS
     |--------------------------------------------------------------------------
     */
 
@@ -105,7 +121,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | CIRURGIÕES DESATIVADOS
+    | CIRURGIÕES
     |--------------------------------------------------------------------------
     */
 
@@ -136,7 +152,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | ANESTESISTAS DESATIVADOS
+    | ANESTESISTAS
     |--------------------------------------------------------------------------
     */
 
@@ -178,7 +194,7 @@ try {
             function ($funcionario) use ($pesquisa) {
 
                 return
-                    stripos($funcionario['nome'], $pesquisa) !== false ||
+                    stripos($funcionario['nome'] ?? '', $pesquisa) !== false ||
                     stripos($funcionario['registro'] ?? '', $pesquisa) !== false ||
                     stripos($funcionario['cpf'] ?? '', $pesquisa) !== false ||
                     stripos($funcionario['email'] ?? '', $pesquisa) !== false ||
@@ -217,7 +233,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | ORDENAR
+    | ORDENAR POR NOME
     |--------------------------------------------------------------------------
     */
 
@@ -248,191 +264,1019 @@ try {
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
-<title>Funcionários Desativados</title>
+    <title>Funcionários Desativados</title>
 
-<link
-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-rel="stylesheet"
->
 
-<link
-rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
->
+    <!-- Bootstrap -->
 
-<style>
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-body {
 
-    background:#f4f6f9;
+    <!-- Bootstrap Icons -->
 
-    font-family:'Segoe UI', sans-serif;
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
 
-}
 
-.container-principal {
+    <style>
 
-    background:white;
+        :root {
 
-    border-radius:20px;
+            --vermelho: #b4232f;
+            --vermelho-escuro: #8f1822;
+            --vermelho-claro: #fff1f2;
 
-    padding:30px;
+            --verde: #198754;
+            --verde-claro: #ecfdf3;
 
-    margin-top:30px;
+            --azul: #2f80ed;
 
-    box-shadow:0 10px 30px rgba(0,0,0,.08);
+            --cinza-texto: #475467;
+            --cinza-claro: #f8fafc;
+            --borda: #e4e7ec;
 
-}
+        }
 
-.titulo {
 
-    color:#dc3545;
+        * {
+            box-sizing: border-box;
+        }
 
-    font-weight:700;
 
-}
+        body {
 
-.subtitulo {
+            margin: 0;
 
-    color:#6c757d;
+            min-height: 100vh;
 
-    font-size:14px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #eef5ff 0%,
+                    #f8fbff 50%,
+                    #eef5ff 100%
+                );
 
-}
+            font-family:
+                'Segoe UI',
+                Arial,
+                sans-serif;
 
-.total-box {
+            color: #1d2939;
 
-    background:#fff5f5;
+        }
 
-    border:1px solid #f5c2c7;
 
-    border-radius:15px;
+        .container-principal {
 
-    padding:20px;
+            background: #ffffff;
 
-    text-align:center;
+            border-radius: 24px;
 
-    margin:25px 0;
+            padding: 32px;
 
-}
+            margin-top: 35px;
+            margin-bottom: 35px;
 
-.total-box h2 {
+            box-shadow:
+                0 15px 45px rgba(16, 24, 40, .10);
 
-    color:#dc3545;
+            border: 1px solid rgba(255,255,255,.8);
 
-    font-weight:700;
+        }
 
-    margin:0;
 
-}
+        /*
+        |--------------------------------------------------------------------------
+        | CABEÇALHO
+        |--------------------------------------------------------------------------
+        */
 
-.table thead th {
+        .cabecalho {
 
-    background:#dc3545;
+            display: flex;
 
-    color:white;
+            justify-content: space-between;
 
-    border:none;
+            align-items: center;
 
-}
+            gap: 20px;
 
-.table tbody td {
+            margin-bottom: 25px;
 
-    vertical-align:middle;
+        }
 
-    padding:14px;
 
-}
+        .titulo-area {
 
-.badge-funcao {
+            display: flex;
 
-    background:#f1f5f9;
+            align-items: center;
 
-    color:#495057;
+            gap: 15px;
 
-    padding:7px 10px;
+        }
 
-    border-radius:15px;
 
-    font-size:12px;
+        .icone-titulo {
 
-}
+            width: 55px;
+            height: 55px;
 
-.btn-voltar {
+            display: flex;
 
-    background:#6c757d;
+            align-items: center;
+            justify-content: center;
 
-    color:white;
+            border-radius: 15px;
 
-    border:none;
+            background: var(--vermelho-claro);
 
-}
+            color: var(--vermelho);
 
-.btn-voltar:hover {
+            font-size: 25px;
 
-    background:#5c636a;
+        }
 
-    color:white;
 
-}
+        .titulo {
 
-.btn-reativar {
+            margin: 0;
 
-    background:#d1e7dd;
+            color: var(--vermelho);
 
-    color:#146c43;
+            font-size: 28px;
 
-    border:none;
+            font-weight: 750;
 
-    border-radius:8px;
+            letter-spacing: -.5px;
 
-}
+        }
 
-.btn-reativar:hover {
 
-    background:#198754;
+        .subtitulo {
 
-    color:white;
+            margin-top: 5px;
 
-}
+            color: #667085;
 
-</style>
+            font-size: 14px;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BOTÃO VOLTAR
+        |--------------------------------------------------------------------------
+        */
+
+        .btn-voltar {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            padding: 11px 18px;
+
+            border-radius: 10px;
+
+            background: #344054;
+
+            color: #ffffff;
+
+            border: none;
+
+            font-weight: 600;
+
+            transition: .2s;
+
+        }
+
+
+        .btn-voltar:hover {
+
+            background: #1d2939;
+
+            color: #ffffff;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ALERTA DE SUCESSO
+        |--------------------------------------------------------------------------
+        */
+
+        .alert-sucesso {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            background: var(--verde-claro);
+
+            border: 1px solid #a6f4c5;
+
+            color: #067647;
+
+            border-radius: 16px;
+
+            padding: 14px 18px;
+
+            margin-bottom: 25px;
+
+            animation: aparecer .35s ease;
+
+        }
+
+
+        .alert-icone {
+
+            width: 42px;
+            height: 42px;
+
+            min-width: 42px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background: #d1fadf;
+
+            color: #039855;
+
+            font-size: 21px;
+
+        }
+
+
+        .alert-conteudo {
+
+            flex: 1;
+
+        }
+
+
+        .alert-titulo {
+
+            font-weight: 700;
+
+            font-size: 16px;
+
+            margin-bottom: 3px;
+
+        }
+
+
+        .alert-texto {
+
+            font-size: 14px;
+
+            color: #344054;
+
+        }
+
+
+        .alert-fechar {
+
+            border: none;
+
+            background: transparent;
+
+            color: #039855;
+
+            font-size: 22px;
+
+            opacity: .8;
+
+            cursor: pointer;
+
+        }
+
+
+        .alert-fechar:hover {
+
+            opacity: 1;
+
+        }
+
+
+        @keyframes aparecer {
+
+            from {
+
+                opacity: 0;
+
+                transform: translateY(-10px);
+
+            }
+
+            to {
+
+                opacity: 1;
+
+                transform: translateY(0);
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        .total-box {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff7f7,
+                    #fff1f2
+                );
+
+            border: 1px solid #fecdd3;
+
+            border-radius: 18px;
+
+            padding: 22px;
+
+            text-align: center;
+
+            margin-bottom: 28px;
+
+        }
+
+
+        .total-numero {
+
+            color: var(--vermelho);
+
+            font-size: 34px;
+
+            font-weight: 750;
+
+            line-height: 1;
+
+        }
+
+
+        .total-texto {
+
+            color: #475467;
+
+            margin-top: 8px;
+
+            font-size: 14px;
+
+            font-weight: 500;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PESQUISA
+        |--------------------------------------------------------------------------
+        */
+
+        .area-filtros {
+
+            background: #f8fafc;
+
+            border: 1px solid var(--borda);
+
+            border-radius: 16px;
+
+            padding: 16px;
+
+            margin-bottom: 22px;
+
+        }
+
+
+        .form-control,
+        .form-select {
+
+            min-height: 48px;
+
+            border-radius: 10px;
+
+            border: 1px solid #d0d5dd;
+
+            font-size: 14px;
+
+            padding-left: 15px;
+
+        }
+
+
+        .form-control:focus,
+        .form-select:focus {
+
+            border-color: var(--vermelho);
+
+            box-shadow:
+                0 0 0 3px rgba(180,35,47,.10);
+
+        }
+
+
+        .btn-buscar {
+
+            min-height: 48px;
+
+            border-radius: 10px;
+
+            background: var(--vermelho);
+
+            border: none;
+
+            color: white;
+
+            font-weight: 650;
+
+            transition: .2s;
+
+        }
+
+
+        .btn-buscar:hover {
+
+            background: var(--vermelho-escuro);
+
+            color: white;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TABELA
+        |--------------------------------------------------------------------------
+        */
+
+        .tabela-container {
+
+            border: 1px solid var(--borda);
+
+            border-radius: 16px;
+
+            overflow: hidden;
+
+        }
+
+
+        .table {
+
+            margin: 0;
+
+        }
+
+
+        .table thead th {
+
+            background: var(--vermelho);
+
+            color: white;
+
+            border: none;
+
+            padding: 15px;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+
+        }
+
+
+        .table tbody td {
+
+            padding: 15px;
+
+            vertical-align: middle;
+
+            border-color: #eaecf0;
+
+            font-size: 14px;
+
+        }
+
+
+        .table tbody tr {
+
+            transition: .15s;
+
+        }
+
+
+        .table tbody tr:hover {
+
+            background: #fffafa;
+
+        }
+
+
+        .nome-funcionario {
+
+            font-weight: 700;
+
+            color: #101828;
+
+        }
+
+
+        .badge-funcao {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            padding: 7px 11px;
+
+            border-radius: 20px;
+
+            background: #f2f4f7;
+
+            color: #344054;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BOTÕES DE AÇÃO
+        |--------------------------------------------------------------------------
+        */
+
+        .acoes {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+        }
+
+
+        .btn-acao {
+
+            width: 40px;
+            height: 40px;
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            transition: .2s;
+
+        }
+
+
+        .btn-visualizar {
+
+            background: #f2f4f7;
+
+            color: #344054;
+
+            border: 1px solid #d0d5dd;
+
+        }
+
+
+        .btn-visualizar:hover {
+
+            background: #344054;
+
+            color: white;
+
+            border-color: #344054;
+
+        }
+
+
+        .btn-reativar {
+
+            background: #ecfdf3;
+
+            color: #067647;
+
+            border: 1px solid #abefc6;
+
+        }
+
+
+        .btn-reativar:hover {
+
+            background: #198754;
+
+            color: white;
+
+            border-color: #198754;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MODAL
+        |--------------------------------------------------------------------------
+        */
+
+        .modal-content {
+
+            border: none;
+
+            border-radius: 22px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 25px 70px rgba(16,24,40,.25);
+
+        }
+
+
+        .modal-header {
+
+            padding: 22px 25px;
+
+            border-bottom: 1px solid #eaecf0;
+
+            background: #ffffff;
+
+        }
+
+
+        .modal-titulo-area {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+        }
+
+
+        .modal-icone {
+
+            width: 48px;
+            height: 48px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 13px;
+
+            background: #ecfdf3;
+
+            color: #198754;
+
+            font-size: 22px;
+
+        }
+
+
+        .modal-titulo {
+
+            margin: 0;
+
+            font-size: 20px;
+
+            font-weight: 750;
+
+            color: #101828;
+
+        }
+
+
+        .modal-subtitulo {
+
+            margin: 3px 0 0;
+
+            color: #667085;
+
+            font-size: 13px;
+
+        }
+
+
+        .modal-body {
+
+            padding: 25px;
+
+        }
+
+
+        .alerta-confirmacao {
+
+            background: #fffaeb;
+
+            border: 1px solid #fedf89;
+
+            border-radius: 13px;
+
+            padding: 13px 15px;
+
+            display: flex;
+
+            gap: 11px;
+
+            align-items: flex-start;
+
+            margin-bottom: 20px;
+
+            color: #7a2e0b;
+
+            font-size: 13px;
+
+        }
+
+
+        .alerta-confirmacao i {
+
+            font-size: 18px;
+
+        }
+
+
+        .info-funcionario {
+
+            background: #f8fafc;
+
+            border: 1px solid #eaecf0;
+
+            border-radius: 16px;
+
+            padding: 18px;
+
+        }
+
+
+        .info-item {
+
+            padding: 10px 0;
+
+        }
+
+
+        .info-item:not(:last-child) {
+
+            border-bottom: 1px solid #eaecf0;
+
+        }
+
+
+        .info-label {
+
+            display: block;
+
+            color: #667085;
+
+            font-size: 11px;
+
+            text-transform: uppercase;
+
+            letter-spacing: .5px;
+
+            font-weight: 700;
+
+            margin-bottom: 3px;
+
+        }
+
+
+        .info-valor {
+
+            color: #101828;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            word-break: break-word;
+
+        }
+
+
+        .status-inativo {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            background: #fff1f2;
+
+            color: #b4232f;
+
+            padding: 5px 9px;
+
+            border-radius: 20px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+        }
+
+
+        .modal-footer {
+
+            padding: 18px 25px;
+
+            border-top: 1px solid #eaecf0;
+
+            background: #fafafa;
+
+        }
+
+
+        .btn-cancelar {
+
+            border: 1px solid #d0d5dd;
+
+            background: white;
+
+            color: #344054;
+
+            border-radius: 10px;
+
+            padding: 10px 18px;
+
+            font-weight: 600;
+
+        }
+
+
+        .btn-cancelar:hover {
+
+            background: #f2f4f7;
+
+        }
+
+
+        .btn-confirmar {
+
+            border: none;
+
+            background: #198754;
+
+            color: white;
+
+            border-radius: 10px;
+
+            padding: 10px 18px;
+
+            font-weight: 650;
+
+        }
+
+
+        .btn-confirmar:hover {
+
+            background: #157347;
+
+            color: white;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSIVIDADE
+        |--------------------------------------------------------------------------
+        */
+
+        @media (max-width: 768px) {
+
+            .container-principal {
+
+                padding: 20px;
+
+                margin-top: 15px;
+
+            }
+
+
+            .cabecalho {
+
+                align-items: flex-start;
+
+                flex-direction: column;
+
+            }
+
+
+            .btn-voltar {
+
+                width: 100%;
+
+                justify-content: center;
+
+            }
+
+
+            .titulo {
+
+                font-size: 23px;
+
+            }
+
+
+            .tabela-container {
+
+                overflow-x: auto;
+
+            }
+
+        }
+
+    </style>
 
 </head>
 
+
 <body>
+
 
 <div class="container">
 
-<div class="container-principal">
+    <div class="container-principal">
 
-    <!-- CABEÇALHO -->
 
-    <div class="d-flex justify-content-between align-items-center">
+        <!-- ==========================================================
+             CABEÇALHO
+        =========================================================== -->
 
-        <div>
+        <div class="cabecalho">
 
-            <h2 class="titulo">
+            <div class="titulo-area">
 
-                <i class="bi bi-person-x"></i>
+                <div class="icone-titulo">
 
-                Funcionários Desativados
+                    <i class="bi bi-person-x"></i>
 
-            </h2>
+                </div>
 
-            <div class="subtitulo">
+                <div>
 
-                Funcionários que não estão atualmente ativos no hospital.
+                    <h1 class="titulo">
+                        Funcionários Desativados
+                    </h1>
+
+                    <div class="subtitulo">
+                        Consulte e gerencie os funcionários que estão atualmente inativos no hospital.
+                    </div>
+
+                </div>
 
             </div>
 
-        </div>
-
-        <div>
 
             <a
                 href="funcionarios.php"
@@ -441,241 +1285,858 @@ body {
 
                 <i class="bi bi-arrow-left"></i>
 
-                Voltar
+                Voltar para funcionários
 
             </a>
 
         </div>
 
+
+
+        <!-- ==========================================================
+             MENSAGEM DE SUCESSO
+        =========================================================== -->
+
+        <?php if ($mensagemSucesso): ?>
+
+            <div
+                class="alert-sucesso"
+                id="alertaSucesso"
+            >
+
+                <div class="alert-icone">
+
+                    <i class="bi bi-check-lg"></i>
+
+                </div>
+
+
+                <div class="alert-conteudo">
+
+                    <div class="alert-titulo">
+                        Funcionário reativado com sucesso!
+                    </div>
+
+                    <div class="alert-texto">
+                        <?= htmlspecialchars($mensagemSucesso) ?>
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="alert-fechar"
+                    onclick="fecharAlerta()"
+                    aria-label="Fechar"
+                >
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+        <?php endif; ?>
+
+
+
+        <!-- ==========================================================
+             TOTAL
+        =========================================================== -->
+
+        <div class="total-box">
+
+            <div class="total-numero">
+                <?= count($funcionarios) ?>
+            </div>
+
+            <div class="total-texto">
+                Funcionários desativados
+            </div>
+
+        </div>
+
+
+
+        <!-- ==========================================================
+             FILTROS
+        =========================================================== -->
+
+        <div class="area-filtros">
+
+            <form
+                method="GET"
+                class="row g-2"
+            >
+
+                <div class="col-md-7">
+
+                    <input
+                        type="text"
+                        name="pesquisa"
+                        class="form-control"
+                        placeholder="Pesquisar por nome, CPF, registro, telefone ou e-mail..."
+                        value="<?= htmlspecialchars($pesquisa) ?>"
+                    >
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <select
+                        name="funcao"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Todas as funções
+                        </option>
+
+                        <option
+                            value="Médico"
+                            <?= $funcao === 'Médico' ? 'selected' : '' ?>
+                        >
+                            Médico
+                        </option>
+
+                        <option
+                            value="Enfermeiro"
+                            <?= $funcao === 'Enfermeiro' ? 'selected' : '' ?>
+                        >
+                            Enfermeiro
+                        </option>
+
+                        <option
+                            value="Farmacêutico"
+                            <?= $funcao === 'Farmacêutico' ? 'selected' : '' ?>
+                        >
+                            Farmacêutico
+                        </option>
+
+                        <option
+                            value="Cirurgião"
+                            <?= $funcao === 'Cirurgião' ? 'selected' : '' ?>
+                        >
+                            Cirurgião
+                        </option>
+
+                        <option
+                            value="Anestesista"
+                            <?= $funcao === 'Anestesista' ? 'selected' : '' ?>
+                        >
+                            Anestesista
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-buscar w-100"
+                    >
+
+                        <i class="bi bi-search me-1"></i>
+
+                        Buscar
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+
+        <!-- ==========================================================
+             TABELA
+        =========================================================== -->
+
+        <div class="tabela-container">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Nome</th>
+
+                            <th>Função</th>
+
+                            <th>Registro</th>
+
+                            <th>Telefone</th>
+
+                            <th>E-mail</th>
+
+                            <th>Ações</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    <?php if (count($funcionarios) > 0): ?>
+
+
+                        <?php foreach ($funcionarios as $f): ?>
+
+
+                            <tr>
+
+
+                                <!-- NOME -->
+
+                                <td>
+
+                                    <div class="nome-funcionario">
+
+                                        <?= htmlspecialchars($f['nome']) ?>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- FUNÇÃO -->
+
+                                <td>
+
+                                    <span class="badge-funcao">
+
+                                        <?= htmlspecialchars($f['funcao']) ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- REGISTRO -->
+
+                                <td>
+
+                                    <?= htmlspecialchars($f['registro'] ?? 'Não informado') ?>
+
+                                </td>
+
+
+                                <!-- TELEFONE -->
+
+                                <td>
+
+                                    <?= htmlspecialchars($f['telefone'] ?? 'Não informado') ?>
+
+                                </td>
+
+
+                                <!-- E-MAIL -->
+
+                                <td>
+
+                                    <?= htmlspecialchars($f['email'] ?? 'Não informado') ?>
+
+                                </td>
+
+
+                                <!-- AÇÕES -->
+
+                                <td>
+
+                                    <div class="acoes">
+
+
+                                        <!-- VISUALIZAR -->
+
+                                        <a
+                                            href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+                                            class="btn-acao btn-visualizar"
+                                            title="Visualizar funcionário"
+                                        >
+
+                                            <i class="bi bi-eye"></i>
+
+                                        </a>
+
+
+                                        <!-- REATIVAR -->
+
+                                        <button
+                                            type="button"
+                                            class="btn-acao btn-reativar"
+                                            title="Reativar funcionário"
+
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalReativar"
+
+                                            data-id="<?= htmlspecialchars($f['id']) ?>"
+
+                                            data-tabela="<?= htmlspecialchars($f['tabela_origem']) ?>"
+
+                                            data-nome="<?= htmlspecialchars($f['nome']) ?>"
+
+                                            data-funcao="<?= htmlspecialchars($f['funcao']) ?>"
+
+                                            data-registro="<?= htmlspecialchars($f['registro'] ?? 'Não informado') ?>"
+
+                                            data-telefone="<?= htmlspecialchars($f['telefone'] ?? 'Não informado') ?>"
+
+                                            data-email="<?= htmlspecialchars($f['email'] ?? 'Não informado') ?>"
+
+                                            data-cpf="<?= htmlspecialchars($f['cpf'] ?? 'Não informado') ?>"
+
+                                            data-nascimento="<?= htmlspecialchars($f['data_nascimento'] ?? 'Não informado') ?>"
+
+                                            data-sexo="<?= htmlspecialchars($f['sexo'] ?? 'Não informado') ?>"
+
+                                            data-endereco="<?= htmlspecialchars($f['endereco_id'] ?? 'Não informado') ?>"
+                                        >
+
+                                            <i class="bi bi-person-check"></i>
+
+                                        </button>
+
+
+                                    </div>
+
+                                </td>
+
+
+                            </tr>
+
+
+                        <?php endforeach; ?>
+
+
+                    <?php else: ?>
+
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                class="text-center py-5"
+                            >
+
+                                <div class="text-muted">
+
+                                    <i
+                                        class="bi bi-person-check"
+                                        style="font-size:38px;"
+                                    ></i>
+
+                                    <div class="mt-2 fw-semibold">
+
+                                        Nenhum funcionário desativado encontrado.
+
+                                    </div>
+
+                                    <small>
+
+                                        Não existem funcionários correspondentes aos filtros informados.
+
+                                    </small>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+
+                    <?php endif; ?>
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
     </div>
 
-
-    <!-- TOTAL -->
-
-    <div class="total-box">
-
-        <h2>
-
-            <?= count($funcionarios) ?>
-
-        </h2>
-
-        <div>
-
-            Funcionários desativados
-
-        </div>
-
-    </div>
+</div>
 
 
-    <!-- PESQUISA -->
 
-    <form method="GET" class="row g-2 mb-4">
+<!-- ==============================================================
+     MODAL DE CONFIRMAÇÃO DE REATIVAÇÃO
+================================================================ -->
 
-        <div class="col-md-7">
+<div
+    class="modal fade"
+    id="modalReativar"
+    tabindex="-1"
+    aria-hidden="true"
+>
 
-            <input
-                type="text"
-                name="pesquisa"
-                class="form-control"
-                placeholder="Pesquisar por nome, CPF, registro, telefone ou e-mail..."
-                value="<?= htmlspecialchars($pesquisa) ?>"
-            >
+    <div class="modal-dialog modal-dialog-centered modal-lg">
 
-        </div>
-
-        <div class="col-md-3">
-
-            <select
-                name="funcao"
-                class="form-select"
-            >
-
-                <option value="">
-                    Todas as funções
-                </option>
-
-                <option value="Médico"
-                    <?= $funcao === 'Médico' ? 'selected' : '' ?>>
-                    Médico
-                </option>
-
-                <option value="Enfermeiro"
-                    <?= $funcao === 'Enfermeiro' ? 'selected' : '' ?>>
-                    Enfermeiro
-                </option>
-
-                <option value="Farmacêutico"
-                    <?= $funcao === 'Farmacêutico' ? 'selected' : '' ?>>
-                    Farmacêutico
-                </option>
-
-                <option value="Cirurgião"
-                    <?= $funcao === 'Cirurgião' ? 'selected' : '' ?>>
-                    Cirurgião
-                </option>
-
-                <option value="Anestesista"
-                    <?= $funcao === 'Anestesista' ? 'selected' : '' ?>>
-                    Anestesista
-                </option>
-
-            </select>
-
-        </div>
-
-        <div class="col-md-2">
-
-            <button
-                type="submit"
-                class="btn btn-danger w-100"
-            >
-
-                <i class="bi bi-search"></i>
-
-                Buscar
-
-            </button>
-
-        </div>
-
-    </form>
+        <div class="modal-content">
 
 
-    <!-- TABELA -->
+            <!-- CABEÇALHO -->
 
-    <div class="table-responsive">
+            <div class="modal-header">
 
-        <table class="table table-hover">
+                <div class="modal-titulo-area">
 
-            <thead>
+                    <div class="modal-icone">
 
-                <tr>
+                        <i class="bi bi-person-check"></i>
 
-                    <th>Nome</th>
+                    </div>
 
-                    <th>Função</th>
+                    <div>
 
-                    <th>Registro</th>
+                        <h5 class="modal-titulo">
 
-                    <th>Telefone</th>
+                            Reativar funcionário
 
-                    <th>E-mail</th>
+                        </h5>
 
-                    <th>Ações</th>
+                        <p class="modal-subtitulo">
 
-                </tr>
+                            Confira os dados antes de confirmar a reativação.
 
-            </thead>
+                        </p>
 
-            <tbody>
+                    </div>
 
-            <?php if (count($funcionarios) > 0): ?>
+                </div>
 
-                <?php foreach ($funcionarios as $f): ?>
 
-                    <tr>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Fechar"
+                ></button>
 
-                        <td>
+            </div>
 
-                            <strong>
 
-                                <?= htmlspecialchars($f['nome']) ?>
 
-                            </strong>
+            <!-- CORPO -->
 
-                        </td>
+            <div class="modal-body">
 
-                        <td>
 
-                            <span class="badge-funcao">
+                <div class="alerta-confirmacao">
 
-                                <?= htmlspecialchars($f['funcao']) ?>
+                    <i class="bi bi-exclamation-triangle"></i>
+
+                    <div>
+
+                        <strong>Atenção:</strong>
+
+                        Você está prestes a reativar este funcionário.
+
+                        Após a confirmação, ele voltará a ser considerado
+                        <strong>ativo</strong> no hospital.
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- INFORMAÇÕES -->
+
+                <div class="info-funcionario">
+
+                    <div class="row">
+
+
+                        <!-- NOME -->
+
+                        <div class="col-md-8 info-item">
+
+                            <span class="info-label">
+                                Nome completo
+                            </span>
+
+                            <span
+                                class="info-valor"
+                                id="modalNome"
+                            >
+                            </span>
+
+                        </div>
+
+
+                        <!-- FUNÇÃO -->
+
+                        <div class="col-md-4 info-item">
+
+                            <span class="info-label">
+                                Função
+                            </span>
+
+                            <span
+                                class="info-valor"
+                                id="modalFuncao"
+                            >
+                            </span>
+
+                        </div>
+
+
+                        <!-- REGISTRO -->
+
+                        <div class="col-md-4 info-item">
+
+                            <span class="info-label">
+                                Registro profissional
+                            </span>
+
+                            <span
+                                class="info-valor"
+                                id="modalRegistro"
+                            >
+                            </span>
+
+                        </div>
+
+
+                        <!-- CPF -->
+
+                        <div class="col-md-4 info-item">
+
+                            <span class="info-label">
+                                CPF
+                            </span>
+
+                            <span
+                                class="info-valor"
+                                id="modalCpf"
+                            >
+                            </span>
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div class="col-md-4 info-item">
+
+                            <span class="info-label">
+                                Status atual
+                            </span>
+
+                            <span class="status-inativo">
+
+                                <i class="bi bi-circle-fill"></i>
+
+                                Inativo
 
                             </span>
 
-                        </td>
+                        </div>
 
-                        <td>
 
-                            <?= htmlspecialchars($f['registro']) ?>
+                        <!-- TELEFONE -->
 
-                        </td>
+                        <div class="col-md-6 info-item">
 
-                        <td>
+                            <span class="info-label">
+                                Telefone
+                            </span>
 
-                            <?= htmlspecialchars($f['telefone'] ?? '') ?>
+                            <span
+                                class="info-valor"
+                                id="modalTelefone"
+                            >
+                            </span>
 
-                        </td>
+                        </div>
 
-                        <td>
 
-                            <?= htmlspecialchars($f['email'] ?? '') ?>
+                        <!-- E-MAIL -->
 
-                        </td>
+                        <div class="col-md-6 info-item">
 
-                        <td>
+                            <span class="info-label">
+                                E-mail
+                            </span>
 
-                            <div class="d-flex gap-2">
+                            <span
+                                class="info-valor"
+                                id="modalEmail"
+                            >
+                            </span>
 
-                                <a
-                                    href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-                                    class="btn btn-sm btn-outline-secondary"
-                                    title="Visualizar"
-                                >
+                        </div>
 
-                                    <i class="bi bi-eye"></i>
 
-                                </a>
+                        <!-- DATA NASCIMENTO -->
 
-                                <a
-                                    href="funcionario_reativar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-                                    class="btn btn-reativar btn-sm"
-                                    title="Reativar"
-                                    onclick="return confirm('Deseja realmente reativar este funcionário?');"
-                                >
+                        <div class="col-md-4 info-item">
 
-                                    <i class="bi bi-person-check"></i>
+                            <span class="info-label">
+                                Data de nascimento
+                            </span>
 
-                                </a>
+                            <span
+                                class="info-valor"
+                                id="modalNascimento"
+                            >
+                            </span>
 
-                            </div>
+                        </div>
 
-                        </td>
 
-                    </tr>
+                        <!-- SEXO -->
 
-                <?php endforeach; ?>
+                        <div class="col-md-4 info-item">
 
-            <?php else: ?>
+                            <span class="info-label">
+                                Sexo
+                            </span>
 
-                <tr>
+                            <span
+                                class="info-valor"
+                                id="modalSexo"
+                            >
+                            </span>
 
-                    <td
-                        colspan="6"
-                        class="text-center text-muted py-4"
+                        </div>
+
+
+                        <!-- ENDEREÇO -->
+
+                        <div class="col-md-4 info-item">
+
+                            <span class="info-label">
+                                Endereço ID
+                            </span>
+
+                            <span
+                                class="info-valor"
+                                id="modalEndereco"
+                            >
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- RODAPÉ -->
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-cancelar"
+                    data-bs-dismiss="modal"
+                >
+
+                    <i class="bi bi-x-lg me-1"></i>
+
+                    Cancelar
+
+                </button>
+
+
+                <form
+                    method="GET"
+                    action="funcionario_reativar.php"
+                    id="formReativar"
+                >
+
+                    <input
+                        type="hidden"
+                        name="id"
+                        id="reativarId"
                     >
 
-                        <i class="bi bi-person-x"></i>
+                    <input
+                        type="hidden"
+                        name="tabela"
+                        id="reativarTabela"
+                    >
 
-                        Nenhum funcionário desativado encontrado.
 
-                    </td>
+                    <button
+                        type="submit"
+                        class="btn btn-confirmar"
+                    >
 
-                </tr>
+                        <i class="bi bi-person-check me-1"></i>
 
-            <?php endif; ?>
+                        Sim, reativar funcionário
 
-            </tbody>
+                    </button>
 
-        </table>
+                </form>
+
+            </div>
+
+
+        </div>
 
     </div>
 
 </div>
 
-</div>
+
+
+<!-- Bootstrap JS -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
+
+
+
+<script>
+
+/*
+|--------------------------------------------------------------------------
+| MODAL DE REATIVAÇÃO
+|--------------------------------------------------------------------------
+*/
+
+const modalReativar = document.getElementById('modalReativar');
+
+
+modalReativar.addEventListener('show.bs.modal', function (event) {
+
+    const botao = event.relatedTarget;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PEGAR DADOS DO FUNCIONÁRIO
+    |--------------------------------------------------------------------------
+    */
+
+    const id = botao.getAttribute('data-id');
+
+    const tabela = botao.getAttribute('data-tabela');
+
+    const nome = botao.getAttribute('data-nome');
+
+    const funcao = botao.getAttribute('data-funcao');
+
+    const registro = botao.getAttribute('data-registro');
+
+    const telefone = botao.getAttribute('data-telefone');
+
+    const email = botao.getAttribute('data-email');
+
+    const cpf = botao.getAttribute('data-cpf');
+
+    const nascimento = botao.getAttribute('data-nascimento');
+
+    const sexo = botao.getAttribute('data-sexo');
+
+    const endereco = botao.getAttribute('data-endereco');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PREENCHER MODAL
+    |--------------------------------------------------------------------------
+    */
+
+    document.getElementById('modalNome').textContent = nome;
+
+    document.getElementById('modalFuncao').textContent = funcao;
+
+    document.getElementById('modalRegistro').textContent = registro;
+
+    document.getElementById('modalTelefone').textContent = telefone;
+
+    document.getElementById('modalEmail').textContent = email;
+
+    document.getElementById('modalCpf').textContent = cpf;
+
+    document.getElementById('modalNascimento').textContent = nascimento;
+
+    document.getElementById('modalSexo').textContent = sexo;
+
+    document.getElementById('modalEndereco').textContent = endereco;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PREENCHER FORMULÁRIO
+    |--------------------------------------------------------------------------
+    */
+
+    document.getElementById('reativarId').value = id;
+
+    document.getElementById('reativarTabela').value = tabela;
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| FECHAR ALERTA
+|--------------------------------------------------------------------------
+*/
+
+function fecharAlerta() {
+
+    const alerta = document.getElementById('alertaSucesso');
+
+    if (alerta) {
+
+        alerta.style.opacity = '0';
+
+        alerta.style.transform = 'translateY(-10px)';
+
+        alerta.style.transition = '.3s';
+
+        setTimeout(function () {
+
+            alerta.remove();
+
+        }, 300);
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| FECHAR AUTOMATICAMENTE
+|--------------------------------------------------------------------------
+*/
+
+setTimeout(function () {
+
+    fecharAlerta();
+
+}, 6000);
+
+</script>
+
 
 </body>
 
