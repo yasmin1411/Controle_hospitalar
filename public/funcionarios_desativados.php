@@ -299,6 +299,7 @@ try {
             --vermelho-claro: #fff1f2;
 
             --verde: #198754;
+            --verde-escuro: #157347;
             --verde-claro: #ecfdf3;
 
             --azul: #2f80ed;
@@ -661,7 +662,7 @@ try {
 
         /*
         |--------------------------------------------------------------------------
-        | PESQUISA
+        | FILTROS
         |--------------------------------------------------------------------------
         */
 
@@ -1043,6 +1044,12 @@ try {
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | INFORMAÇÕES DO FUNCIONÁRIO
+        |--------------------------------------------------------------------------
+        */
+
         .info-funcionario {
 
             background: #f8fafc;
@@ -1058,14 +1065,7 @@ try {
 
         .info-item {
 
-            padding: 10px 0;
-
-        }
-
-
-        .info-item:not(:last-child) {
-
-            border-bottom: 1px solid #eaecf0;
+            padding: 10px 12px;
 
         }
 
@@ -1102,28 +1102,11 @@ try {
         }
 
 
-        .status-inativo {
-
-            display: inline-flex;
-
-            align-items: center;
-
-            gap: 5px;
-
-            background: #fff1f2;
-
-            color: #b4232f;
-
-            padding: 5px 9px;
-
-            border-radius: 20px;
-
-            font-size: 12px;
-
-            font-weight: 700;
-
-        }
-
+        /*
+        |--------------------------------------------------------------------------
+        | RODAPÉ DO MODAL
+        |--------------------------------------------------------------------------
+        */
 
         .modal-footer {
 
@@ -1231,6 +1214,27 @@ try {
             .tabela-container {
 
                 overflow-x: auto;
+
+            }
+
+
+            .modal-dialog {
+
+                margin: 10px;
+
+            }
+
+
+            .modal-body {
+
+                padding: 18px;
+
+            }
+
+
+            .info-item {
+
+                padding: 9px 6px;
 
             }
 
@@ -1705,15 +1709,11 @@ try {
                     <div>
 
                         <h5 class="modal-titulo">
-
                             Reativar funcionário
-
                         </h5>
 
                         <p class="modal-subtitulo">
-
                             Confira os dados antes de confirmar a reativação.
-
                         </p>
 
                     </div>
@@ -1756,7 +1756,7 @@ try {
 
 
 
-                <!-- INFORMAÇÕES -->
+                <!-- INFORMAÇÕES DO FUNCIONÁRIO -->
 
                 <div class="info-funcionario">
 
@@ -1774,8 +1774,7 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalNome"
-                            >
-                            </span>
+                            ></span>
 
                         </div>
 
@@ -1791,15 +1790,14 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalFuncao"
-                            >
-                            </span>
+                            ></span>
 
                         </div>
 
 
                         <!-- REGISTRO -->
 
-                        <div class="col-md-4 info-item">
+                        <div class="col-md-6 info-item">
 
                             <span class="info-label">
                                 Registro profissional
@@ -1808,15 +1806,14 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalRegistro"
-                            >
-                            </span>
+                            ></span>
 
                         </div>
 
 
                         <!-- CPF -->
 
-                        <div class="col-md-4 info-item">
+                        <div class="col-md-6 info-item">
 
                             <span class="info-label">
                                 CPF
@@ -1825,27 +1822,7 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalCpf"
-                            >
-                            </span>
-
-                        </div>
-
-
-                        <!-- STATUS -->
-
-                        <div class="col-md-4 info-item">
-
-                            <span class="info-label">
-                                Status atual
-                            </span>
-
-                            <span class="status-inativo">
-
-                                <i class="bi bi-circle-fill"></i>
-
-                                Inativo
-
-                            </span>
+                            ></span>
 
                         </div>
 
@@ -1861,8 +1838,7 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalTelefone"
-                            >
-                            </span>
+                            ></span>
 
                         </div>
 
@@ -1878,15 +1854,14 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalEmail"
-                            >
-                            </span>
+                            ></span>
 
                         </div>
 
 
                         <!-- DATA NASCIMENTO -->
 
-                        <div class="col-md-4 info-item">
+                        <div class="col-md-6 info-item">
 
                             <span class="info-label">
                                 Data de nascimento
@@ -1895,15 +1870,14 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalNascimento"
-                            >
-                            </span>
+                            ></span>
 
                         </div>
 
 
                         <!-- SEXO -->
 
-                        <div class="col-md-4 info-item">
+                        <div class="col-md-6 info-item">
 
                             <span class="info-label">
                                 Sexo
@@ -1912,15 +1886,14 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalSexo"
-                            >
-                            </span>
+                            ></span>
 
                         </div>
 
 
                         <!-- ENDEREÇO -->
 
-                        <div class="col-md-4 info-item">
+                        <div class="col-12 info-item">
 
                             <span class="info-label">
                                 Endereço ID
@@ -1929,8 +1902,7 @@ try {
                             <span
                                 class="info-valor"
                                 id="modalEndereco"
-                            >
-                            </span>
+                            ></span>
 
                         </div>
 
