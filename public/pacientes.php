@@ -219,143 +219,87 @@ body{
    MODAL EXCLUSÃO PACIENTE
 ============================== */
 
-
 .modal-content{
-
-background:white;
-
-border:none;
-
-border-radius:25px;
-
-box-shadow:0 15px 40px rgba(47,128,237,.12);
-
-padding:20px;
-
+    background:white;
+    border:none;
+    border-radius:25px;
+    box-shadow:0 15px 40px rgba(47,128,237,.18);
+    padding:20px;
 }
-
-
 
 .modal-header{
-
-border:none;
-
-display:block;
-
-text-align:center;
-
+    border:none;
+    display:block;
+    text-align:center;
+    padding-bottom:5px;
 }
-
-
 
 .modal-alerta{
-
-width:90px;
-
-height:90px;
-
-margin:10px auto 20px;
-
-border-radius:50%;
-
-background:#fff3cd;
-
-color:#856404;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-font-size:40px;
-
+    width:90px;
+    height:90px;
+    margin:10px auto 20px;
+    border-radius:50%;
+    background:#fff3cd;
+    color:#856404;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:40px;
 }
-
-
 
 .modal-title{
-
-color:#dc3545;
-
-font-weight:700;
-
-text-align:center;
-
+    color:#dc3545;
+    font-weight:700;
+    text-align:center;
+    margin-bottom:8px;
 }
-
-
 
 .modal-body{
-
-background:#f8f9fa;
-
-border-radius:15px;
-
-padding:20px;
-
-margin:10px 0;
-
-text-align:center;
-
+    background:#f8f9fa;
+    border-radius:15px;
+    padding:20px;
+    margin:15px 0;
 }
 
-
-
-.modal-body strong{
-
-display:block;
-
-color:#2F80ED;
-
-font-size:20px;
-
-margin-top:10px;
-
+.info-paciente{
+    text-align:left;
 }
 
+.info-paciente p{
+    margin-bottom:10px;
+    font-size:15px;
+    color:#212529;
+}
 
+.info-paciente strong{
+    color:#212529;
+    font-weight:700;
+}
 
 .modal-footer{
-
-border:none;
-
-justify-content:center;
-
+    border:none;
+    justify-content:center;
+    gap:8px;
+    padding-top:5px;
 }
-
-
 
 .btn-modal-excluir{
-
-background:#dc3545;
-
-border:none;
-
-color:white;
-
-border-radius:12px;
-
-padding:10px 18px;
-
+    background:#dc3545;
+    border:none;
+    color:white;
+    border-radius:12px;
+    padding:10px 18px;
+    font-weight:600;
 }
-
-
 
 .btn-modal-excluir:hover{
-
-background:#bb2d3b;
-
-color:white;
-
+    background:#bb2d3b;
+    color:white;
 }
 
-
-
 .btn-modal-cancelar{
-
-border-radius:12px;
-
+    border-radius:12px;
+    padding:10px 18px;
 }
 
 </style>
@@ -558,110 +502,131 @@ Novo Paciente
 
 <div class="modal fade" id="modalExcluir<?= $p['id'] ?>" tabindex="-1">
 
+    <div class="modal-dialog modal-dialog-centered">
 
-<div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
 
+            <div class="modal-header">
 
-<div class="modal-content">
+                <div class="modal-alerta">
 
+                    <i class="bi bi-exclamation-triangle-fill"></i>
 
-<div class="modal-header">
+                </div>
 
+                <h2 class="modal-title">
 
-<div class="modal-alerta">
+                    Confirmar Exclusão
 
-<i class="bi bi-exclamation-triangle-fill"></i>
+                </h2>
 
-</div>
+                <p class="text-center text-muted mb-0">
 
+                    Esta ação não poderá ser desfeita.
 
-<h2 class="modal-title">
+                </p>
 
-Confirmar Exclusão
+            </div>
 
-</h2>
 
+            <div class="modal-body">
 
-</div>
+                <div class="info-paciente">
 
+                    <p>
+                        <strong>Paciente:</strong>
+                        <?= htmlspecialchars($p['nome']) ?>
+                    </p>
 
+                    <p>
+                        <strong>CPF:</strong>
+                        <?= htmlspecialchars($p['cpf']) ?>
+                    </p>
 
-<div class="modal-body">
+                    <p>
+                        <strong>Data de Nascimento:</strong>
+                        <?= htmlspecialchars($p['data_de_nascimento']) ?>
+                    </p>
 
+                    <p>
+                        <strong>Telefone:</strong>
+                        <?= htmlspecialchars($p['telefone']) ?>
+                    </p>
 
-<p>
+                    <p>
+                        <strong>Cartão do Cidadão:</strong>
+                        <?= htmlspecialchars($p['cartao_cidadao']) ?>
+                    </p>
 
-Esta ação não poderá ser desfeita.
+                    <p>
+                        <strong>Cidade:</strong>
+                        <?= htmlspecialchars($p['cidade']) ?>
+                    </p>
 
-</p>
+                    <p class="mb-0">
 
+                        <strong>Responsável:</strong>
 
-<hr>
+                        <?php if ($p['responsavel_nome']): ?>
 
+                            <?= htmlspecialchars($p['responsavel_nome']) ?>
 
-<p>
+                        <?php else: ?>
 
-<strong>
+                            <span class="text-muted">
+                                Não possui
+                            </span>
 
-Paciente:
+                        <?php endif; ?>
 
-</strong>
+                    </p>
 
+                </div>
 
-<?= htmlspecialchars($p['nome']) ?>
+            </div>
 
 
-</p>
+            <div class="modal-footer">
 
+                <!--
+                    Envia POST diretamente para paciente_apagar.php.
+                    O backend continua exatamente o mesmo.
+                -->
 
+                <form
+                    method="POST"
+                    action="paciente_apagar.php?id=<?= $p['id'] ?>"
+                    class="m-0">
 
-</div>
+                    <button
+                        type="submit"
+                        class="btn btn-modal-excluir">
 
+                        <i class="bi bi-trash"></i>
 
+                        Excluir Paciente
 
-<div class="modal-footer">
+                    </button>
 
+                </form>
 
-<a
-href="paciente_apagar.php?id=<?= $p['id'] ?>"
-class="btn btn-modal-excluir">
 
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-modal-cancelar"
+                    data-bs-dismiss="modal">
 
-<i class="bi bi-trash"></i>
+                    <i class="bi bi-arrow-left"></i>
 
-Excluir Paciente
+                    Cancelar
 
+                </button>
 
-</a>
+            </div>
 
+        </div>
 
-
-<button
-
-type="button"
-
-class="btn btn-secondary btn-modal-cancelar"
-
-data-bs-dismiss="modal">
-
-
-<i class="bi bi-arrow-left"></i>
-
-Cancelar
-
-
-</button>
-
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
+    </div>
 
 </div>
                     </div>
