@@ -96,16 +96,31 @@ $totalInternacoes = count($internacoes);
 
 $internacoesAtivas = 0;
 $leitosEmUso = 0;
+$pacientesAlta = 0;
 
 foreach ($internacoes as $internacao) {
 
+    $statusAtual = strtolower(trim($internacao['status'] ?? ''));
+
+    /*
+    |--------------------------------------------------------------------------
+    | INTERNAÇÕES ATIVAS
+    |--------------------------------------------------------------------------
+    */
+
     if (
         empty($internacao['data_saida']) &&
-        strtolower($internacao['status']) !== 'alta'
+        $statusAtual !== 'alta'
     ) {
 
         $internacoesAtivas++;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | LEITOS EM USO
+    |--------------------------------------------------------------------------
+    */
 
     if (
         empty($internacao['data_saida']) &&
@@ -113,6 +128,20 @@ foreach ($internacoes as $internacao) {
     ) {
 
         $leitosEmUso++;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PACIENTES COM ALTA
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        $statusAtual === 'alta' ||
+        !empty($internacao['data_saida'])
+    ) {
+
+        $pacientesAlta++;
     }
 }
 
@@ -153,6 +182,9 @@ foreach ($internacoes as $internacao) {
             --azul-principal: #2F80ED;
             --azul-claro: #56CCF2;
 
+            --verde-alta: #198754;
+            --verde-alta-claro: #e7f8ef;
+
         }
 
 
@@ -164,27 +196,33 @@ foreach ($internacoes as $internacao) {
 
 
         html {
-    font-size: 14px;
-}
 
-body {
-    margin: 0;
+            font-size: 14px;
 
-    min-height: 100vh;
+        }
 
-    background:
-        linear-gradient(
-            135deg,
-            #eef5ff,
-            #dbeeff
-        );
 
-    font-family: 'Segoe UI', sans-serif;
+        body {
 
-    color: #2c3e50;
+            margin: 0;
 
-    font-size: 14px;
-}
+            min-height: 100vh;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #eef5ff,
+                    #dbeeff
+                );
+
+            font-family: 'Segoe UI', sans-serif;
+
+            color: #2c3e50;
+
+            font-size: 14px;
+
+        }
+
 
         /* ==========================================================
            CONTAINER PRINCIPAL
@@ -246,22 +284,22 @@ body {
 
         .info-card h2 {
 
-font-weight: 700;
+            font-weight: 700;
 
-font-size: 28px;
+            font-size: 28px;
 
-margin-bottom: 5px;
+            margin-bottom: 5px;
 
-}
+        }
 
 
-.info-card p {
+        .info-card p {
 
-font-size: 14px;
+            font-size: 14px;
 
-opacity: .95;
+            opacity: .95;
 
-}
+        }
 
 
         /* ==========================================================
@@ -284,6 +322,8 @@ opacity: .95;
             height: 100%;
 
             transition: .25s;
+
+            cursor: pointer;
 
         }
 
@@ -346,17 +386,26 @@ opacity: .95;
         }
 
 
+        .icone-alta {
+
+            background: #e8f8ef;
+
+            color: #198754;
+
+        }
+
+
         .estatistica-card h2 {
 
-margin: 0;
+            margin: 0;
 
-font-size: 26px;
+            font-size: 26px;
 
-font-weight: 700;
+            font-weight: 700;
 
-color: var(--azul-principal);
+            color: var(--azul-principal);
 
-}
+        }
 
 
         .estatistica-card:nth-child(2) h2 {
@@ -369,6 +418,13 @@ color: var(--azul-principal);
         .estatistica-card:nth-child(3) h2 {
 
             color: #6f42c1;
+
+        }
+
+
+        .estatistica-card:nth-child(4) h2 {
+
+            color: #198754;
 
         }
 
@@ -388,15 +444,15 @@ color: var(--azul-principal);
 
         .titulo {
 
-color: var(--azul-principal);
+            color: var(--azul-principal);
 
-font-weight: 700;
+            font-weight: 700;
 
-font-size: 32px;
+            font-size: 32px;
 
-margin-bottom: 5px;
+            margin-bottom: 5px;
 
-}
+        }
 
 
         .subtitulo {
@@ -527,15 +583,15 @@ margin-bottom: 5px;
 
         .campo-pesquisa {
 
-border: 1px solid #dbe7ff;
+            border: 1px solid #dbe7ff;
 
-border-radius: 12px;
+            border-radius: 12px;
 
-min-height: 46px;
+            min-height: 46px;
 
-font-size: 14px;
+            font-size: 14px;
 
-}
+        }
 
 
         .campo-pesquisa:focus {
@@ -769,8 +825,196 @@ font-size: 14px;
 
 
         /* ==========================================================
+           MODAL DE ALTA
+        ========================================================== */
+
+        .modal-alta .modal-content {
+
+            border: none;
+
+            border-radius: 22px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.15);
+
+        }
+
+
+        .modal-alta .modal-header {
+
+            border: none;
+
+            padding: 25px 25px 10px;
+
+            display: flex;
+
+            justify-content: center;
+
+        }
+
+
+        .icone-modal-alta {
+
+            width: 70px;
+
+            height: 70px;
+
+            border-radius: 50%;
+
+            background: #e7f8ef;
+
+            color: #198754;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 32px;
+
+        }
+
+
+        .modal-alta .modal-body {
+
+            text-align: center;
+
+            padding: 10px 30px 25px;
+
+        }
+
+
+        .modal-alta .modal-body h4 {
+
+            color: #2c3e50;
+
+            font-weight: 700;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .modal-alta .modal-body p {
+
+            color: #6c757d;
+
+            margin-bottom: 18px;
+
+            font-size: 14px;
+
+        }
+
+
+        .paciente-alta {
+
+            background: #f0faf5;
+
+            border: 1px solid #d7f0e2;
+
+            border-radius: 14px;
+
+            padding: 13px 16px;
+
+            color: #198754;
+
+            font-weight: 600;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        .modal-alta .modal-footer {
+
+            border: none;
+
+            padding: 10px 25px 25px;
+
+            display: flex;
+
+            justify-content: center;
+
+            gap: 10px;
+
+        }
+
+
+        .btn-cancelar-alta {
+
+            border: none;
+
+            background: #f1f3f5;
+
+            color: #6c757d;
+
+            border-radius: 11px;
+
+            padding: 10px 22px;
+
+            font-weight: 600;
+
+            transition: .2s;
+
+        }
+
+
+        .btn-cancelar-alta:hover {
+
+            background: #e2e6ea;
+
+            color: #495057;
+
+        }
+
+
+        .btn-confirmar-alta {
+
+            border: none;
+
+            background: #198754;
+
+            color: white;
+
+            border-radius: 11px;
+
+            padding: 10px 22px;
+
+            font-weight: 600;
+
+            transition: .2s;
+
+        }
+
+
+        .btn-confirmar-alta:hover {
+
+            background: #157347;
+
+            color: white;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        /* ==========================================================
            RESPONSIVIDADE
         ========================================================== */
+
+        @media (max-width: 992px) {
+
+            .estatistica-card {
+
+                padding: 20px;
+
+            }
+
+        }
+
 
         @media (max-width: 768px) {
 
@@ -800,6 +1044,13 @@ font-size: 14px;
             .container-principal {
 
                 padding: 15px 10px 30px;
+
+            }
+
+
+            .estatistica-card {
+
+                padding: 20px;
 
             }
 
@@ -850,9 +1101,13 @@ font-size: 14px;
 
             <!-- TOTAL -->
 
-            <div class="col-md-4">
+            <div class="col-md-3">
 
-                <div class="estatistica-card">
+                <div
+                    class="estatistica-card"
+                    onclick="mostrarTodasInternacoes()"
+                    title="Visualizar todas as internações"
+                >
 
                     <div class="icone-estatistica icone-azul">
 
@@ -879,9 +1134,13 @@ font-size: 14px;
 
             <!-- ATIVAS -->
 
-            <div class="col-md-4">
+            <div class="col-md-3">
 
-                <div class="estatistica-card">
+                <div
+                    class="estatistica-card"
+                    onclick="mostrarInternacoesAtivas()"
+                    title="Visualizar internações ativas"
+                >
 
                     <div class="icone-estatistica icone-verde">
 
@@ -908,9 +1167,13 @@ font-size: 14px;
 
             <!-- LEITOS -->
 
-            <div class="col-md-4">
+            <div class="col-md-3">
 
-                <div class="estatistica-card">
+                <div
+                    class="estatistica-card"
+                    onclick="mostrarInternacoesAtivas()"
+                    title="Visualizar pacientes ocupando leitos"
+                >
 
                     <div class="icone-estatistica icone-roxo">
 
@@ -935,6 +1198,39 @@ font-size: 14px;
             </div>
 
 
+            <!-- ALTA -->
+
+            <div class="col-md-3">
+
+                <div
+                    class="estatistica-card"
+                    onclick="mostrarPacientesAlta()"
+                    title="Visualizar pacientes com alta"
+                >
+
+                    <div class="icone-estatistica icone-alta">
+
+                        <i class="bi bi-check-circle"></i>
+
+                    </div>
+
+                    <h2>
+
+                        <?= $pacientesAlta ?>
+
+                    </h2>
+
+                    <p>
+
+                        Pacientes com Alta
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
         </div>
 
 
@@ -942,72 +1238,73 @@ font-size: 14px;
              TÍTULO + NOVA INTERNAÇÃO
         ======================================================= -->
 
-        <<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
-<div>
+            <div>
 
-    <h1 class="titulo">
+                <h1 class="titulo">
 
-        <i class="bi bi-person-badge"></i>
+                    <i class="bi bi-person-badge"></i>
 
-        Controle de Internações
+                    Controle de Internações
 
-    </h1>
+                </h1>
 
-    <p class="subtitulo mb-0">
+                <p class="subtitulo mb-0">
 
-        Cadastro, acompanhamento e controle dos pacientes internados.
+                    Cadastro, acompanhamento e controle dos pacientes internados.
 
-    </p>
+                </p>
 
-</div>
-
-<div class="d-flex gap-2">
-
-<!-- VOLTAR AO MENU -->
-
-<a
-        href="dashboard.php"
-        class="btn btn-secondary btn-voltar"
-    >
-
-        <i class="bi bi-arrow-left"></i>
-
-        Voltar ao Menu
-
-    </a>
-
-    <!-- NOVA INTERNAÇÃO -->
-
-    <a
-        href="internacao_cadastrar.php"
-        class="btn btn-azul"
-    >
-
-        <i class="bi bi-plus-circle"></i>
-
-        Nova Internação
-
-    </a>
+            </div>
 
 
-</div>
+            <div class="d-flex gap-2">
 
-</div>
+                <!-- VOLTAR AO MENU -->
+
+                <a
+                    href="dashboard.php"
+                    class="btn btn-secondary btn-voltar"
+                >
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Voltar ao Menu
+
+                </a>
+
+
+                <!-- NOVA INTERNAÇÃO -->
+
+                <a
+                    href="internacao_cadastrar.php"
+                    class="btn btn-azul"
+                >
+
+                    <i class="bi bi-plus-circle"></i>
+
+                    Nova Internação
+
+                </a>
+
+            </div>
+
+        </div>
 
 
         <!-- ======================================================
              PESQUISA
         ======================================================= -->
 
-        <form method="GET" class="row g-2 mb-4">
-
+        <form method="GET" class="row g-2 mb-4" id="formPesquisa">
 
             <div class="col-md-10">
 
                 <input
                     type="text"
                     name="pesquisa"
+                    id="campoPesquisa"
                     class="form-control campo-pesquisa"
                     placeholder="Pesquisar paciente, médico, enfermeiro, quarto, leito ou status..."
                     value="<?= htmlspecialchars($pesquisa) ?>"
@@ -1031,7 +1328,6 @@ font-size: 14px;
 
             </div>
 
-
         </form>
 
 
@@ -1042,7 +1338,6 @@ font-size: 14px;
         <div class="table-responsive tabela-container">
 
             <table class="table table-hover align-middle mb-0">
-
 
                 <thead>
 
@@ -1080,6 +1375,19 @@ font-size: 14px;
 
 
                     <?php foreach ($internacoes as $i): ?>
+
+
+                        <?php
+
+                        $status = $i['status'] ?? '';
+
+                        $statusLower = strtolower(trim($status));
+
+                        $pacienteComAlta =
+                            $statusLower === 'alta' ||
+                            !empty($i['data_saida']);
+
+                        ?>
 
 
                         <tr>
@@ -1287,13 +1595,6 @@ font-size: 14px;
 
                                 <?php
 
-                                $status = $i['status'] ?? '';
-
-                                $statusLower = strtolower(
-                                    trim($status)
-                                );
-
-
                                 if ($statusLower === 'alta'):
 
                                 ?>
@@ -1327,7 +1628,6 @@ font-size: 14px;
 
                                 <?php else: ?>
 
-
                                     <span class="badge-status outro">
 
                                         <?= htmlspecialchars(
@@ -1335,7 +1635,6 @@ font-size: 14px;
                                         ) ?>
 
                                     </span>
-
 
                                 <?php endif; ?>
 
@@ -1349,17 +1648,21 @@ font-size: 14px;
                                 <div class="d-flex gap-2">
 
 
-                                    <!-- EDITAR -->
+                                    <?php if (!$pacienteComAlta): ?>
 
-                                    <a
-                                        href="internacao_editar.php?id=<?= (int)$i['id'] ?>"
-                                        class="btn btn-editar"
-                                        title="Editar internação"
-                                    >
+                                        <!-- EDITAR -->
 
-                                        <i class="bi bi-pencil-square"></i>
+                                        <a
+                                            href="internacao_editar.php?id=<?= (int)$i['id'] ?>"
+                                            class="btn btn-editar"
+                                            title="Editar internação"
+                                        >
 
-                                    </a>
+                                            <i class="bi bi-pencil-square"></i>
+
+                                        </a>
+
+                                    <?php endif; ?>
 
 
                                     <!-- DAR ALTA -->
@@ -1373,16 +1676,23 @@ font-size: 14px;
 
                                     ?>
 
-                                        <a
-                                            href="internacao_alta.php?id=<?= (int)$i['id'] ?>"
+                                        <button
+                                            type="button"
                                             class="btn btn-alta"
                                             title="Dar alta ao paciente"
-                                            onclick="return confirm('Deseja realmente dar alta para este paciente?')"
+                                            data-id="<?= (int)$i['id'] ?>"
+                                            data-paciente="<?= htmlspecialchars(
+                                                $i['paciente'],
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ) ?>"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalAlta"
                                         >
 
                                             <i class="bi bi-box-arrow-right"></i>
 
-                                        </a>
+                                        </button>
 
                                     <?php endif; ?>
 
@@ -1492,8 +1802,280 @@ font-size: 14px;
 
         </div>
 
+
+    </div>
+
+</div>
+
+
+<!-- ==============================================================
+     MODAL DE CONFIRMAÇÃO DE ALTA
+=============================================================== -->
+
+<div
+    class="modal fade modal-alta"
+    id="modalAlta"
+    tabindex="-1"
+    aria-labelledby="modalAltaLabel"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+
+            <!-- ÍCONE -->
+
+            <div class="modal-header">
+
+                <div class="icone-modal-alta">
+
+                    <i class="bi bi-check-circle"></i>
+
+                </div>
+
+            </div>
+
+
+            <!-- CONTEÚDO -->
+
+            <div class="modal-body">
+
+                <h4 id="modalAltaLabel">
+
+                    Confirmar alta
+
+                </h4>
+
+
+                <p>
+
+                    Você está prestes a dar alta para o paciente:
+
+                </p>
+
+
+                <div class="paciente-alta">
+
+                    <i class="bi bi-person-check me-1"></i>
+
+                    <span id="nomePacienteAlta">
+
+                        Paciente
+
+                    </span>
+
+                </div>
+
+
+                <p class="mt-3 mb-0">
+
+                    Após a alta, o paciente não será mais considerado
+                    uma internação ativa.
+
+                </p>
+
+            </div>
+
+
+            <!-- BOTÕES -->
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn-cancelar-alta"
+                    data-bs-dismiss="modal"
+                >
+
+                    <i class="bi bi-x-lg me-1"></i>
+
+                    Cancelar
+
+                </button>
+
+
+                <a
+                    href="#"
+                    id="btnConfirmarAlta"
+                    class="btn-confirmar-alta"
+                >
+
+                    <i class="bi bi-check-lg me-1"></i>
+
+                    Confirmar Alta
+
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Bootstrap JS -->
+
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<script>
+
+/*
+|--------------------------------------------------------------------------
+| MODAL DE ALTA
+|--------------------------------------------------------------------------
+*/
+
+const modalAlta = document.getElementById('modalAlta');
+
+if (modalAlta) {
+
+    modalAlta.addEventListener('show.bs.modal', function (event) {
+
+        const botao = event.relatedTarget;
+
+        const id = botao.getAttribute('data-id');
+
+        const paciente = botao.getAttribute('data-paciente');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | COLOCA O NOME DO PACIENTE NO MODAL
+        |--------------------------------------------------------------------------
+        */
+
+        document.getElementById('nomePacienteAlta').textContent = paciente;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DEFINE O LINK DE CONFIRMAÇÃO
+        |--------------------------------------------------------------------------
+        */
+
+        document.getElementById('btnConfirmarAlta').href =
+            'internacao_alta.php?id=' + id;
+
+    });
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| FILTROS DOS CARDS
+|--------------------------------------------------------------------------
+|
+| Estes filtros funcionam apenas no FRONT-END.
+| Nenhuma alteração é feita no banco de dados.
+|
+|--------------------------------------------------------------------------
+*/
+
+
+function mostrarTodasInternacoes() {
+
+    const linhas =
+        document.querySelectorAll('.tabela-container tbody tr');
+
+    linhas.forEach(function(linha) {
+
+        linha.style.display = '';
+
+    });
+
+    document.getElementById('campoPesquisa').value = '';
+
+    window.scrollTo({
+        top: document.querySelector('.tabela-container').offsetTop - 30,
+        behavior: 'smooth'
+    });
+
+}
+
+
+function mostrarInternacoesAtivas() {
+
+    const linhas =
+        document.querySelectorAll('.tabela-container tbody tr');
+
+    linhas.forEach(function(linha) {
+
+        const status =
+            linha.querySelector('.badge-status');
+
+        if (!status) return;
+
+        const texto =
+            status.textContent.trim().toLowerCase();
+
+        if (
+            texto === 'alta' ||
+            texto.includes('alta')
+        ) {
+
+            linha.style.display = 'none';
+
+        } else {
+
+            linha.style.display = '';
+
+        }
+
+    });
+
+    window.scrollTo({
+        top: document.querySelector('.tabela-container').offsetTop - 30,
+        behavior: 'smooth'
+    });
+
+}
+
+
+function mostrarPacientesAlta() {
+
+    const linhas =
+        document.querySelectorAll('.tabela-container tbody tr');
+
+    linhas.forEach(function(linha) {
+
+        const status =
+            linha.querySelector('.badge-status');
+
+        if (!status) return;
+
+        const texto =
+            status.textContent.trim().toLowerCase();
+
+        if (
+            texto.includes('alta')
+        ) {
+
+            linha.style.display = '';
+
+        } else {
+
+            linha.style.display = 'none';
+
+        }
+
+    });
+
+    window.scrollTo({
+        top: document.querySelector('.tabela-container').offsetTop - 30,
+        behavior: 'smooth'
+    });
+
+}
+
 </script>
 
 

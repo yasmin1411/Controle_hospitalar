@@ -4,11 +4,10 @@ require_once '../includes/auth.php';
 require_once '../config/database.php';
 
 $erro = '';
-$sucesso = '';
 
 /*
 |--------------------------------------------------------------------------
-| VERIFICA ID
+| VERIFICAR ID DA INTERNAÇÃO
 |--------------------------------------------------------------------------
 */
 
@@ -21,28 +20,17 @@ $id = (int) $_GET['id'];
 
 /*
 |--------------------------------------------------------------------------
-| FUNÇÕES AUXILIARES
+| FUNÇÃO PARA ESCAPAR VALORES
 |--------------------------------------------------------------------------
 */
 
 function e($valor)
 {
-    return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
-}
-
-function formatarDataInput($data)
-{
-    if (empty($data)) {
-        return '';
-    }
-
-    $timestamp = strtotime($data);
-
-    if ($timestamp === false) {
-        return '';
-    }
-
-    return date('Y-m-d\TH:i', $timestamp);
+    return htmlspecialchars(
+        (string)($valor ?? ''),
+        ENT_QUOTES,
+        'UTF-8'
+    );
 }
 
 
@@ -54,9 +42,12 @@ function formatarDataInput($data)
 
 try {
 
-    $sql = "SELECT * FROM internacoes WHERE id = ?";
+    $stmt = $pdo->prepare("
+        SELECT *
+        FROM internacoes
+        WHERE id = ?
+    ");
 
-    $stmt = $pdo->prepare($sql);
     $stmt->execute([$id]);
 
     $internacao = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -71,21 +62,22 @@ try {
         "Erro ao carregar internação: " .
         $e->getMessage()
     );
+
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| BUSCAR PACIENTES
+| CARREGAR PACIENTES
 |--------------------------------------------------------------------------
 */
-
-$pacientes = [];
 
 try {
 
     $stmt = $pdo->query("
-        SELECT id, nome
+        SELECT
+            id,
+            nome
         FROM pacientes
         ORDER BY nome
     ");
@@ -94,22 +86,27 @@ try {
 
 } catch (PDOException $e) {
 
-    $pacientes = [];
+    die(
+        "Erro ao carregar pacientes: " .
+        $e->getMessage()
+    );
+
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| BUSCAR MÉDICOS
+| CARREGAR MÉDICOS ATIVOS
 |--------------------------------------------------------------------------
 */
-
-$medicos = [];
 
 try {
 
     $stmt = $pdo->query("
-        SELECT id, nome, crm
+        SELECT
+            id,
+            nome,
+            crm
         FROM medico
         WHERE status = 'Ativo'
         ORDER BY nome
@@ -119,336 +116,254 @@ try {
 
 } catch (PDOException $e) {
 
-    $medicos = [];
+    die(
+        "Erro ao carregar médicos: " .
+        $e->getMessage()
+    );
+
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| VALORES INICIAIS
+| CARREGAR ENFERMEIROS ATIVOS
+|--------------------------------------------------------------------------
+*/
+
+try {
+
+    $stmt = $pdo->query("
+        SELECT
+            id,
+            nome,
+            coren
+        FROM enfermeiro
+        WHERE status = 'Ativo'
+        ORDER BY nome
+    ");
+
+    $enfermeiros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+
+    die(
+        "Erro ao carregar enfermeiros: " .
+        $e->getMessage()
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| VALORES ATUAIS DA INTERNAÇÃO
 |--------------------------------------------------------------------------
 */
 
 $pacienteId = $internacao['paciente_id'] ?? '';
+
 $medicoId = $internacao['medico_id'] ?? '';
 
-$dataEntrada = formatarDataInput(
-    $internacao['data_entrada'] ?? ''
-);
+$enfermeiroId = $internacao['enfermeiro_id'] ?? '';
 
-$dataSaida = formatarDataInput(
-    $internacao['data_saida'] ?? ''
-);
+$dataEntrada = $internacao['data_entrada'] ?? '';
+
+$dataSaida = $internacao['data_saida'] ?? '';
 
 $quarto = $internacao['quarto'] ?? '';
+
 $leito = $internacao['leito'] ?? '';
+
 $motivos = $internacao['motivos'] ?? '';
+
 $observacoes = $internacao['observacoes'] ?? '';
 
-/*
-|--------------------------------------------------------------------------
-| CORREÇÃO DO WARNING
-|--------------------------------------------------------------------------
-|
-| O campo pode não existir no SELECT dependendo da estrutura da tabela.
-| Por isso usamos ?? ''.
-|
-*/
-
-$enfermeiroResponsavel =
-    $internacao['enfermeiro_responsavel'] ?? '';
-
-$quadroClinico =
-    $internacao['quadro_clinico'] ?? '';
-
-$status =
-    $internacao['status'] ?? 'Estável';
+$quadroClinico = $internacao['quadro_clinico'] ?? '';
 
 
 /*
 |--------------------------------------------------------------------------
-| ATUALIZAÇÃO
+| ATUALIZAR INTERNAÇÃO
 |--------------------------------------------------------------------------
 */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $pacienteId = trim($_POST['paciente_id'] ?? '');
-    $medicoId = trim($_POST['medico_id'] ?? '');
+    $pacienteId = $_POST['paciente_id'] ?? '';
 
-    $dataEntrada = trim($_POST['data_entrada'] ?? '');
+    $medicoId = $_POST['medico_id'] ?? '';
+
+    $enfermeiroId = $_POST['enfermeiro_id'] ?? '';
+
+    $dataEntrada = $_POST['data_entrada'] ?? '';
 
     $dataSaida = !empty($_POST['data_saida'])
-        ? trim($_POST['data_saida'])
+        ? $_POST['data_saida']
         : null;
 
     $quarto = trim($_POST['quarto'] ?? '');
+
     $leito = trim($_POST['leito'] ?? '');
 
     $motivos = trim($_POST['motivos'] ?? '');
+
     $observacoes = trim($_POST['observacoes'] ?? '');
+
+    $quadroClinico = $_POST['quadro_clinico'] ?? '';
+
 
     /*
     |--------------------------------------------------------------------------
-    | CORREÇÃO DO CAMPO ENFERMEIRO
+    | VALIDAÇÕES
     |--------------------------------------------------------------------------
     */
 
-    $enfermeiroResponsavel =
-        trim($_POST['enfermeiro_responsavel'] ?? '');
+    if (
+        empty($pacienteId) ||
+        empty($medicoId) ||
+        empty($enfermeiroId) ||
+        empty($dataEntrada) ||
+        empty($quarto) ||
+        empty($leito) ||
+        empty($quadroClinico)
+    ) {
 
-    $quadroClinico =
-        trim($_POST['quadro_clinico'] ?? '');
+        $erro = "Preencha todos os campos obrigatórios.";
 
-    $status =
-        trim($_POST['status'] ?? 'Estável');
+    } else {
+
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFICAR PACIENTE
+            |--------------------------------------------------------------------------
+            */
+
+            $stmt = $pdo->prepare("
+                SELECT id
+                FROM pacientes
+                WHERE id = ?
+            ");
+
+            $stmt->execute([$pacienteId]);
+
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+
+                throw new Exception(
+                    "Paciente selecionado não foi encontrado."
+                );
+
+            }
 
 
-    try {
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFICAR MÉDICO
+            |--------------------------------------------------------------------------
+            */
 
-        /*
-        |--------------------------------------------------------------------------
-        | VERIFICAR PACIENTE
-        |--------------------------------------------------------------------------
-        */
+            $stmt = $pdo->prepare("
+                SELECT id
+                FROM medico
+                WHERE id = ?
+                AND status = 'Ativo'
+            ");
 
-        $stmt = $pdo->prepare("
-            SELECT id
-            FROM pacientes
-            WHERE id = ?
-        ");
+            $stmt->execute([$medicoId]);
 
-        $stmt->execute([$pacienteId]);
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
 
-        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
-            throw new Exception(
-                "Paciente não encontrado."
-            );
+                throw new Exception(
+                    "Médico selecionado não foi encontrado ou está inativo."
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFICAR ENFERMEIRO
+            |--------------------------------------------------------------------------
+            */
+
+            $stmt = $pdo->prepare("
+                SELECT id
+                FROM enfermeiro
+                WHERE id = ?
+                AND status = 'Ativo'
+            ");
+
+            $stmt->execute([$enfermeiroId]);
+
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+
+                throw new Exception(
+                    "Enfermeiro selecionado não foi encontrado ou está inativo."
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ATUALIZAR
+            |--------------------------------------------------------------------------
+            */
+
+            $stmt = $pdo->prepare("
+                UPDATE internacoes
+                SET
+                    paciente_id = ?,
+                    medico_id = ?,
+                    enfermeiro_id = ?,
+                    data_entrada = ?,
+                    data_saida = ?,
+                    quarto = ?,
+                    leito = ?,
+                    motivos = ?,
+                    observacoes = ?,
+                    quadro_clinico = ?
+                WHERE id = ?
+            ");
+
+            $stmt->execute([
+                $pacienteId,
+                $medicoId,
+                $enfermeiroId,
+                $dataEntrada,
+                $dataSaida,
+                $quarto,
+                $leito,
+                $motivos,
+                $observacoes,
+                $quadroClinico,
+                $id
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | REDIRECIONAR
+            |--------------------------------------------------------------------------
+            */
+
+            header("Location: internacoes.php?editado=1");
+
+            exit;
+
+        } catch (Exception $e) {
+
+            $erro = $e->getMessage();
+
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | VERIFICAR MÉDICO
-        |--------------------------------------------------------------------------
-        */
-
-        $stmt = $pdo->prepare("
-            SELECT id
-            FROM medico
-            WHERE id = ?
-        ");
-
-        $stmt->execute([$medicoId]);
-
-        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
-            throw new Exception(
-                "Médico não encontrado."
-            );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VERIFICAR OUTRA INTERNAÇÃO ATIVA
-        |--------------------------------------------------------------------------
-        */
-
-        $stmt = $pdo->prepare("
-            SELECT id
-            FROM internacoes
-            WHERE paciente_id = ?
-            AND status IN ('Estável', 'Instável')
-            AND id <> ?
-        ");
-
-        $stmt->execute([
-            $pacienteId,
-            $id
-        ]);
-
-        if ($stmt->fetch(PDO::FETCH_ASSOC)) {
-
-            throw new Exception(
-                "Este paciente já possui outra internação ativa."
-            );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TRANSAÇÃO
-        |--------------------------------------------------------------------------
-        */
-
-        $pdo->beginTransaction();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ATUALIZAR
-        |--------------------------------------------------------------------------
-        */
-
-        $sql = "
-            UPDATE internacoes SET
-
-                paciente_id = :paciente_id,
-
-                medico_id = :medico_id,
-
-                data_entrada = :data_entrada,
-
-                data_saida = :data_saida,
-
-                quarto = :quarto,
-
-                leito = :leito,
-
-                motivos = :motivos,
-
-                observacoes = :observacoes,
-
-                enfermeiro_responsavel = :enfermeiro_responsavel,
-
-                quadro_clinico = :quadro_clinico,
-
-                status = :status
-
-            WHERE id = :id
-        ";
-
-        $stmt = $pdo->prepare($sql);
-
-        $stmt->bindValue(
-            ':paciente_id',
-            $pacienteId
-        );
-
-        $stmt->bindValue(
-            ':medico_id',
-            $medicoId
-        );
-
-        $stmt->bindValue(
-            ':data_entrada',
-            $dataEntrada
-        );
-
-        $stmt->bindValue(
-            ':data_saida',
-            $dataSaida
-        );
-
-        $stmt->bindValue(
-            ':quarto',
-            $quarto
-        );
-
-        $stmt->bindValue(
-            ':leito',
-            $leito
-        );
-
-        $stmt->bindValue(
-            ':motivos',
-            $motivos
-        );
-
-        $stmt->bindValue(
-            ':observacoes',
-            $observacoes
-        );
-
-        $stmt->bindValue(
-            ':enfermeiro_responsavel',
-            $enfermeiroResponsavel
-        );
-
-        $stmt->bindValue(
-            ':quadro_clinico',
-            $quadroClinico
-        );
-
-        $stmt->bindValue(
-            ':status',
-            $status
-        );
-
-        $stmt->bindValue(
-            ':id',
-            $id,
-            PDO::PARAM_INT
-        );
-
-        $stmt->execute();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | FINALIZAR
-        |--------------------------------------------------------------------------
-        */
-
-        $pdo->commit();
-
-        header(
-            "Location: internacoes.php?editado=1"
-        );
-
-        exit;
-
-    } catch (Exception $e) {
-
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-
-        $erro = $e->getMessage();
     }
-}
 
-
-/*
-|--------------------------------------------------------------------------
-| NOME DO PACIENTE
-|--------------------------------------------------------------------------
-*/
-
-$nomePaciente = 'Paciente não encontrado';
-
-foreach ($pacientes as $paciente) {
-
-    if ((int)$paciente['id'] === (int)$pacienteId) {
-
-        $nomePaciente = $paciente['nome'];
-
-        break;
-    }
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| NOME DO MÉDICO
-|--------------------------------------------------------------------------
-*/
-
-$nomeMedico = 'Médico não encontrado';
-$crmMedico = '';
-
-foreach ($medicos as $medico) {
-
-    if ((int)$medico['id'] === (int)$medicoId) {
-
-        $nomeMedico = $medico['nome'];
-        $crmMedico = $medico['crm'] ?? '';
-
-        break;
-    }
 }
 
 ?>
+
 
 <!DOCTYPE html>
 
@@ -460,44 +375,51 @@ foreach ($medicos as $medico) {
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1"
+        content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Editar Internação</title>
+    <title>Editar Internação | Sistema Hospitalar</title>
+
+
+    <!-- Bootstrap -->
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
+
+    <!-- Bootstrap Icons -->
+
     <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
         rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
+
 
     <style>
 
         :root {
 
-            --azul: #2f80ed;
-            --azul-escuro: #1769d1;
-            --azul-claro: #56ccf2;
+            --azul-principal: #2F80ED;
 
-            --fundo: #eef5ff;
+            --azul-claro: #56CCF2;
 
-            --texto: #172b4d;
-            --texto-secundario: #667085;
+            --azul-suave: #eef5ff;
 
-            --borda: #dfe7f1;
+            --borda: #dbe7ff;
 
-            --verde: #198754;
-            --vermelho: #dc3545;
+            --texto: #2c3e50;
+
+            --cinza: #6c757d;
 
         }
 
 
         * {
+
             box-sizing: border-box;
+
         }
 
 
@@ -508,97 +430,62 @@ foreach ($medicos as $medico) {
             min-height: 100vh;
 
             background:
-                radial-gradient(
-                    circle at top left,
-                    #dff4ff 0%,
-                    transparent 35%
-                ),
                 linear-gradient(
                     135deg,
                     #eef5ff,
-                    #f8fbff,
-                    #edf4ff
+                    #dbeeff
                 );
 
-            font-family:
-                'Segoe UI',
-                Arial,
-                sans-serif;
+            font-family: 'Segoe UI', sans-serif;
 
             color: var(--texto);
 
         }
 
 
+        /* =====================================================
+           CONTAINER PRINCIPAL
+        ===================================================== */
+
         .pagina {
 
-            max-width: 1250px;
+            max-width: 1180px;
 
-            margin: 35px auto;
+            margin: 0 auto;
 
-            padding: 0 20px 50px;
+            padding: 35px 20px 50px;
 
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CABEÇALHO
-        |--------------------------------------------------------------------------
-        */
+        /* =====================================================
+           CABEÇALHO
+        ===================================================== */
 
-        .hero {
-
-            position: relative;
-
-            overflow: hidden;
-
-            border-radius: 25px;
-
-            padding: 32px 38px;
-
-            margin-bottom: 25px;
+        .cabecalho {
 
             background:
                 linear-gradient(
-                    120deg,
-                    #1769d1,
-                    #2f80ed 55%,
-                    #56ccf2
+                    135deg,
+                    var(--azul-principal),
+                    var(--azul-claro)
                 );
+
+            border-radius: 25px;
+
+            padding: 28px 32px;
 
             color: white;
 
             box-shadow:
-                0 18px 45px rgba(47,128,237,.22);
+                0 12px 30px rgba(47, 128, 237, 0.20);
+
+            margin-bottom: 25px;
 
         }
 
 
-        .hero::after {
-
-            content: '';
-
-            position: absolute;
-
-            width: 260px;
-            height: 260px;
-
-            right: -70px;
-            top: -120px;
-
-            border-radius: 50%;
-
-            background: rgba(255,255,255,.10);
-
-        }
-
-
-        .hero-conteudo {
-
-            position: relative;
-
-            z-index: 2;
+        .cabecalho-conteudo {
 
             display: flex;
 
@@ -606,12 +493,12 @@ foreach ($medicos as $medico) {
 
             justify-content: space-between;
 
-            gap: 20px;
+            gap: 18px;
 
         }
 
 
-        .hero-esquerda {
+        .cabecalho-esquerda {
 
             display: flex;
 
@@ -622,56 +509,58 @@ foreach ($medicos as $medico) {
         }
 
 
-        .hero-icone {
+        .icone-cabecalho {
 
-            width: 65px;
-            height: 65px;
+            width: 62px;
+
+            height: 62px;
+
+            border-radius: 18px;
+
+            background: rgba(255,255,255,0.18);
 
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
-            border-radius: 18px;
-
-            background: rgba(255,255,255,.15);
-
-            border: 1px solid rgba(255,255,255,.25);
-
             font-size: 30px;
+
+            flex-shrink: 0;
 
         }
 
 
-        .hero h1 {
+        .cabecalho h1 {
 
             margin: 0;
 
             font-size: 30px;
 
-            font-weight: 750;
+            font-weight: 700;
 
         }
 
 
-        .hero p {
+        .cabecalho p {
 
-            margin: 6px 0 0;
-
-            color: rgba(255,255,255,.88);
+            margin: 5px 0 0;
 
             font-size: 14px;
 
+            opacity: 0.92;
+
         }
 
 
-        .badge-id {
+        .badge-internacao {
 
-            background: rgba(255,255,255,.14);
+            background: rgba(255,255,255,0.14);
 
-            border: 1px solid rgba(255,255,255,.25);
+            border: 1px solid rgba(255,255,255,0.25);
 
-            padding: 10px 15px;
+            padding: 10px 16px;
 
             border-radius: 30px;
 
@@ -682,13 +571,11 @@ foreach ($medicos as $medico) {
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | ERRO
-        |--------------------------------------------------------------------------
-        */
+        /* =====================================================
+           ERRO
+        ===================================================== */
 
-        .alert-erro {
+        .alerta-erro {
 
             background: #fff1f2;
 
@@ -713,192 +600,198 @@ foreach ($medicos as $medico) {
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CARDS
-        |--------------------------------------------------------------------------
-        */
+        /* =====================================================
+           CARD PRINCIPAL
+        ===================================================== */
 
-        .card-form {
+        .card-principal {
 
-            background: rgba(255,255,255,.96);
+            background: #ffffff;
 
-            border: 1px solid rgba(223,231,241,.9);
-
-            border-radius: 23px;
-
-            margin-bottom: 22px;
-
-            overflow: hidden;
-
-            box-shadow:
-                0 10px 30px rgba(16,24,40,.07);
-
-        }
-
-
-        .card-cabecalho {
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 14px;
-
-            padding: 22px 28px;
-
-            border-bottom: 1px solid #e8edf4;
-
-            background:
-                linear-gradient(
-                    180deg,
-                    #ffffff,
-                    #fbfdff
-                );
-
-        }
-
-
-        .card-icone {
-
-            width: 45px;
-            height: 45px;
-
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-
-            border-radius: 13px;
-
-            background: #edf5ff;
-
-            color: var(--azul);
-
-            font-size: 21px;
-
-        }
-
-
-        .card-titulo {
-
-            margin: 0;
-
-            font-size: 19px;
-
-            font-weight: 750;
-
-        }
-
-
-        .card-descricao {
-
-            margin: 3px 0 0;
-
-            color: var(--texto-secundario);
-
-            font-size: 13px;
-
-        }
-
-
-        .card-corpo {
+            border-radius: 25px;
 
             padding: 28px;
 
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CAMPOS
-        |--------------------------------------------------------------------------
-        */
-
-        .campo {
-
-            margin-bottom: 20px;
+            box-shadow:
+                0 10px 30px rgba(44, 62, 80, 0.08);
 
         }
 
 
-        .campo label {
+        /* =====================================================
+           CABEÇALHO DO FORMULÁRIO
+        ===================================================== */
 
-            display: block;
+        .titulo-formulario {
 
-            margin-bottom: 8px;
+            display: flex;
 
-            font-size: 13px;
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin-bottom: 25px;
+
+            padding-bottom: 20px;
+
+            border-bottom: 1px solid #edf2fa;
+
+        }
+
+
+        .titulo-formulario h2 {
+
+            margin: 0;
+
+            color: var(--azul-principal);
+
+            font-size: 22px;
 
             font-weight: 700;
 
-            color: #243b5a;
+        }
+
+
+        .titulo-formulario p {
+
+            margin: 5px 0 0;
+
+            color: var(--cinza);
+
+            font-size: 14px;
 
         }
 
 
         .obrigatorio {
 
-            color: var(--vermelho);
+            color: #dc3545;
+
+            font-weight: 700;
 
         }
 
 
-        .input-wrapper {
+        /* =====================================================
+           SEÇÕES
+        ===================================================== */
 
-            position: relative;
+        .secao {
+
+            border: 1px solid #e7eef9;
+
+            border-radius: 18px;
+
+            padding: 22px;
+
+            margin-bottom: 22px;
+
+            background: #ffffff;
+
+        }
+
+
+        .secao-cabecalho {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            margin-bottom: 20px;
 
         }
 
 
-        .input-wrapper i {
+        .icone-secao {
 
-            position: absolute;
+            width: 42px;
 
-            left: 15px;
+            height: 42px;
 
-            top: 50%;
+            border-radius: 12px;
 
-            transform: translateY(-50%);
+            display: flex;
 
-            color: #8ba0b8;
+            align-items: center;
 
-            font-size: 17px;
+            justify-content: center;
 
-            z-index: 2;
+            background: #e8f3ff;
+
+            color: var(--azul-principal);
+
+            font-size: 19px;
+
+            flex-shrink: 0;
 
         }
 
+
+        .secao-cabecalho h3 {
+
+            margin: 0;
+
+            font-size: 18px;
+
+            font-weight: 700;
+
+            color: #2c3e50;
+
+        }
+
+
+        .secao-cabecalho p {
+
+            margin: 3px 0 0;
+
+            font-size: 13px;
+
+            color: var(--cinza);
+
+        }
+
+
+        /* =====================================================
+           LABELS
+        ===================================================== */
+
+        .form-label {
+
+            font-weight: 600;
+
+            color: #34495e;
+
+            margin-bottom: 7px;
+
+        }
+
+
+        /* =====================================================
+           INPUTS E SELECTS
+        ===================================================== */
 
         .form-control,
         .form-select {
 
-            min-height: 53px;
+            min-height: 46px;
 
-            border-radius: 13px;
+            border-radius: 12px;
 
-            border: 1px solid #d4deea;
+            border: 1px solid var(--borda);
 
-            color: #172b4d;
+            padding: 10px 13px;
 
-            font-size: 14px;
+            color: #2c3e50;
 
-            background: #fff;
+            background-color: #fff;
 
-            padding-left: 45px;
-
-            transition: .2s;
-
-        }
-
-
-        textarea.form-control {
-
-            min-height: 125px;
-
-            padding: 15px;
-
-            resize: vertical;
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
 
         }
 
@@ -906,215 +799,212 @@ foreach ($medicos as $medico) {
         .form-control:focus,
         .form-select:focus {
 
-            border-color: var(--azul);
+            border-color: var(--azul-principal);
 
             box-shadow:
-                0 0 0 4px rgba(47,128,237,.10);
+                0 0 0 0.20rem rgba(47, 128, 237, 0.12);
 
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CAMPOS SOMENTE LEITURA
-        |--------------------------------------------------------------------------
-        */
+        .form-control::placeholder {
 
-        .campo-readonly {
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #f8fbff,
-                    #f2f7fc
-                );
-
-            cursor: not-allowed;
+            color: #a0aabd;
 
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | STATUS
-        |--------------------------------------------------------------------------
-        */
+        textarea.form-control {
 
-        .status-box {
+            min-height: 115px;
 
-            display: grid;
-
-            grid-template-columns:
-                repeat(3, 1fr);
-
-            gap: 12px;
+            resize: vertical;
 
         }
 
 
-        .status-option {
+        /* =====================================================
+           CAMPOS COM ÍCONE
+        ===================================================== */
+
+        .campo-com-icone {
 
             position: relative;
 
         }
 
 
-        .status-option input {
+        .campo-com-icone .icone-campo {
 
             position: absolute;
 
-            opacity: 0;
+            left: 14px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            color: var(--azul-principal);
+
+            pointer-events: none;
+
+            z-index: 2;
 
         }
 
 
-        .status-option label {
+        .campo-com-icone .form-control {
 
-            min-height: 52px;
+            padding-left: 42px;
+
+        }
+
+
+        /* =====================================================
+           QUADRO CLÍNICO
+        ===================================================== */
+
+        .quadro-clinico {
+
+            background: #f8fbff;
+
+            border: 1px solid #dceaff;
+
+            border-radius: 15px;
+
+            padding: 18px;
+
+        }
+
+
+        .quadro-clinico .form-select {
+
+            background-color: #fff;
+
+        }
+
+
+        .ajuda {
+
+            margin-top: 7px;
+
+            color: #7b8794;
+
+            font-size: 12px;
+
+        }
+
+
+        /* =====================================================
+           RODAPÉ
+        ===================================================== */
+
+        .acoes {
 
             display: flex;
 
+            justify-content: space-between;
+
             align-items: center;
+
+            gap: 15px;
+
+            padding-top: 8px;
+
+        }
+
+
+        .btn {
+
+            min-height: 45px;
+
+            border-radius: 12px;
+
+            padding: 10px 20px;
+
+            font-weight: 600;
+
+            display: inline-flex;
+
+            align-items: center;
+
             justify-content: center;
 
             gap: 8px;
 
-            border: 1px solid #d4deea;
-
-            border-radius: 13px;
-
-            cursor: pointer;
-
-            background: #fff;
-
-            transition: .2s;
-
-            color: #475467;
+            transition: all 0.2s ease;
 
         }
 
 
-        .status-option input:checked + label {
+        .btn-azul {
 
-            border-color: var(--azul);
-
-            background: #edf5ff;
-
-            color: var(--azul);
-
-            font-weight: 700;
-
-            box-shadow:
-                0 0 0 3px rgba(47,128,237,.08);
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RODAPÉ
-        |--------------------------------------------------------------------------
-        */
-
-        .acoes-finais {
-
-            display: flex;
-
-            justify-content: flex-end;
-
-            gap: 12px;
-
-            padding-top: 5px;
-
-        }
-
-
-        .btn-cancelar {
-
-            min-height: 48px;
-
-            padding: 0 22px;
-
-            border-radius: 12px;
-
-            border: 1px solid #d0d5dd;
-
-            background: white;
-
-            color: #344054;
-
-            font-weight: 650;
-
-        }
-
-
-        .btn-cancelar:hover {
-
-            background: #f2f4f7;
-
-        }
-
-
-        .btn-salvar {
-
-            min-height: 48px;
-
-            padding: 0 25px;
-
-            border: none;
-
-            border-radius: 12px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #1769d1,
-                    #2f80ed
-                );
+            background: var(--azul-principal);
 
             color: white;
 
-            font-weight: 700;
-
-            box-shadow:
-                0 8px 18px rgba(47,128,237,.22);
-
-            transition: .2s;
+            border: none;
 
         }
 
 
-        .btn-salvar:hover {
+        .btn-azul:hover {
+
+            background: #1c6ad6;
 
             color: white;
 
             transform: translateY(-1px);
 
             box-shadow:
-                0 10px 22px rgba(47,128,237,.28);
+                0 6px 15px rgba(47, 128, 237, 0.20);
 
         }
 
+
+        .btn-cancelar {
+
+            background: #f4f6f9;
+
+            color: #5f6b7a;
+
+            border: 1px solid #e2e7ee;
+
+        }
+
+
+        .btn-cancelar:hover {
+
+            background: #e9edf2;
+
+            color: #394452;
+
+        }
+
+
+        /* =====================================================
+           RESPONSIVIDADE
+        ===================================================== */
 
         @media (max-width: 768px) {
 
             .pagina {
 
-                margin-top: 15px;
-
-                padding: 0 12px 30px;
+                padding: 20px 12px 35px;
 
             }
 
 
-            .hero {
+            .cabecalho {
 
-                padding: 25px;
+                padding: 22px;
+
+                border-radius: 20px;
 
             }
 
 
-            .hero-conteudo {
+            .cabecalho-conteudo {
 
                 align-items: flex-start;
 
@@ -1123,14 +1013,14 @@ foreach ($medicos as $medico) {
             }
 
 
-            .hero h1 {
+            .cabecalho-esquerda {
 
-                font-size: 24px;
+                align-items: flex-start;
 
             }
 
 
-            .badge-id {
+            .badge-internacao {
 
                 align-self: stretch;
 
@@ -1139,29 +1029,61 @@ foreach ($medicos as $medico) {
             }
 
 
-            .card-corpo {
+            .icone-cabecalho {
 
-                padding: 20px;
+                width: 52px;
 
-            }
+                height: 52px;
 
-
-            .status-box {
-
-                grid-template-columns: 1fr;
+                font-size: 25px;
 
             }
 
 
-            .acoes-finais {
+            .cabecalho h1 {
+
+                font-size: 25px;
+
+            }
+
+
+            .card-principal {
+
+                padding: 18px;
+
+                border-radius: 20px;
+
+            }
+
+
+            .secao {
+
+                padding: 17px;
+
+                border-radius: 15px;
+
+            }
+
+
+            .titulo-formulario {
+
+                align-items: flex-start;
+
+                flex-direction: column;
+
+            }
+
+
+            .acoes {
 
                 flex-direction: column-reverse;
 
+                align-items: stretch;
+
             }
 
 
-            .btn-cancelar,
-            .btn-salvar {
+            .acoes .btn {
 
                 width: 100%;
 
@@ -1180,30 +1102,37 @@ foreach ($medicos as $medico) {
 <div class="pagina">
 
 
-    <!-- ==========================================================
+    <!-- =====================================================
          CABEÇALHO
-    =========================================================== -->
+    ====================================================== -->
 
-    <div class="hero">
+    <div class="cabecalho">
 
-        <div class="hero-conteudo">
+        <div class="cabecalho-conteudo">
 
-            <div class="hero-esquerda">
 
-                <div class="hero-icone">
+            <div class="cabecalho-esquerda">
+
+                <div class="icone-cabecalho">
 
                     <i class="bi bi-pencil-square"></i>
 
                 </div>
 
+
                 <div>
 
                     <h1>
+
                         Editar Internação
+
                     </h1>
 
+
                     <p>
+
                         Atualize as informações da internação com segurança.
+
                     </p>
 
                 </div>
@@ -1211,7 +1140,7 @@ foreach ($medicos as $medico) {
             </div>
 
 
-            <div class="badge-id">
+            <div class="badge-internacao">
 
                 <i class="bi bi-hash"></i>
 
@@ -1219,23 +1148,26 @@ foreach ($medicos as $medico) {
 
             </div>
 
+
         </div>
 
     </div>
 
 
-    <!-- ==========================================================
+    <!-- =====================================================
          ERRO
-    =========================================================== -->
+    ====================================================== -->
 
-    <?php if ($erro): ?>
+    <?php if (!empty($erro)): ?>
 
-        <div class="alert-erro">
+        <div class="alerta-erro">
 
             <i class="bi bi-exclamation-triangle-fill"></i>
 
             <span>
+
                 <?= e($erro) ?>
+
             </span>
 
         </div>
@@ -1243,147 +1175,277 @@ foreach ($medicos as $medico) {
     <?php endif; ?>
 
 
-    <!-- ==========================================================
-         FORMULÁRIO
-    =========================================================== -->
+    <!-- =====================================================
+         CARD PRINCIPAL
+    ====================================================== -->
 
-    <form
-        method="POST"
-        action="internacao_editar.php?id=<?= e($id) ?>"
-        id="formInternacao"
-    >
+    <div class="card-principal">
 
 
-        <!-- ======================================================
-             IDENTIFICAÇÃO
-        ======================================================= -->
+        <div class="titulo-formulario">
 
-        <div class="card-form">
+            <div>
 
-            <div class="card-cabecalho">
+                <h2>
 
-                <div class="card-icone">
+                    <i class="bi bi-clipboard2-plus me-2"></i>
 
-                    <i class="bi bi-person-vcard"></i>
+                    Dados da Internação
+
+                </h2>
+
+
+                <p>
+
+                    Edite os dados abaixo para atualizar esta internação.
+
+                </p>
+
+            </div>
+
+
+            <div class="text-end">
+
+                <small class="text-muted">
+
+                    <span class="obrigatorio">*</span>
+
+                    Campo obrigatório
+
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="internacao_editar.php?id=<?= e($id) ?>"
+        >
+
+
+            <!-- =================================================
+                 PACIENTE
+            ================================================== -->
+
+            <div class="secao">
+
+
+                <div class="secao-cabecalho">
+
+                    <div class="icone-secao">
+
+                        <i class="bi bi-person-heart"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <h3>
+
+                            Paciente
+
+                        </h3>
+
+
+                        <p>
+
+                            Selecione o paciente que está internado.
+
+                        </p>
+
+                    </div>
 
                 </div>
 
-                <div>
 
-                    <h2 class="card-titulo">
-                        Identificação
-                    </h2>
+                <div class="row g-4">
 
-                    <p class="card-descricao">
-                        Paciente e profissional responsável pela internação.
-                    </p>
+                    <div class="col-12">
+
+
+                        <label class="form-label">
+
+                            Paciente
+
+                            <span class="obrigatorio">*</span>
+
+                        </label>
+
+
+                        <select
+                            name="paciente_id"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+
+                                Selecione o paciente
+
+                            </option>
+
+
+                            <?php foreach ($pacientes as $p): ?>
+
+                                <option
+                                    value="<?= e($p['id']) ?>"
+                                    <?= ((int)$p['id'] === (int)$pacienteId) ? 'selected' : '' ?>
+                                >
+
+                                    <?= e($p['nome']) ?>
+
+                                </option>
+
+                            <?php endforeach; ?>
+
+
+                        </select>
+
+                    </div>
 
                 </div>
 
             </div>
 
 
-            <div class="card-corpo">
+            <!-- =================================================
+                 EQUIPE RESPONSÁVEL
+            ================================================== -->
 
-                <div class="row">
+            <div class="secao">
 
 
-                    <!-- PACIENTE -->
+                <div class="secao-cabecalho">
 
-                    <div class="col-md-6">
+                    <div class="icone-secao">
 
-                        <div class="campo">
-
-                            <label>
-                                Paciente
-                                <span class="obrigatorio">*</span>
-                            </label>
-
-                            <div class="input-wrapper">
-
-                                <i class="bi bi-person"></i>
-
-                                <select
-                                    name="paciente_id"
-                                    class="form-select"
-                                    required
-                                >
-
-                                    <option value="">
-                                        Selecione o paciente
-                                    </option>
-
-                                    <?php foreach ($pacientes as $paciente): ?>
-
-                                        <option
-                                            value="<?= e($paciente['id']) ?>"
-                                            <?= ((int)$paciente['id'] === (int)$pacienteId) ? 'selected' : '' ?>
-                                        >
-
-                                            <?= e($paciente['nome']) ?>
-
-                                        </option>
-
-                                    <?php endforeach; ?>
-
-                                </select>
-
-                            </div>
-
-                        </div>
+                        <i class="bi bi-people"></i>
 
                     </div>
+
+
+                    <div>
+
+                        <h3>
+
+                            Equipe Responsável
+
+                        </h3>
+
+
+                        <p>
+
+                            Defina os profissionais responsáveis pelo atendimento.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row g-4">
 
 
                     <!-- MÉDICO -->
 
-                    <div class="col-md-6">
+                    <div class="col-lg-6">
 
-                        <div class="campo">
 
-                            <label>
-                                Médico responsável
-                                <span class="obrigatorio">*</span>
-                            </label>
+                        <label class="form-label">
 
-                            <div class="input-wrapper">
+                            Médico responsável
 
-                                <i class="bi bi-person-badge"></i>
+                            <span class="obrigatorio">*</span>
 
-                                <select
-                                    name="medico_id"
-                                    class="form-select"
-                                    required
+                        </label>
+
+
+                        <select
+                            name="medico_id"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+
+                                Selecione o médico
+
+                            </option>
+
+
+                            <?php foreach ($medicos as $m): ?>
+
+                                <option
+                                    value="<?= e($m['id']) ?>"
+                                    <?= ((int)$m['id'] === (int)$medicoId) ? 'selected' : '' ?>
                                 >
 
-                                    <option value="">
-                                        Selecione o médico
-                                    </option>
+                                    <?= e($m['nome']) ?>
 
-                                    <?php foreach ($medicos as $medico): ?>
+                                    - CRM:
 
-                                        <option
-                                            value="<?= e($medico['id']) ?>"
-                                            <?= ((int)$medico['id'] === (int)$medicoId) ? 'selected' : '' ?>
-                                        >
+                                    <?= e($m['crm']) ?>
 
-                                            <?= e($medico['nome']) ?>
+                                </option>
 
-                                            <?php if (!empty($medico['crm'])): ?>
+                            <?php endforeach; ?>
 
-                                                — CRM <?= e($medico['crm']) ?>
 
-                                            <?php endif; ?>
+                        </select>
 
-                                        </option>
+                    </div>
 
-                                    <?php endforeach; ?>
 
-                                </select>
+                    <!-- ENFERMEIRO -->
 
-                            </div>
+                    <div class="col-lg-6">
 
-                        </div>
+
+                        <label class="form-label">
+
+                            Enfermeiro responsável
+
+                            <span class="obrigatorio">*</span>
+
+                        </label>
+
+
+                        <select
+                            name="enfermeiro_id"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+
+                                Selecione o enfermeiro
+
+                            </option>
+
+
+                            <?php foreach ($enfermeiros as $equipe): ?>
+
+                                <option
+                                    value="<?= e($equipe['id']) ?>"
+                                    <?= ((int)$equipe['id'] === (int)$enfermeiroId) ? 'selected' : '' ?>
+                                >
+
+                                    <?= e($equipe['nome']) ?>
+
+                                    - COREN:
+
+                                    <?= e($equipe['coren']) ?>
+
+                                </option>
+
+                            <?php endforeach; ?>
+
+
+                        </select>
 
                     </div>
 
@@ -1392,165 +1454,106 @@ foreach ($medicos as $medico) {
 
             </div>
 
-        </div>
+
+            <!-- =================================================
+                 ACOMODAÇÃO
+            ================================================== -->
+
+            <div class="secao">
 
 
-        <!-- ======================================================
-             PERÍODO
-        ======================================================= -->
+                <div class="secao-cabecalho">
 
-        <div class="card-form">
+                    <div class="icone-secao">
 
-            <div class="card-cabecalho">
-
-                <div class="card-icone">
-
-                    <i class="bi bi-calendar3"></i>
-
-                </div>
-
-                <div>
-
-                    <h2 class="card-titulo">
-                        Período da internação
-                    </h2>
-
-                    <p class="card-descricao">
-                        Registre a entrada e, quando aplicável, a saída do paciente.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="card-corpo">
-
-                <div class="row">
-
-
-                    <!-- DATA ENTRADA -->
-
-                    <div class="col-md-6">
-
-                        <div class="campo">
-
-                            <label>
-                                Data de entrada
-                                <span class="obrigatorio">*</span>
-                            </label>
-
-                            <div class="input-wrapper">
-
-                                <i class="bi bi-calendar-event"></i>
-
-                                <input
-                                    type="datetime-local"
-                                    name="data_entrada"
-                                    class="form-control"
-                                    value="<?= e($dataEntrada) ?>"
-                                    required
-                                >
-
-                            </div>
-
-                        </div>
+                        <i class="bi bi-hospital"></i>
 
                     </div>
 
 
-                    <!-- DATA SAÍDA -->
+                    <div>
 
-                    <div class="col-md-6">
+                        <h3>
 
-                        <div class="campo">
+                            Acomodação
 
-                            <label>
-                                Data de saída
-                            </label>
+                        </h3>
 
-                            <div class="input-wrapper">
 
-                                <i class="bi bi-calendar-check"></i>
+                        <p>
 
-                                <input
-                                    type="datetime-local"
-                                    name="data_saida"
-                                    class="form-control"
-                                    value="<?= e($dataSaida) ?>"
-                                >
+                            Informe a localização atual do paciente dentro da unidade.
 
-                            </div>
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row g-4">
+
+
+                    <!-- DATA DE ENTRADA -->
+
+                    <div class="col-lg-4">
+
+
+                        <label class="form-label">
+
+                            Data de entrada
+
+                            <span class="obrigatorio">*</span>
+
+                        </label>
+
+
+                        <div class="campo-com-icone">
+
+                            <i class="bi bi-calendar3 icone-campo"></i>
+
+
+                            <input
+                                type="date"
+                                name="data_entrada"
+                                class="form-control"
+                                value="<?= e($dataEntrada) ?>"
+                                required
+                            >
 
                         </div>
 
                     </div>
-
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ======================================================
-             LOCALIZAÇÃO
-        ======================================================= -->
-
-        <div class="card-form">
-
-            <div class="card-cabecalho">
-
-                <div class="card-icone">
-
-                    <i class="bi bi-hospital"></i>
-
-                </div>
-
-                <div>
-
-                    <h2 class="card-titulo">
-                        Localização
-                    </h2>
-
-                    <p class="card-descricao">
-                        Informe o quarto e o leito destinados ao paciente.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="card-corpo">
-
-                <div class="row">
 
 
                     <!-- QUARTO -->
 
-                    <div class="col-md-6">
+                    <div class="col-lg-4">
 
-                        <div class="campo">
 
-                            <label>
-                                Quarto
-                            </label>
+                        <label class="form-label">
 
-                            <div class="input-wrapper">
+                            Quarto
 
-                                <i class="bi bi-door-open"></i>
+                            <span class="obrigatorio">*</span>
 
-                                <input
-                                    type="text"
-                                    name="quarto"
-                                    class="form-control"
-                                    value="<?= e($quarto) ?>"
-                                    placeholder="Ex.: 204"
-                                >
+                        </label>
 
-                            </div>
+
+                        <div class="campo-com-icone">
+
+                            <i class="bi bi-door-open icone-campo"></i>
+
+
+                            <input
+                                type="text"
+                                name="quarto"
+                                class="form-control"
+                                value="<?= e($quarto) ?>"
+                                placeholder="Ex.: 204"
+                                autocomplete="off"
+                                required
+                            >
 
                         </div>
 
@@ -1559,27 +1562,76 @@ foreach ($medicos as $medico) {
 
                     <!-- LEITO -->
 
-                    <div class="col-md-6">
+                    <div class="col-lg-4">
 
-                        <div class="campo">
 
-                            <label>
-                                Leito
-                            </label>
+                        <label class="form-label">
 
-                            <div class="input-wrapper">
+                            Leito
 
-                                <i class="bi bi-hospital"></i>
+                            <span class="obrigatorio">*</span>
 
-                                <input
-                                    type="text"
-                                    name="leito"
-                                    class="form-control"
-                                    value="<?= e($leito) ?>"
-                                    placeholder="Ex.: A"
-                                >
+                        </label>
 
-                            </div>
+
+                        <div class="campo-com-icone">
+
+                            <i class="bi bi-bed icone-campo"></i>
+
+
+                            <input
+                                type="text"
+                                name="leito"
+                                class="form-control"
+                                value="<?= e($leito) ?>"
+                                placeholder="Ex.: 02"
+                                autocomplete="off"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- DATA DE SAÍDA -->
+
+                <div class="row g-4 mt-1">
+
+
+                    <div class="col-lg-4">
+
+
+                        <label class="form-label">
+
+                            Data de saída
+
+                        </label>
+
+
+                        <div class="campo-com-icone">
+
+                            <i class="bi bi-calendar-check icone-campo"></i>
+
+
+                            <input
+                                type="date"
+                                name="data_saida"
+                                class="form-control"
+                                value="<?= e($dataSaida) ?>"
+                            >
+
+                        </div>
+
+
+                        <div class="ajuda">
+
+                            <i class="bi bi-info-circle me-1"></i>
+
+                            Deixe em branco caso o paciente ainda esteja internado.
 
                         </div>
 
@@ -1590,343 +1642,301 @@ foreach ($medicos as $medico) {
 
             </div>
 
-        </div>
+
+            <!-- =================================================
+                 INFORMAÇÕES CLÍNICAS
+            ================================================== -->
+
+            <div class="secao">
 
 
-        <!-- ======================================================
-             SITUAÇÃO CLÍNICA
-        ======================================================= -->
+                <div class="secao-cabecalho">
 
-        <div class="card-form">
+                    <div class="icone-secao">
 
-            <div class="card-cabecalho">
+                        <i class="bi bi-heart-pulse"></i>
 
-                <div class="card-icone">
+                    </div>
 
-                    <i class="bi bi-clipboard2-pulse"></i>
+
+                    <div>
+
+                        <h3>
+
+                            Informações Clínicas
+
+                        </h3>
+
+
+                        <p>
+
+                            Atualize informações importantes sobre o estado do paciente.
+
+                        </p>
+
+                    </div>
 
                 </div>
 
-                <div>
 
-                    <h2 class="card-titulo">
-                        Situação clínica
-                    </h2>
+                <div class="row g-4">
 
-                    <p class="card-descricao">
-                        Atualize as informações relacionadas ao estado do paciente.
-                    </p>
+
+                    <!-- MOTIVO -->
+
+                    <div class="col-lg-6">
+
+
+                        <label class="form-label">
+
+                            Motivo da internação
+
+                        </label>
+
+
+                        <textarea
+                            name="motivos"
+                            class="form-control"
+                            placeholder="Descreva o motivo ou a principal razão da internação..."
+                        ><?= e($motivos) ?></textarea>
+
+                    </div>
+
+
+                    <!-- OBSERVAÇÕES -->
+
+                    <div class="col-lg-6">
+
+
+                        <label class="form-label">
+
+                            Observações
+
+                        </label>
+
+
+                        <textarea
+                            name="observacoes"
+                            class="form-control"
+                            placeholder="Adicione informações ou observações importantes..."
+                        ><?= e($observacoes) ?></textarea>
+
+                    </div>
+
+
+                    <!-- QUADRO CLÍNICO -->
+
+                    <div class="col-12">
+
+
+                        <div class="quadro-clinico">
+
+
+                            <label class="form-label">
+
+                                <i class="bi bi-activity me-1"></i>
+
+                                Quadro clínico
+
+                                <span class="obrigatorio">*</span>
+
+                            </label>
+
+
+                            <select
+                                name="quadro_clinico"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+
+                                    Selecione o quadro clínico
+
+                                </option>
+
+
+                                <option
+                                    value="Estável"
+                                    <?= $quadroClinico === 'Estável' ? 'selected' : '' ?>
+                                >
+
+                                    Estável
+
+                                </option>
+
+
+                                <option
+                                    value="Grave"
+                                    <?= $quadroClinico === 'Grave' ? 'selected' : '' ?>
+                                >
+
+                                    Grave
+
+                                </option>
+
+
+                                <option
+                                    value="Gravíssimo"
+                                    <?= $quadroClinico === 'Gravíssimo' ? 'selected' : '' ?>
+                                >
+
+                                    Gravíssimo
+
+                                </option>
+
+
+                                <option
+                                    value="Crítico"
+                                    <?= $quadroClinico === 'Crítico' ? 'selected' : '' ?>
+                                >
+
+                                    Crítico
+
+                                </option>
+
+
+                                <option
+                                    value="Em Recuperação"
+                                    <?= $quadroClinico === 'Em Recuperação' ? 'selected' : '' ?>
+                                >
+
+                                    Em Recuperação
+
+                                </option>
+
+
+                                <option
+                                    value="Pós-operatório"
+                                    <?= $quadroClinico === 'Pós-operatório' ? 'selected' : '' ?>
+                                >
+
+                                    Pós-operatório
+
+                                </option>
+
+
+                                <option
+                                    value="Em Observação"
+                                    <?= $quadroClinico === 'Em Observação' ? 'selected' : '' ?>
+                                >
+
+                                    Em Observação
+
+                                </option>
+
+
+                                <option
+                                    value="Sedado"
+                                    <?= $quadroClinico === 'Sedado' ? 'selected' : '' ?>
+                                >
+
+                                    Sedado
+
+                                </option>
+
+
+                                <option
+                                    value="Intubado"
+                                    <?= $quadroClinico === 'Intubado' ? 'selected' : '' ?>
+                                >
+
+                                    Intubado
+
+                                </option>
+
+
+                                <option
+                                    value="Consciente"
+                                    <?= $quadroClinico === 'Consciente' ? 'selected' : '' ?>
+                                >
+
+                                    Consciente
+
+                                </option>
+
+
+                                <option
+                                    value="Inconsciente"
+                                    <?= $quadroClinico === 'Inconsciente' ? 'selected' : '' ?>
+                                >
+
+                                    Inconsciente
+
+                                </option>
+
+
+                                <option
+                                    value="Com Ventilação Mecânica"
+                                    <?= $quadroClinico === 'Com Ventilação Mecânica' ? 'selected' : '' ?>
+                                >
+
+                                    Com Ventilação Mecânica
+
+                                </option>
+
+
+                            </select>
+
+
+                            <div class="ajuda">
+
+                                <i class="bi bi-info-circle me-1"></i>
+
+                                Selecione a condição que melhor representa o estado atual do paciente.
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
 
                 </div>
 
             </div>
 
 
-            <div class="card-corpo">
+            <!-- =================================================
+                 AÇÕES
+            ================================================== -->
+
+            <div class="acoes">
 
 
-                <!-- MOTIVO -->
+                <a
+                    href="internacoes.php"
+                    class="btn btn-cancelar"
+                >
 
-                <div class="campo">
+                    <i class="bi bi-arrow-left"></i>
 
-                    <label>
-                        Motivo da internação
-                    </label>
+                    Cancelar
 
-                    <textarea
-                        name="motivos"
-                        class="form-control"
-                        placeholder="Informe o motivo da internação..."
-                    ><?= e($motivos) ?></textarea>
-
-                </div>
+                </a>
 
 
-                <!-- QUADRO CLÍNICO -->
+                <button
+                    type="submit"
+                    class="btn btn-azul"
+                >
 
-                <div class="campo">
+                    <i class="bi bi-check2-circle"></i>
 
-                    <label>
-                        Quadro clínico
-                    </label>
+                    Salvar Alterações
 
-                    <textarea
-                        name="quadro_clinico"
-                        class="form-control"
-                        placeholder="Descreva o quadro clínico atual do paciente..."
-                    ><?= e($quadroClinico) ?></textarea>
-
-                </div>
-
-
-                <!-- OBSERVAÇÕES -->
-
-                <div class="campo mb-0">
-
-                    <label>
-                        Observações
-                    </label>
-
-                    <textarea
-                        name="observacoes"
-                        class="form-control"
-                        placeholder="Adicione observações importantes..."
-                    ><?= e($observacoes) ?></textarea>
-
-                </div>
+                </button>
 
 
             </div>
 
-        </div>
 
+        </form>
 
-        <!-- ======================================================
-             EQUIPE
-        ======================================================= -->
 
-        <div class="card-form">
+    </div>
 
-            <div class="card-cabecalho">
-
-                <div class="card-icone">
-
-                    <i class="bi bi-people"></i>
-
-                </div>
-
-                <div>
-
-                    <h2 class="card-titulo">
-                        Equipe responsável
-                    </h2>
-
-                    <p class="card-descricao">
-                        Informações complementares da equipe responsável.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="card-corpo">
-
-                <div class="campo mb-0">
-
-                    <label>
-                    Médico responsável
-
-<span class="obrigatorio">*</span>
-
-</label>
-
-<select
-name="medico_id"
-class="form-select"
-required
->
-
-<option value="">
-    Selecione o médico
-</option>
-
-<?php foreach ($medicos as $m): ?>
-
-    <option value="<?= $m['id'] ?>">
-
-        <?= htmlspecialchars($m['nome']) ?>
-
-        - CRM:
-
-        <?= htmlspecialchars($m['crm']) ?>
-
-    </option>
-
-<?php endforeach; ?>
-
-</select>
-
-</div>
-
-
-<!-- ENFERMEIRO -->
-
-<div class="col-lg-6">
-
-<label class="form-label">
-
-Enfermeiro responsável
-
-<span class="obrigatorio">*</span>
-
-</label>
-
-<select
-name="enfermeiro_id"
-class="form-select"
-required
->
-
-<option value="">
-    Selecione o enfermeiro
-</option>
-
-<?php foreach ($enfermeiros as $e): ?>
-
-    <option value="<?= $e['id'] ?>">
-
-        <?= htmlspecialchars($e['nome']) ?>
-
-        - COREN:
-
-        <?= htmlspecialchars($e['coren']) ?>
-
-    </option>
-
-<?php endforeach; ?>
-
-</select>
-
-</div>
-
-</div>
-
-</div>
-
-        <!-- ======================================================
-             STATUS
-        ======================================================= -->
-
-        <div class="card-form">
-
-            <div class="card-cabecalho">
-
-                <div class="card-icone">
-
-                    <i class="bi bi-activity"></i>
-
-                </div>
-
-                <div>
-
-                    <h2 class="card-titulo">
-                    Quadro clínico
-
-<span class="obrigatorio">*</span>
-
-</label>
-
-<select
-name="quadro_clinico"
-class="form-select"
-required
->
-
-<option value="">
-    Selecione o quadro clínico
-</option>
-
-<option value="Estável">
-    Estável
-</option>
-
-<option value="Grave">
-    Grave
-</option>
-
-<option value="Gravíssimo">
-    Gravíssimo
-</option>
-
-<option value="Crítico">
-    Crítico
-</option>
-
-<option value="Em Recuperação">
-    Em Recuperação
-</option>
-
-<option value="Pós-operatório">
-    Pós-operatório
-</option>
-
-<option value="Em Observação">
-    Em Observação
-</option>
-
-<option value="Sedado">
-    Sedado
-</option>
-
-<option value="Intubado">
-    Intubado
-</option>
-
-<option value="Consciente">
-    Consciente
-</option>
-
-<option value="Inconsciente">
-    Inconsciente
-</option>
-
-<option value="Com Ventilação Mecânica">
-    Com Ventilação Mecânica
-</option>
-
-</select>
-
-<div class="ajuda">
-
-<i class="bi bi-info-circle me-1"></i>
-
-Selecione a condição que melhor representa o estado atual do paciente.
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-        <!-- ======================================================
-             AÇÕES
-        ======================================================= -->
-
-        <div class="acoes-finais">
-
-            <a
-                href="internacoes.php"
-                class="btn btn-cancelar"
-            >
-
-                <i class="bi bi-arrow-left me-1"></i>
-
-                Cancelar
-
-            </a>
-
-
-            <button
-                type="submit"
-                class="btn btn-salvar"
-            >
-
-                <i class="bi bi-check2-circle me-1"></i>
-
-                Salvar alterações
-
-            </button>
-
-        </div>
-
-
-    </form>
 
 </div>
 
