@@ -259,7 +259,6 @@ try {
 ?>
 
 <!DOCTYPE html>
-
 <html lang="pt-br">
 
 <head>
@@ -299,13 +298,14 @@ try {
             --vermelho-claro: #fff1f2;
 
             --verde: #198754;
-            --verde-escuro: #157347;
             --verde-claro: #ecfdf3;
 
             --azul: #2f80ed;
+            --azul-claro: #eaf2ff;
 
-            --cinza-texto: #475467;
-            --cinza-claro: #f8fafc;
+            --texto: #172b4d;
+            --texto-secundario: #667085;
+
             --borda: #e4e7ec;
 
         }
@@ -335,26 +335,26 @@ try {
                 Arial,
                 sans-serif;
 
-            color: #1d2939;
+            color: var(--texto);
 
         }
 
 
-        .container-principal {
+        /*
+        |--------------------------------------------------------------------------
+        | CONTAINER PRINCIPAL
+        |--------------------------------------------------------------------------
+        */
 
-            background: #ffffff;
+        .pagina {
 
-            border-radius: 24px;
+            width: 100%;
 
-            padding: 32px;
+            max-width: 1700px;
 
-            margin-top: 35px;
-            margin-bottom: 35px;
+            margin: 0 auto;
 
-            box-shadow:
-                0 15px 45px rgba(16, 24, 40, .10);
-
-            border: 1px solid rgba(255,255,255,.8);
+            padding: 48px 35px 60px;
 
         }
 
@@ -373,9 +373,9 @@ try {
 
             align-items: center;
 
-            gap: 20px;
+            gap: 30px;
 
-            margin-bottom: 25px;
+            margin-bottom: 35px;
 
         }
 
@@ -386,28 +386,31 @@ try {
 
             align-items: center;
 
-            gap: 15px;
+            gap: 28px;
 
         }
 
 
         .icone-titulo {
 
-            width: 55px;
-            height: 55px;
+            width: 90px;
+            height: 90px;
+
+            flex-shrink: 0;
 
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
-            border-radius: 15px;
+            border-radius: 24px;
 
             background: var(--vermelho-claro);
 
-            color: var(--vermelho);
+            color: #e63946;
 
-            font-size: 25px;
+            font-size: 40px;
 
         }
 
@@ -416,24 +419,24 @@ try {
 
             margin: 0;
 
-            color: var(--vermelho);
+            color: var(--texto);
 
-            font-size: 28px;
+            font-size: 42px;
 
             font-weight: 750;
 
-            letter-spacing: -.5px;
+            letter-spacing: -1px;
 
         }
 
 
         .subtitulo {
 
-            margin-top: 5px;
+            margin-top: 8px;
 
             color: #667085;
 
-            font-size: 14px;
+            font-size: 19px;
 
         }
 
@@ -450,17 +453,23 @@ try {
 
             align-items: center;
 
-            gap: 8px;
+            justify-content: center;
 
-            padding: 11px 18px;
+            gap: 10px;
 
-            border-radius: 10px;
+            padding: 15px 25px;
 
-            background: #344054;
+            min-height: 58px;
 
-            color: #ffffff;
+            border-radius: 15px;
 
-            border: none;
+            background: #ffffff;
+
+            border: 1px solid #d9e1ec;
+
+            color: #315070;
+
+            font-size: 17px;
 
             font-weight: 600;
 
@@ -471,9 +480,11 @@ try {
 
         .btn-voltar:hover {
 
-            background: #1d2939;
+            background: #f8fafc;
 
-            color: #ffffff;
+            color: #172b4d;
+
+            border-color: #c7d2e0;
 
             transform: translateY(-1px);
 
@@ -482,201 +493,226 @@ try {
 
         /*
         |--------------------------------------------------------------------------
-        | ALERTA DE SUCESSO
+        | CARDS SUPERIORES
         |--------------------------------------------------------------------------
         */
 
-        .alert-sucesso {
+        .cards-resumo {
 
-            display: flex;
+            display: grid;
 
-            align-items: center;
+            grid-template-columns:
+                repeat(3, 1fr);
 
-            gap: 15px;
+            gap: 25px;
 
-            background: var(--verde-claro);
-
-            border: 1px solid #a6f4c5;
-
-            color: #067647;
-
-            border-radius: 16px;
-
-            padding: 14px 18px;
-
-            margin-bottom: 25px;
-
-            animation: aparecer .35s ease;
+            margin-bottom: 40px;
 
         }
 
 
-        .alert-icone {
+        .card-resumo {
 
-            width: 42px;
-            height: 42px;
+            background: #ffffff;
 
-            min-width: 42px;
+            border: 1px solid #e1e8f0;
+
+            border-radius: 24px;
+
+            min-height: 145px;
+
+            padding: 30px 35px;
 
             display: flex;
 
             align-items: center;
+
+            gap: 25px;
+
+            box-shadow:
+                0 10px 30px rgba(31, 61, 96, .06);
+
+        }
+
+
+        .card-icone {
+
+            width: 82px;
+            height: 82px;
+
+            flex-shrink: 0;
+
+            border-radius: 22px;
+
+            display: flex;
+
+            align-items: center;
+
             justify-content: center;
 
-            border-radius: 12px;
-
-            background: #d1fadf;
-
-            color: #039855;
-
-            font-size: 21px;
+            font-size: 34px;
 
         }
 
 
-        .alert-conteudo {
+        .card-icone.vermelho {
 
-            flex: 1;
+            background: #fff0f2;
+
+            color: #e63946;
 
         }
 
 
-        .alert-titulo {
+        .card-icone.azul {
 
-            font-weight: 700;
+            background: #eaf2ff;
 
-            font-size: 16px;
+            color: #2f80ed;
+
+        }
+
+
+        .card-icone.verde {
+
+            background: #eafaf2;
+
+            color: #079455;
+
+        }
+
+
+        .card-label {
+
+            color: #667085;
+
+            font-size: 17px;
 
             margin-bottom: 3px;
 
         }
 
 
-        .alert-texto {
+        .card-valor {
 
-            font-size: 14px;
+            color: #193557;
 
-            color: #344054;
-
-        }
-
-
-        .alert-fechar {
-
-            border: none;
-
-            background: transparent;
-
-            color: #039855;
-
-            font-size: 22px;
-
-            opacity: .8;
-
-            cursor: pointer;
-
-        }
-
-
-        .alert-fechar:hover {
-
-            opacity: 1;
-
-        }
-
-
-        @keyframes aparecer {
-
-            from {
-
-                opacity: 0;
-
-                transform: translateY(-10px);
-
-            }
-
-            to {
-
-                opacity: 1;
-
-                transform: translateY(0);
-
-            }
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TOTAL
-        |--------------------------------------------------------------------------
-        */
-
-        .total-box {
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #fff7f7,
-                    #fff1f2
-                );
-
-            border: 1px solid #fecdd3;
-
-            border-radius: 18px;
-
-            padding: 22px;
-
-            text-align: center;
-
-            margin-bottom: 28px;
-
-        }
-
-
-        .total-numero {
-
-            color: var(--vermelho);
-
-            font-size: 34px;
+            font-size: 36px;
 
             font-weight: 750;
 
-            line-height: 1;
-
-        }
-
-
-        .total-texto {
-
-            color: #475467;
-
-            margin-top: 8px;
-
-            font-size: 14px;
-
-            font-weight: 500;
+            line-height: 1.1;
 
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | FILTROS
+        | CARD DA LISTA
+        |--------------------------------------------------------------------------
+        */
+
+        .card-lista {
+
+            background: #ffffff;
+
+            border: 1px solid #e1e8f0;
+
+            border-radius: 24px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 12px 35px rgba(31, 61, 96, .07);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CABEÇALHO DA LISTA
+        |--------------------------------------------------------------------------
+        */
+
+        .lista-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            padding: 30px 35px;
+
+            border-bottom: 1px solid #e6ebf1;
+
+        }
+
+
+        .lista-titulo {
+
+            margin: 0;
+
+            font-size: 25px;
+
+            font-weight: 750;
+
+            color: #193557;
+
+        }
+
+
+        .lista-subtitulo {
+
+            margin-top: 7px;
+
+            margin-bottom: 0;
+
+            color: #718096;
+
+            font-size: 16px;
+
+        }
+
+
+        .contador-registros {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            padding: 10px 17px;
+
+            border-radius: 25px;
+
+            background: #eef5ff;
+
+            color: #2f80ed;
+
+            font-size: 15px;
+
+            font-weight: 650;
+
+            white-space: nowrap;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ÁREA DE FILTROS
         |--------------------------------------------------------------------------
         */
 
         .area-filtros {
 
-            background: #f8fafc;
+            padding: 25px 35px;
 
-            border: 1px solid var(--borda);
+            background: #ffffff;
 
-            border-radius: 16px;
-
-            padding: 16px;
-
-            margin-bottom: 22px;
+            border-bottom: 1px solid #e6ebf1;
 
         }
 
@@ -684,15 +720,26 @@ try {
         .form-control,
         .form-select {
 
-            min-height: 48px;
+            min-height: 54px;
 
-            border-radius: 10px;
+            border-radius: 13px;
 
-            border: 1px solid #d0d5dd;
+            border: 1px solid #d2d9e3;
 
-            font-size: 14px;
+            color: #344054;
 
-            padding-left: 15px;
+            font-size: 16px;
+
+            padding-left: 18px;
+
+            background-color: #ffffff;
+
+        }
+
+
+        .form-control::placeholder {
+
+            color: #98a2b3;
 
         }
 
@@ -700,27 +747,29 @@ try {
         .form-control:focus,
         .form-select:focus {
 
-            border-color: var(--vermelho);
+            border-color: var(--azul);
 
             box-shadow:
-                0 0 0 3px rgba(180,35,47,.10);
+                0 0 0 4px rgba(47,128,237,.10);
 
         }
 
 
         .btn-buscar {
 
-            min-height: 48px;
+            min-height: 54px;
 
-            border-radius: 10px;
+            border-radius: 13px;
 
             background: var(--vermelho);
 
             border: none;
 
-            color: white;
+            color: #ffffff;
 
-            font-weight: 650;
+            font-size: 16px;
+
+            font-weight: 700;
 
             transition: .2s;
 
@@ -731,7 +780,7 @@ try {
 
             background: var(--vermelho-escuro);
 
-            color: white;
+            color: #ffffff;
 
             transform: translateY(-1px);
 
@@ -746,11 +795,9 @@ try {
 
         .tabela-container {
 
-            border: 1px solid var(--borda);
+            width: 100%;
 
-            border-radius: 16px;
-
-            overflow: hidden;
+            overflow-x: auto;
 
         }
 
@@ -759,22 +806,30 @@ try {
 
             margin: 0;
 
+            min-width: 1000px;
+
         }
 
 
         .table thead th {
 
-            background: var(--vermelho);
+            background: #f8fafc;
 
-            color: white;
+            color: #667085;
 
-            border: none;
+            border-bottom: 1px solid #e4e7ec;
 
-            padding: 15px;
+            border-top: none;
 
-            font-size: 13px;
+            padding: 22px 25px;
 
-            font-weight: 700;
+            font-size: 14px;
+
+            font-weight: 750;
+
+            text-transform: uppercase;
+
+            letter-spacing: .3px;
 
             white-space: nowrap;
 
@@ -783,13 +838,15 @@ try {
 
         .table tbody td {
 
-            padding: 15px;
+            padding: 23px 25px;
 
             vertical-align: middle;
 
             border-color: #eaecf0;
 
-            font-size: 14px;
+            color: #172b4d;
+
+            font-size: 15px;
 
         }
 
@@ -803,7 +860,7 @@ try {
 
         .table tbody tr:hover {
 
-            background: #fffafa;
+            background: #fbfdff;
 
         }
 
@@ -812,10 +869,18 @@ try {
 
             font-weight: 700;
 
-            color: #101828;
+            color: #172b4d;
+
+            font-size: 16px;
 
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | BADGE DA FUNÇÃO
+        |--------------------------------------------------------------------------
+        */
 
         .badge-funcao {
 
@@ -823,24 +888,70 @@ try {
 
             align-items: center;
 
-            padding: 7px 11px;
+            padding: 9px 15px;
 
-            border-radius: 20px;
+            border-radius: 22px;
 
             background: #f2f4f7;
 
             color: #344054;
 
-            font-size: 12px;
+            font-size: 13px;
 
-            font-weight: 600;
+            font-weight: 650;
+
+            white-space: nowrap;
 
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | BOTÕES DE AÇÃO
+        | STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        .badge-status {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            padding: 8px 13px;
+
+            border-radius: 20px;
+
+            background: #fff1f2;
+
+            color: #d92d20;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+        }
+
+
+        .badge-status::before {
+
+            content: "";
+
+            width: 8px;
+
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #e63946;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BOTÕES
         |--------------------------------------------------------------------------
         */
 
@@ -850,22 +961,25 @@ try {
 
             align-items: center;
 
-            gap: 8px;
+            gap: 10px;
 
         }
 
 
         .btn-acao {
 
-            width: 40px;
-            height: 40px;
+            width: 46px;
+            height: 46px;
 
             display: inline-flex;
 
             align-items: center;
+
             justify-content: center;
 
-            border-radius: 10px;
+            border-radius: 13px;
+
+            font-size: 19px;
 
             transition: .2s;
 
@@ -874,31 +988,33 @@ try {
 
         .btn-visualizar {
 
-            background: #f2f4f7;
+            background: #ffffff;
 
-            color: #344054;
+            color: #2f80ed;
 
-            border: 1px solid #d0d5dd;
+            border: 1px solid #d6e1f0;
 
         }
 
 
         .btn-visualizar:hover {
 
-            background: #344054;
+            background: #eef5ff;
 
-            color: white;
+            color: #1769d2;
 
-            border-color: #344054;
+            border-color: #b9cceb;
+
+            transform: translateY(-1px);
 
         }
 
 
         .btn-reativar {
 
-            background: #ecfdf3;
+            background: #effdf5;
 
-            color: #067647;
+            color: #079455;
 
             border: 1px solid #abefc6;
 
@@ -909,7 +1025,7 @@ try {
 
             background: #198754;
 
-            color: white;
+            color: #ffffff;
 
             border-color: #198754;
 
@@ -940,7 +1056,7 @@ try {
 
         .modal-header {
 
-            padding: 22px 25px;
+            padding: 25px;
 
             border-bottom: 1px solid #eaecf0;
 
@@ -955,28 +1071,29 @@ try {
 
             align-items: center;
 
-            gap: 13px;
+            gap: 14px;
 
         }
 
 
         .modal-icone {
 
-            width: 48px;
-            height: 48px;
+            width: 52px;
+            height: 52px;
 
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
-            border-radius: 13px;
+            border-radius: 14px;
 
             background: #ecfdf3;
 
             color: #198754;
 
-            font-size: 22px;
+            font-size: 24px;
 
         }
 
@@ -985,7 +1102,7 @@ try {
 
             margin: 0;
 
-            font-size: 20px;
+            font-size: 21px;
 
             font-weight: 750;
 
@@ -1000,7 +1117,7 @@ try {
 
             color: #667085;
 
-            font-size: 13px;
+            font-size: 14px;
 
         }
 
@@ -1020,33 +1137,33 @@ try {
 
             border-radius: 13px;
 
-            padding: 13px 15px;
+            padding: 15px;
 
             display: flex;
 
-            gap: 11px;
+            gap: 12px;
 
             align-items: flex-start;
 
-            margin-bottom: 20px;
+            margin-bottom: 22px;
 
             color: #7a2e0b;
 
-            font-size: 13px;
+            font-size: 14px;
 
         }
 
 
         .alerta-confirmacao i {
 
-            font-size: 18px;
+            font-size: 19px;
 
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | INFORMAÇÕES DO FUNCIONÁRIO
+        | INFORMAÇÕES
         |--------------------------------------------------------------------------
         */
 
@@ -1056,7 +1173,7 @@ try {
 
             border: 1px solid #eaecf0;
 
-            border-radius: 16px;
+            border-radius: 17px;
 
             padding: 18px;
 
@@ -1065,7 +1182,7 @@ try {
 
         .info-item {
 
-            padding: 10px 12px;
+            padding: 11px 12px;
 
         }
 
@@ -1082,9 +1199,9 @@ try {
 
             letter-spacing: .5px;
 
-            font-weight: 700;
+            font-weight: 750;
 
-            margin-bottom: 3px;
+            margin-bottom: 5px;
 
         }
 
@@ -1093,7 +1210,7 @@ try {
 
             color: #101828;
 
-            font-size: 14px;
+            font-size: 15px;
 
             font-weight: 600;
 
@@ -1104,7 +1221,7 @@ try {
 
         /*
         |--------------------------------------------------------------------------
-        | RODAPÉ DO MODAL
+        | RODAPÉ MODAL
         |--------------------------------------------------------------------------
         */
 
@@ -1123,13 +1240,13 @@ try {
 
             border: 1px solid #d0d5dd;
 
-            background: white;
+            background: #ffffff;
 
             color: #344054;
 
-            border-radius: 10px;
+            border-radius: 11px;
 
-            padding: 10px 18px;
+            padding: 11px 20px;
 
             font-weight: 600;
 
@@ -1149,13 +1266,13 @@ try {
 
             background: #198754;
 
-            color: white;
+            color: #ffffff;
 
-            border-radius: 10px;
+            border-radius: 11px;
 
-            padding: 10px 18px;
+            padding: 11px 20px;
 
-            font-weight: 650;
+            font-weight: 700;
 
         }
 
@@ -1164,7 +1281,110 @@ try {
 
             background: #157347;
 
-            color: white;
+            color: #ffffff;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MENSAGEM DE SUCESSO - PEQUENO TOAST
+        |--------------------------------------------------------------------------
+        */
+
+        .toast-sucesso {
+
+            position: fixed;
+
+            right: 25px;
+
+            bottom: 25px;
+
+            z-index: 9999;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 15px 20px;
+
+            background: #ffffff;
+
+            border: 1px solid #abefc6;
+
+            border-radius: 14px;
+
+            box-shadow:
+                0 15px 40px rgba(16,24,40,.15);
+
+            color: #067647;
+
+            animation: aparecer .35s ease;
+
+        }
+
+
+        .toast-icone {
+
+            width: 38px;
+            height: 38px;
+
+            border-radius: 10px;
+
+            background: #ecfdf3;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 19px;
+
+        }
+
+
+        .toast-conteudo strong {
+
+            display: block;
+
+            font-size: 14px;
+
+        }
+
+
+        .toast-conteudo span {
+
+            display: block;
+
+            color: #667085;
+
+            font-size: 13px;
+
+            margin-top: 2px;
+
+        }
+
+
+        @keyframes aparecer {
+
+            from {
+
+                opacity: 0;
+
+                transform: translateY(10px);
+
+            }
+
+            to {
+
+                opacity: 1;
+
+                transform: translateY(0);
+
+            }
 
         }
 
@@ -1175,22 +1395,68 @@ try {
         |--------------------------------------------------------------------------
         */
 
+        @media (max-width: 1100px) {
+
+            .cards-resumo {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            .titulo {
+
+                font-size: 34px;
+
+            }
+
+        }
+
+
         @media (max-width: 768px) {
 
-            .container-principal {
+            .pagina {
 
-                padding: 20px;
-
-                margin-top: 15px;
+                padding: 25px 15px 40px;
 
             }
 
 
             .cabecalho {
 
+                flex-direction: column;
+
                 align-items: flex-start;
 
-                flex-direction: column;
+            }
+
+
+            .titulo-area {
+
+                align-items: flex-start;
+
+            }
+
+
+            .icone-titulo {
+
+                width: 70px;
+                height: 70px;
+
+                font-size: 30px;
+
+            }
+
+
+            .titulo {
+
+                font-size: 28px;
+
+            }
+
+
+            .subtitulo {
+
+                font-size: 15px;
 
             }
 
@@ -1199,42 +1465,45 @@ try {
 
                 width: 100%;
 
-                justify-content: center;
+            }
+
+
+            .card-resumo {
+
+                min-height: 120px;
+
+                padding: 22px;
 
             }
 
 
-            .titulo {
+            .lista-header {
 
-                font-size: 23px;
+                flex-direction: column;
 
-            }
+                align-items: flex-start;
 
+                gap: 15px;
 
-            .tabela-container {
-
-                overflow-x: auto;
-
-            }
-
-
-            .modal-dialog {
-
-                margin: 10px;
+                padding: 25px;
 
             }
 
 
-            .modal-body {
+            .area-filtros {
 
-                padding: 18px;
+                padding: 20px;
 
             }
 
 
-            .info-item {
+            .toast-sucesso {
 
-                padding: 9px 6px;
+                left: 15px;
+
+                right: 15px;
+
+                bottom: 15px;
 
             }
 
@@ -1248,124 +1517,180 @@ try {
 <body>
 
 
-<div class="container">
-
-    <div class="container-principal">
+<div class="pagina">
 
 
-        <!-- ==========================================================
-             CABEÇALHO
-        =========================================================== -->
+    <!-- ==========================================================
+         CABEÇALHO
+    =========================================================== -->
 
-        <div class="cabecalho">
+    <div class="cabecalho">
 
-            <div class="titulo-area">
+        <div class="titulo-area">
 
-                <div class="icone-titulo">
+            <div class="icone-titulo">
 
-                    <i class="bi bi-person-x"></i>
-
-                </div>
-
-                <div>
-
-                    <h1 class="titulo">
-                        Funcionários Desativados
-                    </h1>
-
-                    <div class="subtitulo">
-                        Consulte e gerencie os funcionários que estão atualmente inativos no hospital.
-                    </div>
-
-                </div>
+                <i class="bi bi-person-x"></i>
 
             </div>
 
 
-            <a
-                href="funcionarios.php"
-                class="btn btn-voltar"
-            >
+            <div>
 
-                <i class="bi bi-arrow-left"></i>
+                <h1 class="titulo">
+                    Funcionários Desativados
+                </h1>
 
-                Voltar para funcionários
+                <p class="subtitulo">
+                    Consulte os funcionários que foram temporariamente retirados da lista de ativos.
+                </p>
 
-            </a>
+            </div>
 
         </div>
 
 
+        <a
+            href="funcionarios.php"
+            class="btn btn-voltar"
+        >
 
-        <!-- ==========================================================
-             MENSAGEM DE SUCESSO
-        =========================================================== -->
+            <i class="bi bi-arrow-left"></i>
 
-        <?php if ($mensagemSucesso): ?>
+            Voltar aos funcionários
 
-            <div
-                class="alert-sucesso"
-                id="alertaSucesso"
-            >
+        </a>
 
-                <div class="alert-icone">
-
-                    <i class="bi bi-check-lg"></i>
-
-                </div>
+    </div>
 
 
-                <div class="alert-conteudo">
+    <!-- ==========================================================
+         CARDS DE RESUMO
+    =========================================================== -->
 
-                    <div class="alert-titulo">
-                        Funcionário reativado com sucesso!
-                    </div>
-
-                    <div class="alert-texto">
-                        <?= htmlspecialchars($mensagemSucesso) ?>
-                    </div>
-
-                </div>
+    <div class="cards-resumo">
 
 
-                <button
-                    type="button"
-                    class="alert-fechar"
-                    onclick="fecharAlerta()"
-                    aria-label="Fechar"
-                >
+        <!-- FUNCIONÁRIOS DESATIVADOS -->
 
-                    <i class="bi bi-x-lg"></i>
+        <div class="card-resumo">
 
-                </button>
+            <div class="card-icone vermelho">
+
+                <i class="bi bi-person-x"></i>
 
             </div>
 
-        <?php endif; ?>
+
+            <div>
+
+                <div class="card-label">
+                    Funcionários desativados
+                </div>
+
+                <div class="card-valor">
+                    <?= count($funcionarios) ?>
+                </div>
+
+            </div>
+
+        </div>
 
 
+        <!-- REGISTROS PRESERVADOS -->
 
-        <!-- ==========================================================
-             TOTAL
-        =========================================================== -->
+        <div class="card-resumo">
 
-        <div class="total-box">
+            <div class="card-icone azul">
 
-            <div class="total-numero">
+                <i class="bi bi-database-check"></i>
+
+            </div>
+
+
+            <div>
+
+                <div class="card-label">
+                    Registros preservados
+                </div>
+
+                <div class="card-valor">
+                    100%
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- DADOS MANTIDOS -->
+
+        <div class="card-resumo">
+
+            <div class="card-icone verde">
+
+                <i class="bi bi-shield-check"></i>
+
+            </div>
+
+
+            <div>
+
+                <div class="card-label">
+                    Dados mantidos no sistema
+                </div>
+
+                <div class="card-valor">
+                    Ativo
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================================
+         CARD DA LISTA
+    =========================================================== -->
+
+    <div class="card-lista">
+
+
+        <!-- CABEÇALHO -->
+
+        <div class="lista-header">
+
+            <div>
+
+                <h2 class="lista-titulo">
+                    Lista de funcionários desativados
+                </h2>
+
+                <p class="lista-subtitulo">
+                    Os registros abaixo podem ser visualizados e reativados quando necessário.
+                </p>
+
+            </div>
+
+
+            <div class="contador-registros">
+
+                <i class="bi bi-inbox"></i>
+
                 <?= count($funcionarios) ?>
-            </div>
 
-            <div class="total-texto">
-                Funcionários desativados
+                <?= count($funcionarios) == 1 ? 'registro' : 'registros' ?>
+
             </div>
 
         </div>
 
 
-
-        <!-- ==========================================================
+        <!-- ======================================================
              FILTROS
-        =========================================================== -->
+        ======================================================= -->
 
         <div class="area-filtros">
 
@@ -1373,6 +1698,7 @@ try {
                 method="GET"
                 class="row g-2"
             >
+
 
                 <div class="col-md-7">
 
@@ -1458,228 +1784,252 @@ try {
         </div>
 
 
-
-        <!-- ==========================================================
+        <!-- ======================================================
              TABELA
-        =========================================================== -->
+        ======================================================= -->
 
         <div class="tabela-container">
 
-            <div class="table-responsive">
+            <table class="table table-hover">
 
-                <table class="table table-hover">
+                <thead>
 
-                    <thead>
+                    <tr>
+
+                        <th>
+                            Nome
+                        </th>
+
+                        <th>
+                            Função
+                        </th>
+
+                        <th>
+                            Registro
+                        </th>
+
+                        <th>
+                            Telefone
+                        </th>
+
+                        <th>
+                            E-mail
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Ações
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                <?php if (count($funcionarios) > 0): ?>
+
+
+                    <?php foreach ($funcionarios as $f): ?>
 
                         <tr>
 
-                            <th>Nome</th>
 
-                            <th>Função</th>
+                            <!-- NOME -->
 
-                            <th>Registro</th>
+                            <td>
 
-                            <th>Telefone</th>
+                                <div class="nome-funcionario">
 
-                            <th>E-mail</th>
-
-                            <th>Ações</th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-
-                    <?php if (count($funcionarios) > 0): ?>
-
-
-                        <?php foreach ($funcionarios as $f): ?>
-
-
-                            <tr>
-
-
-                                <!-- NOME -->
-
-                                <td>
-
-                                    <div class="nome-funcionario">
-
-                                        <?= htmlspecialchars($f['nome']) ?>
-
-                                    </div>
-
-                                </td>
-
-
-                                <!-- FUNÇÃO -->
-
-                                <td>
-
-                                    <span class="badge-funcao">
-
-                                        <?= htmlspecialchars($f['funcao']) ?>
-
-                                    </span>
-
-                                </td>
-
-
-                                <!-- REGISTRO -->
-
-                                <td>
-
-                                    <?= htmlspecialchars($f['registro'] ?? 'Não informado') ?>
-
-                                </td>
-
-
-                                <!-- TELEFONE -->
-
-                                <td>
-
-                                    <?= htmlspecialchars($f['telefone'] ?? 'Não informado') ?>
-
-                                </td>
-
-
-                                <!-- E-MAIL -->
-
-                                <td>
-
-                                    <?= htmlspecialchars($f['email'] ?? 'Não informado') ?>
-
-                                </td>
-
-
-                                <!-- AÇÕES -->
-
-                                <td>
-
-                                    <div class="acoes">
-
-
-                                        <!-- VISUALIZAR -->
-
-                                        <a
-                                            href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
-                                            class="btn-acao btn-visualizar"
-                                            title="Visualizar funcionário"
-                                        >
-
-                                            <i class="bi bi-eye"></i>
-
-                                        </a>
-
-
-                                        <!-- REATIVAR -->
-
-                                        <button
-                                            type="button"
-                                            class="btn-acao btn-reativar"
-                                            title="Reativar funcionário"
-
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalReativar"
-
-                                            data-id="<?= htmlspecialchars($f['id']) ?>"
-
-                                            data-tabela="<?= htmlspecialchars($f['tabela_origem']) ?>"
-
-                                            data-nome="<?= htmlspecialchars($f['nome']) ?>"
-
-                                            data-funcao="<?= htmlspecialchars($f['funcao']) ?>"
-
-                                            data-registro="<?= htmlspecialchars($f['registro'] ?? 'Não informado') ?>"
-
-                                            data-telefone="<?= htmlspecialchars($f['telefone'] ?? 'Não informado') ?>"
-
-                                            data-email="<?= htmlspecialchars($f['email'] ?? 'Não informado') ?>"
-
-                                            data-cpf="<?= htmlspecialchars($f['cpf'] ?? 'Não informado') ?>"
-
-                                            data-nascimento="<?= htmlspecialchars($f['data_nascimento'] ?? 'Não informado') ?>"
-
-                                            data-sexo="<?= htmlspecialchars($f['sexo'] ?? 'Não informado') ?>"
-
-                                            data-endereco="<?= htmlspecialchars($f['endereco_id'] ?? 'Não informado') ?>"
-                                        >
-
-                                            <i class="bi bi-person-check"></i>
-
-                                        </button>
-
-
-                                    </div>
-
-                                </td>
-
-
-                            </tr>
-
-
-                        <?php endforeach; ?>
-
-
-                    <?php else: ?>
-
-
-                        <tr>
-
-                            <td
-                                colspan="6"
-                                class="text-center py-5"
-                            >
-
-                                <div class="text-muted">
-
-                                    <i
-                                        class="bi bi-person-check"
-                                        style="font-size:38px;"
-                                    ></i>
-
-                                    <div class="mt-2 fw-semibold">
-
-                                        Nenhum funcionário desativado encontrado.
-
-                                    </div>
-
-                                    <small>
-
-                                        Não existem funcionários correspondentes aos filtros informados.
-
-                                    </small>
+                                    <?= htmlspecialchars($f['nome']) ?>
 
                                 </div>
 
                             </td>
 
+
+                            <!-- FUNÇÃO -->
+
+                            <td>
+
+                                <span class="badge-funcao">
+
+                                    <?= htmlspecialchars($f['funcao']) ?>
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- REGISTRO -->
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $f['registro'] ?? 'Não informado'
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- TELEFONE -->
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $f['telefone'] ?? 'Não informado'
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- E-MAIL -->
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $f['email'] ?? 'Não informado'
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- STATUS -->
+
+                            <td>
+
+                                <span class="badge-status">
+                                    Desativado
+                                </span>
+
+                            </td>
+
+
+                            <!-- AÇÕES -->
+
+                            <td>
+
+                                <div class="acoes">
+
+
+                                    <!-- VISUALIZAR -->
+
+                                    <a
+                                        href="funcionario_visualizar.php?id=<?= $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
+                                        class="btn-acao btn-visualizar"
+                                        title="Visualizar funcionário"
+                                    >
+
+                                        <i class="bi bi-eye"></i>
+
+                                    </a>
+
+
+                                    <!-- REATIVAR -->
+
+                                    <button
+                                        type="button"
+                                        class="btn-acao btn-reativar"
+                                        title="Reativar funcionário"
+
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalReativar"
+
+                                        data-id="<?= htmlspecialchars($f['id']) ?>"
+
+                                        data-tabela="<?= htmlspecialchars($f['tabela_origem']) ?>"
+
+                                        data-nome="<?= htmlspecialchars($f['nome']) ?>"
+
+                                        data-funcao="<?= htmlspecialchars($f['funcao']) ?>"
+
+                                        data-registro="<?= htmlspecialchars($f['registro'] ?? 'Não informado') ?>"
+
+                                        data-telefone="<?= htmlspecialchars($f['telefone'] ?? 'Não informado') ?>"
+
+                                        data-email="<?= htmlspecialchars($f['email'] ?? 'Não informado') ?>"
+
+                                        data-cpf="<?= htmlspecialchars($f['cpf'] ?? 'Não informado') ?>"
+
+                                        data-nascimento="<?= htmlspecialchars($f['data_nascimento'] ?? 'Não informado') ?>"
+
+                                        data-sexo="<?= htmlspecialchars($f['sexo'] ?? 'Não informado') ?>"
+
+                                        data-endereco="<?= htmlspecialchars($f['endereco_id'] ?? 'Não informado') ?>"
+                                    >
+
+                                        <i class="bi bi-person-check"></i>
+
+                                    </button>
+
+
+                                </div>
+
+                            </td>
+
+
                         </tr>
 
+                    <?php endforeach; ?>
 
-                    <?php endif; ?>
+
+                <?php else: ?>
 
 
-                    </tbody>
+                    <tr>
 
-                </table>
+                        <td
+                            colspan="7"
+                            class="text-center py-5"
+                        >
 
-            </div>
+                            <div class="text-muted">
+
+                                <i
+                                    class="bi bi-person-check"
+                                    style="font-size:42px;"
+                                ></i>
+
+                                <div class="mt-3 fw-semibold">
+
+                                    Nenhum funcionário desativado encontrado.
+
+                                </div>
+
+                                <small>
+
+                                    Não existem funcionários correspondentes aos filtros informados.
+
+                                </small>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                <?php endif; ?>
+
+
+                </tbody>
+
+            </table>
 
         </div>
-
 
     </div>
 
 </div>
 
 
-
 <!-- ==============================================================
-     MODAL DE CONFIRMAÇÃO DE REATIVAÇÃO
+     MODAL DE REATIVAÇÃO
 ================================================================ -->
 
 <div
@@ -1731,7 +2081,6 @@ try {
             </div>
 
 
-
             <!-- CORPO -->
 
             <div class="modal-body">
@@ -1746,7 +2095,6 @@ try {
                         <strong>Atenção:</strong>
 
                         Você está prestes a reativar este funcionário.
-
                         Após a confirmação, ele voltará a ser considerado
                         <strong>ativo</strong> no hospital.
 
@@ -1755,15 +2103,12 @@ try {
                 </div>
 
 
-
-                <!-- INFORMAÇÕES DO FUNCIONÁRIO -->
+                <!-- INFORMAÇÕES -->
 
                 <div class="info-funcionario">
 
                     <div class="row">
 
-
-                        <!-- NOME -->
 
                         <div class="col-md-8 info-item">
 
@@ -1779,8 +2124,6 @@ try {
                         </div>
 
 
-                        <!-- FUNÇÃO -->
-
                         <div class="col-md-4 info-item">
 
                             <span class="info-label">
@@ -1794,8 +2137,6 @@ try {
 
                         </div>
 
-
-                        <!-- REGISTRO -->
 
                         <div class="col-md-6 info-item">
 
@@ -1811,8 +2152,6 @@ try {
                         </div>
 
 
-                        <!-- CPF -->
-
                         <div class="col-md-6 info-item">
 
                             <span class="info-label">
@@ -1826,8 +2165,6 @@ try {
 
                         </div>
 
-
-                        <!-- TELEFONE -->
 
                         <div class="col-md-6 info-item">
 
@@ -1843,8 +2180,6 @@ try {
                         </div>
 
 
-                        <!-- E-MAIL -->
-
                         <div class="col-md-6 info-item">
 
                             <span class="info-label">
@@ -1858,8 +2193,6 @@ try {
 
                         </div>
 
-
-                        <!-- DATA NASCIMENTO -->
 
                         <div class="col-md-6 info-item">
 
@@ -1875,8 +2208,6 @@ try {
                         </div>
 
 
-                        <!-- SEXO -->
-
                         <div class="col-md-6 info-item">
 
                             <span class="info-label">
@@ -1890,8 +2221,6 @@ try {
 
                         </div>
 
-
-                        <!-- ENDEREÇO -->
 
                         <div class="col-12 info-item">
 
@@ -1912,7 +2241,6 @@ try {
                 </div>
 
             </div>
-
 
 
             <!-- RODAPÉ -->
@@ -1974,13 +2302,11 @@ try {
 </div>
 
 
-
 <!-- Bootstrap JS -->
 
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 ></script>
-
 
 
 <script>
@@ -1991,123 +2317,171 @@ try {
 |--------------------------------------------------------------------------
 */
 
-const modalReativar = document.getElementById('modalReativar');
+const modalReativar =
+    document.getElementById('modalReativar');
 
 
-modalReativar.addEventListener('show.bs.modal', function (event) {
+modalReativar.addEventListener(
+    'show.bs.modal',
+    function (event) {
 
-    const botao = event.relatedTarget;
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PEGAR DADOS DO FUNCIONÁRIO
-    |--------------------------------------------------------------------------
-    */
-
-    const id = botao.getAttribute('data-id');
-
-    const tabela = botao.getAttribute('data-tabela');
-
-    const nome = botao.getAttribute('data-nome');
-
-    const funcao = botao.getAttribute('data-funcao');
-
-    const registro = botao.getAttribute('data-registro');
-
-    const telefone = botao.getAttribute('data-telefone');
-
-    const email = botao.getAttribute('data-email');
-
-    const cpf = botao.getAttribute('data-cpf');
-
-    const nascimento = botao.getAttribute('data-nascimento');
-
-    const sexo = botao.getAttribute('data-sexo');
-
-    const endereco = botao.getAttribute('data-endereco');
+        const botao = event.relatedTarget;
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | PREENCHER MODAL
-    |--------------------------------------------------------------------------
-    */
+        const id =
+            botao.getAttribute('data-id');
 
-    document.getElementById('modalNome').textContent = nome;
+        const tabela =
+            botao.getAttribute('data-tabela');
 
-    document.getElementById('modalFuncao').textContent = funcao;
+        const nome =
+            botao.getAttribute('data-nome');
 
-    document.getElementById('modalRegistro').textContent = registro;
+        const funcao =
+            botao.getAttribute('data-funcao');
 
-    document.getElementById('modalTelefone').textContent = telefone;
+        const registro =
+            botao.getAttribute('data-registro');
 
-    document.getElementById('modalEmail').textContent = email;
+        const telefone =
+            botao.getAttribute('data-telefone');
 
-    document.getElementById('modalCpf').textContent = cpf;
+        const email =
+            botao.getAttribute('data-email');
 
-    document.getElementById('modalNascimento').textContent = nascimento;
+        const cpf =
+            botao.getAttribute('data-cpf');
 
-    document.getElementById('modalSexo').textContent = sexo;
+        const nascimento =
+            botao.getAttribute('data-nascimento');
 
-    document.getElementById('modalEndereco').textContent = endereco;
+        const sexo =
+            botao.getAttribute('data-sexo');
+
+        const endereco =
+            botao.getAttribute('data-endereco');
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | PREENCHER FORMULÁRIO
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | PREENCHER MODAL
+        |--------------------------------------------------------------------------
+        */
 
-    document.getElementById('reativarId').value = id;
+        document.getElementById('modalNome').textContent =
+            nome;
 
-    document.getElementById('reativarTabela').value = tabela;
+        document.getElementById('modalFuncao').textContent =
+            funcao;
 
-});
+        document.getElementById('modalRegistro').textContent =
+            registro;
+
+        document.getElementById('modalTelefone').textContent =
+            telefone;
+
+        document.getElementById('modalEmail').textContent =
+            email;
+
+        document.getElementById('modalCpf').textContent =
+            cpf;
+
+        document.getElementById('modalNascimento').textContent =
+            nascimento;
+
+        document.getElementById('modalSexo').textContent =
+            sexo;
+
+        document.getElementById('modalEndereco').textContent =
+            endereco;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FORMULÁRIO
+        |--------------------------------------------------------------------------
+        */
+
+        document.getElementById('reativarId').value =
+            id;
+
+        document.getElementById('reativarTabela').value =
+            tabela;
+
+    }
+);
 
 
 /*
 |--------------------------------------------------------------------------
-| FECHAR ALERTA
+| MENSAGEM DE SUCESSO
 |--------------------------------------------------------------------------
 */
 
-function fecharAlerta() {
+<?php if ($mensagemSucesso): ?>
 
-    const alerta = document.getElementById('alertaSucesso');
+setTimeout(function () {
 
-    if (alerta) {
+    const toast = document.getElementById(
+        'toastSucesso'
+    );
 
-        alerta.style.opacity = '0';
+    if (toast) {
 
-        alerta.style.transform = 'translateY(-10px)';
+        toast.style.opacity = '0';
 
-        alerta.style.transition = '.3s';
+        toast.style.transform =
+            'translateY(10px)';
+
+        toast.style.transition = '.3s';
 
         setTimeout(function () {
 
-            alerta.remove();
+            toast.remove();
 
         }, 300);
 
     }
 
-}
+}, 5000);
 
-
-/*
-|--------------------------------------------------------------------------
-| FECHAR AUTOMATICAMENTE
-|--------------------------------------------------------------------------
-*/
-
-setTimeout(function () {
-
-    fecharAlerta();
-
-}, 6000);
+<?php endif; ?>
 
 </script>
+
+
+<?php if ($mensagemSucesso): ?>
+
+<!-- ==========================================================
+     TOAST DE SUCESSO
+=========================================================== -->
+
+<div
+    class="toast-sucesso"
+    id="toastSucesso"
+>
+
+    <div class="toast-icone">
+
+        <i class="bi bi-check-lg"></i>
+
+    </div>
+
+    <div class="toast-conteudo">
+
+        <strong>
+            Funcionário reativado!
+        </strong>
+
+        <span>
+            <?= htmlspecialchars($mensagemSucesso) ?>
+        </span>
+
+    </div>
+
+</div>
+
+<?php endif; ?>
 
 
 </body>
