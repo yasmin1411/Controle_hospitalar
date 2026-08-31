@@ -1,19 +1,100 @@
 <?php
+
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+/*
+|--------------------------------------------------------------------------
+| VERIFICA ID
+|--------------------------------------------------------------------------
+*/
 
-    if ($id > 0) {
-        // Atualiza a tabela "fornecedor" no seu banco
-        $stmt = $pdo->prepare("UPDATE fornecedor SET ativo = 0 WHERE id = :id");
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-    }
+$id = (int) ($_POST['id'] ?? 0);
+
+if ($id <= 0) {
+    header('Location: fornecedor.php');
+    exit;
 }
 
-// Redireciona para a página de fornecedores desativados
-header("Location: fornecedor_desativados.php");
-exit();
-?>
+
+/*
+|--------------------------------------------------------------------------
+| DESATIVA O FORNECEDOR
+|--------------------------------------------------------------------------
+*/
+
+try {
+
+    /*
+    |--------------------------------------------------------------------------
+    | BUSCA O FORNECEDOR
+    |--------------------------------------------------------------------------
+    */
+
+    $sql = $pdo->prepare("
+        SELECT id, nome
+        FROM fornecedor
+        WHERE id = ?
+        LIMIT 1
+    ");
+
+    $sql->execute([$id]);
+
+    $fornecedor = $sql->fetch(PDO::FETCH_ASSOC);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VERIFICA SE EXISTE
+    |--------------------------------------------------------------------------
+    */
+
+    if (!$fornecedor) {
+
+        header('Location: fornecedor.php');
+        exit;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DESATIVA
+    |--------------------------------------------------------------------------
+    |
+    | IMPORTANTE:
+    | A coluna correta é "ativa"
+    |
+    */
+
+    $sql = $pdo->prepare("
+        UPDATE fornecedor
+        SET ativa = 0
+        WHERE id = ?
+    ");
+
+    $sql->execute([$id]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VOLTA PARA A LISTA
+    |--------------------------------------------------------------------------
+    */
+
+    header('Location: fornecedor.php');
+    exit;
+
+
+} catch (PDOException $e) {
+
+    /*
+    |--------------------------------------------------------------------------
+    | EM CASO DE ERRO
+    |--------------------------------------------------------------------------
+    */
+
+    die(
+        'Erro ao desativar fornecedor: ' .
+        $e->getMessage()
+    );
+}
