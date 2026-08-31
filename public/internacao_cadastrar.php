@@ -3,7 +3,6 @@
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
-
 /*
 |--------------------------------------------------------------------------
 | CARREGAR PACIENTES, MÉDICOS E ENFERMEIROS
@@ -67,8 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $enfermeiro_id = $_POST['enfermeiro_id'] ?? '';
 
-    $data_entrada = $_POST['data_entrada'] ?? '';
-
     $quarto = trim($_POST['quarto'] ?? '');
 
     $leito = trim($_POST['leito'] ?? '');
@@ -90,7 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         empty($paciente_id) ||
         empty($medico_id) ||
         empty($enfermeiro_id) ||
-        empty($data_entrada) ||
         empty($quarto) ||
         empty($leito) ||
         empty($quadro_clinico)
@@ -129,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ?,
                 ?,
                 ?,
-                ?,
+                NOW(),
                 NULL,
                 ?,
                 ?,
@@ -145,7 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $paciente_id,
             $medico_id,
             $enfermeiro_id,
-            $data_entrada,
             $quarto,
             $leito,
             $motivos,
@@ -156,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         /*
         |--------------------------------------------------------------------------
-        | REDIRECIONAR APÓS CADASTRO
+        | REDIRECIONAR
         |--------------------------------------------------------------------------
         */
 

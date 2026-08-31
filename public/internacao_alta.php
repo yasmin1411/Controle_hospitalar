@@ -3,7 +3,6 @@
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
-
 /*
 |--------------------------------------------------------------------------
 | VERIFICAR ID
@@ -16,16 +15,11 @@ $id = filter_input(
     FILTER_VALIDATE_INT
 );
 
-
 if (!$id) {
-
     die("Internação inválida.");
-
 }
 
-
 try {
-
 
     /*
     |--------------------------------------------------------------------------
@@ -43,9 +37,7 @@ try {
         WHERE id = ?
     ");
 
-
     $sql->execute([$id]);
-
 
     $internacao = $sql->fetch(PDO::FETCH_ASSOC);
 
@@ -57,9 +49,7 @@ try {
     */
 
     if (!$internacao) {
-
         die("Internação não encontrada.");
-
     }
 
 
@@ -73,9 +63,7 @@ try {
         !empty($internacao['data_saida']) ||
         $internacao['status'] === 'Alta'
     ) {
-
         die("Esta internação já recebeu alta.");
-
     }
 
 
@@ -87,14 +75,11 @@ try {
 
     $sql = $pdo->prepare("
         UPDATE internacoes
-
         SET
-            data_saida = CURDATE(),
+            data_saida = NOW(),
             status = 'Alta'
-
         WHERE id = ?
     ");
-
 
     $sql->execute([$id]);
 
@@ -106,18 +91,15 @@ try {
     */
 
     header("Location: internacoes.php");
-
     exit;
 
 
 } catch (PDOException $e) {
 
-
     die(
         "Erro ao registrar alta: " .
         $e->getMessage()
     );
-
 }
 
 ?>
