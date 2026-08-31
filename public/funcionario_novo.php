@@ -6,351 +6,1012 @@ require_once '../config/database.php';
 ?>
 
 <!DOCTYPE html>
+
 <html lang="pt-br">
 
 <head>
 
-    <meta charset="UTF-8">
+```
+<meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Novo Funcionário</title>
+<title>Novo Funcionário</title>
+
+<!-- Bootstrap -->
+<link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+>
+
+<!-- Bootstrap Icons -->
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+>
+
+<style>
+
+    :root {
+        --azul-principal: #2F80ED;
+        --azul-claro: #56CCF2;
+        --verde: #198754;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+
+        margin: 0;
+
+        min-height: 100vh;
+
+        background:
+            linear-gradient(
+                135deg,
+                #eef5ff,
+                #dbeeff
+            );
+
+        font-family: 'Segoe UI', sans-serif;
+
+        color: #2c3e50;
+
+        padding: 30px 15px;
+
+    }
+
+    /* ==========================================================
+       CONTAINER
+    ========================================================== */
+
+    .container-principal {
+
+        max-width: 1050px;
+
+        margin: 0 auto;
+
+    }
+
+    .card-principal {
+
+        background: #ffffff;
+
+        border-radius: 25px;
+
+        box-shadow:
+            0 15px 40px rgba(47, 128, 237, 0.12);
+
+        padding: 35px;
+
+    }
+
+    /* ==========================================================
+       CABEÇALHO
+    ========================================================== */
+
+    .cabecalho {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 18px;
+
+        margin-bottom: 30px;
+
+    }
+
+    .icone-titulo {
+
+        width: 62px;
+
+        height: 62px;
+
+        border-radius: 18px;
+
+        background: #e8f3ff;
+
+        color: var(--azul-principal);
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 30px;
+
+        flex-shrink: 0;
+
+    }
+
+    .titulo {
+
+        margin: 0;
+
+        color: var(--azul-principal);
+
+        font-size: 30px;
+
+        font-weight: 700;
+
+    }
+
+    .subtitulo {
+
+        margin: 4px 0 0;
+
+        color: #6c757d;
+
+        font-size: 15px;
+
+    }
+
+    /* ==========================================================
+       SEÇÕES
+    ========================================================== */
+
+    .secao {
+
+        margin-top: 30px;
+
+        padding: 25px;
+
+        background: #f8fbff;
+
+        border: 1px solid #e5edf8;
+
+        border-radius: 18px;
+
+    }
+
+    .titulo-secao {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+
+        color: #34495e;
+
+        font-size: 18px;
+
+        font-weight: 700;
+
+        margin-bottom: 22px;
+
+    }
+
+    .titulo-secao i {
+
+        color: var(--azul-principal);
+
+        font-size: 20px;
+
+    }
+
+    /* ==========================================================
+       CAMPOS
+    ========================================================== */
+
+    .campo {
+
+        margin-bottom: 18px;
+
+    }
+
+    .campo label {
+
+        display: block;
+
+        font-size: 14px;
+
+        font-weight: 600;
+
+        color: #34495e;
+
+        margin-bottom: 7px;
+
+    }
+
+    .campo-obrigatorio {
+
+        color: #dc3545;
+
+    }
+
+    .input-wrapper {
+
+        position: relative;
+
+    }
+
+    .input-wrapper > i {
+
+        position: absolute;
+
+        left: 14px;
+
+        top: 50%;
+
+        transform: translateY(-50%);
+
+        color: #7c8da5;
+
+        font-size: 17px;
+
+        pointer-events: none;
+
+        z-index: 2;
+
+    }
+
+    .form-control,
+    .form-select {
+
+        min-height: 46px;
+
+        border: 1px solid #dbe7f5;
+
+        border-radius: 11px;
+
+        font-size: 14px;
+
+        color: #34495e;
+
+        background-color: #ffffff;
+
+        transition: .2s;
+
+    }
+
+    .form-control {
+
+        padding-left: 42px;
+
+    }
+
+    /*
+     * Espaço extra à direita para a seta do select.
+     * Isso evita que a seta fique em cima do texto.
+     */
+
+    .form-select {
+
+        padding-left: 42px;
+
+        padding-right: 48px;
+
+        cursor: pointer;
+
+        background-position: right 16px center;
+
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+
+        border-color: var(--azul-principal);
+
+        box-shadow:
+            0 0 0 .2rem rgba(47, 128, 237, .12);
+
+    }
+
+    .form-control::placeholder {
+
+        color: #a0acbb;
+
+    }
+
+    /* ==========================================================
+       SELECT
+    ========================================================== */
+
+    .select-wrapper {
+
+        position: relative;
+
+    }
+
+    .select-wrapper > i {
+
+        position: absolute;
+
+        left: 14px;
+
+        top: 50%;
+
+        transform: translateY(-50%);
+
+        color: var(--azul-principal);
+
+        font-size: 17px;
+
+        z-index: 2;
+
+        pointer-events: none;
+
+    }
+
+    /* ==========================================================
+       BOTÕES
+    ========================================================== */
+
+    .acoes {
+
+        display: flex;
+
+        justify-content: flex-end;
+
+        gap: 12px;
+
+        margin-top: 30px;
+
+        padding-top: 25px;
+
+        border-top: 1px solid #e9eef5;
+
+    }
+
+    .btn-voltar {
+
+        min-height: 46px;
+
+        border-radius: 11px;
+
+        padding: 10px 20px;
+
+        font-weight: 600;
+
+        border: none;
+
+    }
+
+    .btn-cadastrar {
+
+        min-height: 46px;
+
+        border: none;
+
+        border-radius: 11px;
+
+        padding: 10px 24px;
+
+        background: var(--azul-principal);
+
+        color: white;
+
+        font-weight: 600;
+
+        transition: .25s;
+
+    }
+
+    .btn-cadastrar:hover {
+
+        background: #1c6ad6;
+
+        color: white;
+
+        transform: translateY(-1px);
+
+    }
+
+    /* ==========================================================
+       RESPONSIVIDADE
+    ========================================================== */
+
+    @media (max-width: 768px) {
+
+        body {
+            padding: 15px 10px;
+        }
+
+        .card-principal {
+            padding: 22px;
+            border-radius: 18px;
+        }
+
+        .secao {
+            padding: 18px;
+        }
+
+        .titulo {
+            font-size: 25px;
+        }
+
+        .acoes {
+            flex-direction: column-reverse;
+        }
+
+        .acoes a,
+        .acoes button {
+            width: 100%;
+        }
+
+    }
+
+</style>
+```
 
 </head>
 
 <body>
 
-<h2>Novo Funcionário</h2>
+<div class="container-principal">
 
+```
+<div class="card-principal">
 
-<form action="funcionario_cadastrar.php" method="POST">
+    <!-- ======================================================
+         CABEÇALHO
+    ======================================================= -->
 
+    <div class="cabecalho">
 
-    <!-- ========================================================= -->
-    <!-- DADOS DO FUNCIONÁRIO -->
-    <!-- ========================================================= -->
+        <div class="icone-titulo">
 
-    <h3>Dados do Funcionário</h3>
+            <i class="bi bi-person-plus-fill"></i>
 
+        </div>
 
-    <label>Nome:</label>
-    <br>
+        <div>
 
-    <input
-        type="text"
-        name="nome"
-        maxlength="150"
-        required
-    >
+            <h1 class="titulo">
+                Novo Funcionário
+            </h1>
 
-    <br><br>
+            <p class="subtitulo">
+                Cadastre um novo profissional no sistema hospitalar.
+            </p>
 
+        </div>
 
-    <!-- ========================================================= -->
-    <!-- FUNÇÃO -->
-    <!-- ========================================================= -->
+    </div>
 
-    <label>Função:</label>
-    <br>
 
-    <select name="funcao" required>
+    <form action="funcionario_cadastrar.php" method="POST">
 
-        <option value="">
-            Selecione
-        </option>
 
-        <option value="Médico">
-            Médico
-        </option>
+        <!-- ==================================================
+             DADOS DO FUNCIONÁRIO
+        =================================================== -->
 
-        <option value="Enfermeiro">
-            Enfermeiro
-        </option>
+        <div class="secao">
 
-        <option value="Farmacêutico">
-            Farmacêutico
-        </option>
+            <div class="titulo-secao">
 
-        <option value="Cirurgião">
-            Cirurgião
-        </option>
+                <i class="bi bi-person-vcard"></i>
 
-        <option value="Anestesista">
-            Anestesista
-        </option>
+                Dados do Funcionário
 
-    </select>
+            </div>
 
-    <br><br>
 
+            <div class="row">
 
-    <!-- ========================================================= -->
-    <!-- REGISTRO -->
-    <!-- ========================================================= -->
 
-    <label>Registro profissional:</label>
-    <br>
+                <!-- NOME -->
 
-    <input
-        type="text"
-        name="registro"
-        maxlength="20"
-        required
-    >
+                <div class="col-md-8 campo">
 
-    <br><br>
+                    <label for="nome">
 
+                        Nome completo
+                        <span class="campo-obrigatorio">*</span>
 
-    <!-- ========================================================= -->
-    <!-- TELEFONE -->
-    <!-- ========================================================= -->
+                    </label>
 
-    <label>Telefone:</label>
-    <br>
+                    <div class="input-wrapper">
 
-    <input
-        type="text"
-        name="telefone"
-        id="telefone"
-        maxlength="15"
-        placeholder="(00) 00000-0000"
-    >
+                        <i class="bi bi-person"></i>
 
-    <br><br>
+                        <input
+                            type="text"
+                            name="nome"
+                            id="nome"
+                            class="form-control"
+                            maxlength="150"
+                            placeholder="Digite o nome completo"
+                            required
+                        >
 
+                    </div>
 
-    <!-- ========================================================= -->
-    <!-- EMAIL -->
-    <!-- ========================================================= -->
+                </div>
 
-    <label>E-mail:</label>
-    <br>
 
-    <input
-        type="email"
-        name="email"
-        maxlength="120"
-    >
+                <!-- FUNÇÃO -->
 
-    <br><br>
+                <div class="col-md-4 campo">
 
+                    <label for="funcao">
 
-    <!-- ========================================================= -->
-    <!-- CPF -->
-    <!-- ========================================================= -->
+                        Função
+                        <span class="campo-obrigatorio">*</span>
 
-    <label>CPF:</label>
-    <br>
+                    </label>
 
-    <input
-        type="text"
-        name="cpf"
-        id="cpf"
-        maxlength="14"
-        placeholder="000.000.000-00"
-    >
+                    <div class="select-wrapper">
 
-    <br><br>
+                        <i class="bi bi-briefcase"></i>
 
+                        <select
+                            name="funcao"
+                            id="funcao"
+                            class="form-select"
+                            required
+                        >
 
-    <!-- ========================================================= -->
-    <!-- DATA DE NASCIMENTO -->
-    <!-- ========================================================= -->
+                            <option value="">
+                                Selecione a função
+                            </option>
 
-    <label>Data de nascimento:</label>
-    <br>
+                            <option value="Médico">
+                                Médico
+                            </option>
 
-    <input
-        type="date"
-        name="data_nascimento"
-    >
+                            <option value="Enfermeiro">
+                                Enfermeiro
+                            </option>
 
-    <br><br>
+                            <option value="Farmacêutico">
+                                Farmacêutico
+                            </option>
 
+                            <option value="Cirurgião">
+                                Cirurgião
+                            </option>
 
-    <!-- ========================================================= -->
-    <!-- SEXO -->
-    <!-- ========================================================= -->
+                            <option value="Anestesista">
+                                Anestesista
+                            </option>
 
-    <label>Sexo:</label>
-    <br>
+                        </select>
 
-    <select name="sexo">
+                    </div>
 
-        <option value="">
-            Selecione
-        </option>
+                </div>
 
-        <option value="Masculino">
-            Masculino
-        </option>
 
-        <option value="Feminino">
-            Feminino
-        </option>
+                <!-- REGISTRO -->
 
-        <option value="Outro">
-            Outro
-        </option>
+                <div class="col-md-4 campo">
 
-    </select>
+                    <label for="registro">
 
-    <br><br>
+                        Registro profissional
+                        <span class="campo-obrigatorio">*</span>
 
+                    </label>
 
-    <!-- ========================================================= -->
-    <!-- STATUS -->
-    <!-- ========================================================= -->
+                    <div class="input-wrapper">
 
-    <label>Status:</label>
-    <br>
+                        <i class="bi bi-card-text"></i>
 
-    <select name="status" required>
+                        <input
+                            type="text"
+                            name="registro"
+                            id="registro"
+                            class="form-control"
+                            maxlength="20"
+                            placeholder="CRM, COREN, CRF..."
+                            required
+                        >
 
-        <option value="">
-            Selecione
-        </option>
+                    </div>
 
-        <option value="Ativo">
-            Ativo
-        </option>
+                </div>
 
-        <option value="Inativo">
-            Inativo
-        </option>
 
-    </select>
+                <!-- TELEFONE -->
 
+                <div class="col-md-4 campo">
 
-    <!-- ========================================================= -->
-    <!-- ENDEREÇO -->
-    <!-- ========================================================= -->
+                    <label for="telefone">
+                        Telefone
+                    </label>
 
-    <h3>Endereço</h3>
+                    <div class="input-wrapper">
 
+                        <i class="bi bi-telephone"></i>
 
-    <!-- ========================================================= -->
-    <!-- RUA -->
-    <!-- ========================================================= -->
+                        <input
+                            type="text"
+                            name="telefone"
+                            id="telefone"
+                            class="form-control"
+                            maxlength="15"
+                            placeholder="(00) 00000-0000"
+                        >
 
-    <label>Rua:</label>
-    <br>
+                    </div>
 
-    <input
-        type="text"
-        name="rua"
-        maxlength="150"
-        required
-    >
+                </div>
 
-    <br><br>
 
+                <!-- EMAIL -->
 
-    <!-- ========================================================= -->
-    <!-- NÚMERO -->
-    <!-- ========================================================= -->
+                <div class="col-md-4 campo">
 
-    <label>Número:</label>
-    <br>
+                    <label for="email">
+                        E-mail
+                    </label>
 
-    <input
-        type="text"
-        name="numero"
-        maxlength="20"
-        required
-    >
+                    <div class="input-wrapper">
 
-    <br><br>
+                        <i class="bi bi-envelope"></i>
 
+                        <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            class="form-control"
+                            maxlength="120"
+                            placeholder="exemplo@email.com"
+                        >
 
-    <!-- ========================================================= -->
-    <!-- CEP -->
-    <!-- ========================================================= -->
+                    </div>
 
-    <label>CEP:</label>
-    <br>
+                </div>
 
-    <input
-        type="text"
-        name="cep"
-        id="cep"
-        maxlength="9"
-        placeholder="00000-000"
-        required
-    >
 
-    <br><br>
+                <!-- CPF -->
 
+                <div class="col-md-4 campo">
 
-    <!-- ========================================================= -->
-    <!-- CIDADE -->
-    <!-- ========================================================= -->
+                    <label for="cpf">
+                        CPF
+                    </label>
 
-    <label>Cidade:</label>
-    <br>
+                    <div class="input-wrapper">
 
-    <input
-        type="text"
-        name="cidade"
-        maxlength="100"
-        required
-    >
+                        <i class="bi bi-person-vcard"></i>
 
-    <br><br>
+                        <input
+                            type="text"
+                            name="cpf"
+                            id="cpf"
+                            class="form-control"
+                            maxlength="14"
+                            placeholder="000.000.000-00"
+                        >
 
+                    </div>
 
-    <!-- ========================================================= -->
-    <!-- COMPLEMENTO -->
-    <!-- ========================================================= -->
+                </div>
 
-    <label>Complemento:</label>
-    <br>
 
-    <input
-        type="text"
-        name="complemento"
-        maxlength="150"
-    >
+                <!-- DATA NASCIMENTO -->
 
-    <br><br>
+                <div class="col-md-4 campo">
 
+                    <label for="data_nascimento">
+                        Data de nascimento
+                    </label>
 
-    <!-- ========================================================= -->
-    <!-- BOTÃO -->
-    <!-- ========================================================= -->
+                    <div class="input-wrapper">
 
-    <button type="submit">
+                        <i class="bi bi-calendar3"></i>
 
-        Cadastrar
+                        <input
+                            type="date"
+                            name="data_nascimento"
+                            id="data_nascimento"
+                            class="form-control"
+                        >
 
-    </button>
+                    </div>
 
+                </div>
 
-</form>
 
+                <!-- SEXO -->
 
-<br>
+                <div class="col-md-4 campo">
 
+                    <label for="sexo">
+                        Sexo
+                    </label>
 
-<a href="funcionarios.php">
+                    <div class="select-wrapper">
 
-    Voltar
+                        <i class="bi bi-gender-ambiguous"></i>
 
-</a>
+                        <select
+                            name="sexo"
+                            id="sexo"
+                            class="form-select"
+                        >
 
+                            <option value="">
+                                Selecione
+                            </option>
 
-<!-- ========================================================= -->
-<!-- MÁSCARAS -->
-<!-- ========================================================= -->
+                            <option value="Masculino">
+                                Masculino
+                            </option>
+
+                            <option value="Feminino">
+                                Feminino
+                            </option>
+
+                            <option value="Outro">
+                                Outro
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div class="col-md-4 campo">
+
+                    <label for="status">
+
+                        Status
+                        <span class="campo-obrigatorio">*</span>
+
+                    </label>
+
+                    <div class="select-wrapper">
+
+                        <i class="bi bi-toggle-on"></i>
+
+                        <select
+                            name="status"
+                            id="status"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Selecione
+                            </option>
+
+                            <option value="Ativo">
+                                Ativo
+                            </option>
+
+                            <option value="Inativo">
+                                Inativo
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==================================================
+             ENDEREÇO
+        =================================================== -->
+
+        <div class="secao">
+
+            <div class="titulo-secao">
+
+                <i class="bi bi-geo-alt"></i>
+
+                Endereço
+
+            </div>
+
+
+            <div class="row">
+
+
+                <!-- RUA -->
+
+                <div class="col-md-8 campo">
+
+                    <label for="rua">
+
+                        Rua
+                        <span class="campo-obrigatorio">*</span>
+
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-signpost-2"></i>
+
+                        <input
+                            type="text"
+                            name="rua"
+                            id="rua"
+                            class="form-control"
+                            maxlength="150"
+                            placeholder="Digite o nome da rua"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- NÚMERO -->
+
+                <div class="col-md-4 campo">
+
+                    <label for="numero">
+
+                        Número
+                        <span class="campo-obrigatorio">*</span>
+
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-hash"></i>
+
+                        <input
+                            type="text"
+                            name="numero"
+                            id="numero"
+                            class="form-control"
+                            maxlength="20"
+                            placeholder="Número"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- CEP -->
+
+                <div class="col-md-4 campo">
+
+                    <label for="cep">
+
+                        CEP
+                        <span class="campo-obrigatorio">*</span>
+
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-mailbox"></i>
+
+                        <input
+                            type="text"
+                            name="cep"
+                            id="cep"
+                            class="form-control"
+                            maxlength="9"
+                            placeholder="00000-000"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- CIDADE -->
+
+                <div class="col-md-4 campo">
+
+                    <label for="cidade">
+
+                        Cidade
+                        <span class="campo-obrigatorio">*</span>
+
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-buildings"></i>
+
+                        <input
+                            type="text"
+                            name="cidade"
+                            id="cidade"
+                            class="form-control"
+                            maxlength="100"
+                            placeholder="Digite a cidade"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- COMPLEMENTO -->
+
+                <div class="col-md-4 campo">
+
+                    <label for="complemento">
+                        Complemento
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-house-add"></i>
+
+                        <input
+                            type="text"
+                            name="complemento"
+                            id="complemento"
+                            class="form-control"
+                            maxlength="150"
+                            placeholder="Apto, bloco, etc."
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==================================================
+             BOTÕES
+        =================================================== -->
+
+        <div class="acoes">
+
+            <a
+                href="funcionarios.php"
+                class="btn btn-secondary btn-voltar"
+            >
+
+                <i class="bi bi-arrow-left"></i>
+
+                Voltar
+
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-cadastrar"
+            >
+
+                <i class="bi bi-person-plus"></i>
+
+                Cadastrar Funcionário
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+```
+
+</div>
+
+<!-- ==========================================================
+     MÁSCARAS
+=========================================================== -->
 
 <script>
 
-
-/*
-|--------------------------------------------------------------------------
-| MÁSCARA DO CEP
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================
+   CEP
+========================================================== */
 
 document.getElementById('cep').addEventListener('input', function () {
 
@@ -372,11 +1033,9 @@ document.getElementById('cep').addEventListener('input', function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| MÁSCARA DO CPF
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================
+   CPF
+========================================================== */
 
 document.getElementById('cpf').addEventListener('input', function () {
 
@@ -423,11 +1082,9 @@ document.getElementById('cpf').addEventListener('input', function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| MÁSCARA DO TELEFONE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================
+   TELEFONE
+========================================================== */
 
 document.getElementById('telefone').addEventListener('input', function () {
 
@@ -474,9 +1131,7 @@ document.getElementById('telefone').addEventListener('input', function () {
 
 });
 
-
 </script>
-
 
 </body>
 

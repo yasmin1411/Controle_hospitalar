@@ -1,106 +1,137 @@
 <?php
 
 require_once '../includes/auth.php';
+
 require_once '../config/database.php';
 
 
-// Verifica ID
+// =========================================================
+// VERIFICA ID
+// =========================================================
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
 
     header("Location: estoque.php");
-    exit;
 
+    exit;
 }
 
 
-$id = (int)$_GET['id'];
+$id = (int) $_GET['id'];
 
 
-
-// Busca item do estoque com informações completas
+// =========================================================
+// BUSCA ITEM DO ESTOQUE
+// =========================================================
 
 $sql = $pdo->prepare("
 
-SELECT
+    SELECT
+        e.*,
+        m.nome AS medicamento,
+        f.nome AS fornecedor
 
-e.*,
+    FROM estoque e
 
-m.nome AS medicamento,
+    INNER JOIN medicamento m
+        ON e.medicamento_id = m.id
 
-f.nome AS fornecedor
+    INNER JOIN fornecedor f
+        ON e.fornecedor_id = f.id
 
-
-FROM estoque e
-
-
-INNER JOIN medicamento m
-
-ON e.medicamento_id = m.id
-
-
-INNER JOIN fornecedor f
-
-ON e.fornecedor_id = f.id
-
-
-WHERE e.id = ?
+    WHERE e.id = ?
 
 ");
 
-
 $sql->execute([$id]);
-
 
 $item = $sql->fetch(PDO::FETCH_ASSOC);
 
 
-
-if(!$item){
-
-    header("Location: estoque.php");
-    exit;
-
-}
-
-
-
-
-// Confirma exclusão
-
-if($_SERVER['REQUEST_METHOD'] === 'POST'){
-
-
-    $delete = $pdo->prepare("
-
-    DELETE FROM estoque
-
-    WHERE id = ?
-
-    ");
-
-
-    $delete->execute([$id]);
-
+// Caso não encontre
+if (!$item) {
 
     header("Location: estoque.php");
 
     exit;
-
 }
 
 
+// =========================================================
+// CONFIRMA EXCLUSÃO
+// =========================================================
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    try {
+
+        // Inicia transação
+        $pdo->beginTransaction();
+
+
+        // Guarda o ID do medicamento
+        $medicamentoId = (int) $item['medicamento_id'];
+
+
+        // -------------------------------------------------
+        // 1. Exclui o item do estoque
+        // -------------------------------------------------
+
+        $deleteEstoque = $pdo->prepare("
+
+            DELETE FROM estoque
+            WHERE id = ?
+
+        ");
+
+        $deleteEstoque->execute([$id]);
+
+
+        // -------------------------------------------------
+        // 2. Exclui o medicamento correspondente
+        // -------------------------------------------------
+
+        $deleteMedicamento = $pdo->prepare("
+
+            DELETE FROM medicamento
+            WHERE id = ?
+
+        ");
+
+        $deleteMedicamento->execute([$medicamentoId]);
+
+
+        // Confirma as alterações
+        $pdo->commit();
+
+
+        // Volta para o estoque
+        header("Location: estoque.php");
+
+        exit;
+
+
+    } catch (PDOException $e) {
+
+        // Se acontecer algum erro,
+        // desfaz tudo
+        if ($pdo->inTransaction()) {
+
+            $pdo->rollBack();
+        }
+
+
+        die("Erro ao excluir item do estoque: " . $e->getMessage());
+    }
+}
 
 ?>
-
 
 <!DOCTYPE html>
 
 <html lang="pt-BR">
 
-
 <head>
-
 
 <meta charset="UTF-8">
 
@@ -118,9 +149,7 @@ rel="stylesheet">
 href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 
-
 <style>
-
 
 body{
 
@@ -132,6 +161,7 @@ font-family:'Segoe UI',sans-serif;
 
 }
 
+
 .row{
 
 min-height:80vh;
@@ -139,6 +169,7 @@ min-height:80vh;
 align-items:center;
 
 }
+
 
 .card-excluir{
 
@@ -153,7 +184,6 @@ padding:35px;
 box-shadow:0 15px 40px rgba(47,128,237,.12);
 
 }
-
 
 
 .alerta{
@@ -183,7 +213,6 @@ box-shadow:0 5px 15px rgba(0,0,0,.08);
 }
 
 
-
 .titulo{
 
 color:#dc3545;
@@ -191,7 +220,6 @@ color:#dc3545;
 font-weight:700;
 
 }
-
 
 
 .info-box{
@@ -207,13 +235,11 @@ margin-top:20px;
 }
 
 
-
 .info-box p{
 
 margin-bottom:10px;
 
 }
-
 
 
 .btn-excluir{
@@ -231,7 +257,6 @@ padding:10px 18px;
 }
 
 
-
 .btn-excluir:hover{
 
 background:#bb2d3b;
@@ -241,19 +266,15 @@ color:white;
 }
 
 
-
 .btn-cancelar{
 
 border-radius:12px;
 
 }
 
-
 </style>
 
-
 </head>
-
 
 
 <body>
@@ -268,9 +289,7 @@ border-radius:12px;
 <div class="col-lg-6">
 
 
-
 <div class="card-excluir">
-
 
 
 <div class="alerta mb-4">
@@ -280,14 +299,11 @@ border-radius:12px;
 </div>
 
 
-
-
 <h2 class="titulo text-center">
 
 Confirmar Exclusão
 
 </h2>
-
 
 
 <p class="text-center text-muted">
@@ -297,10 +313,7 @@ Esta ação não poderá ser desfeita.
 </p>
 
 
-
-
 <div class="info-box">
-
 
 
 <p>
@@ -312,7 +325,6 @@ Esta ação não poderá ser desfeita.
 </p>
 
 
-
 <p>
 
 <strong>Quantidade:</strong>
@@ -320,7 +332,6 @@ Esta ação não poderá ser desfeita.
 <?= htmlspecialchars($item['quantidade']) ?>
 
 </p>
-
 
 
 <p>
@@ -332,7 +343,6 @@ Esta ação não poderá ser desfeita.
 </p>
 
 
-
 <p>
 
 <strong>Validade:</strong>
@@ -340,7 +350,6 @@ Esta ação não poderá ser desfeita.
 <?= date('d/m/Y', strtotime($item['validade'])) ?>
 
 </p>
-
 
 
 <p>
@@ -352,7 +361,6 @@ Esta ação não poderá ser desfeita.
 </p>
 
 
-
 <p class="mb-0">
 
 <strong>Código de Barras:</strong>
@@ -362,63 +370,46 @@ Esta ação não poderá ser desfeita.
 </p>
 
 
-
 </div>
-
-
-
 
 
 <form method="POST" class="mt-4 text-center">
 
 
-
-<button 
+<button
 type="submit"
 class="btn btn-excluir">
-
 
 <i class="bi bi-trash"></i>
 
 Excluir Item
 
-
 </button>
 
 
-
-
-<a href="estoque.php"
+<a
+href="estoque.php"
 class="btn btn-secondary btn-cancelar">
-
 
 <i class="bi bi-arrow-left"></i>
 
 Cancelar
 
-
 </a>
-
 
 
 </form>
 
 
+</div>
 
 </div>
 
-
 </div>
 
-
 </div>
-
-
-</div>
-
 
 
 </body>
-
 
 </html>

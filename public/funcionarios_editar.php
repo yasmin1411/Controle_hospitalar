@@ -21,11 +21,9 @@ $erro = '';
 
 try {
 
-    /*
-    |--------------------------------------------------------------------------
-    | BUSCAR FUNCIONÁRIO
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       BUSCAR FUNCIONÁRIO
+    ========================================================= */
 
     $stmt = $pdo->prepare("
         SELECT
@@ -51,11 +49,9 @@ try {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | ATUALIZAR
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       ATUALIZAR
+    ========================================================= */
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -80,24 +76,47 @@ try {
         $complemento = trim($_POST['complemento'] ?? '');
 
 
+        /* =====================================================
+           VALIDAÇÕES
+        ===================================================== */
+
         if ($nome === '') {
+
             $erro = 'O nome é obrigatório.';
+
         } elseif (!in_array($funcao, $funcoesPermitidas, true)) {
+
             $erro = 'Função inválida.';
+
         } elseif ($registro === '') {
+
             $erro = 'O registro profissional é obrigatório.';
+
         } elseif ($status !== 'Ativo' && $status !== 'Inativo') {
+
             $erro = 'Status inválido.';
+
         } elseif ($rua === '') {
+
             $erro = 'A rua é obrigatória.';
+
         } elseif ($numero === '') {
+
             $erro = 'O número é obrigatório.';
+
         } elseif ($cep === '') {
+
             $erro = 'O CEP é obrigatório.';
+
         } elseif ($cidade === '') {
+
             $erro = 'A cidade é obrigatória.';
         }
 
+
+        /* =====================================================
+           SALVAR ALTERAÇÕES
+        ===================================================== */
 
         if ($erro === '') {
 
@@ -106,11 +125,9 @@ try {
                 $pdo->beginTransaction();
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | ATUALIZAR FUNCIONÁRIO
-                |--------------------------------------------------------------------------
-                */
+                /* -------------------------------------------------
+                   ATUALIZAR FUNCIONÁRIO
+                ------------------------------------------------- */
 
                 $ativo = ($status === 'Ativo') ? 1 : 0;
 
@@ -145,11 +162,9 @@ try {
                 ]);
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | ATUALIZAR ENDEREÇO
-                |--------------------------------------------------------------------------
-                */
+                /* -------------------------------------------------
+                   ATUALIZAR ENDEREÇO
+                ------------------------------------------------- */
 
                 if (!empty($funcionario['endereco_id'])) {
 
@@ -197,6 +212,7 @@ try {
 
                     $endereco_id = $pdo->lastInsertId();
 
+
                     $stmt = $pdo->prepare("
                         UPDATE funcionario
                         SET endereco_id = ?
@@ -210,16 +226,25 @@ try {
                 }
 
 
+                /* -------------------------------------------------
+                   FINALIZAR TRANSAÇÃO
+                ------------------------------------------------- */
+
                 $pdo->commit();
 
-                echo "
-                    <script>
-                        alert('Funcionário atualizado com sucesso!');
-                        window.location.href = 'funcionario_visualizar.php?id={$id}';
-                    </script>
-                ";
+
+                /*
+                 * IMPORTANTE:
+                 * Não existe alert() aqui.
+                 * O usuário é enviado diretamente para a visualização.
+                 */
+
+                header(
+                    'Location: funcionario_visualizar.php?id=' . $id
+                );
 
                 exit;
+
 
             } catch (PDOException $e) {
 
@@ -232,11 +257,9 @@ try {
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | MANTER VALORES DIGITADOS
-        |--------------------------------------------------------------------------
-        */
+        /* =====================================================
+           MANTER VALORES DIGITADOS EM CASO DE ERRO
+        ===================================================== */
 
         $funcionario['nome'] = $nome;
         $funcionario['funcao'] = $funcao;
@@ -247,6 +270,7 @@ try {
         $funcionario['data_nascimento'] = $data_nascimento;
         $funcionario['sexo'] = $sexo;
         $funcionario['status'] = $status;
+
         $funcionario['rua'] = $rua;
         $funcionario['numero'] = $numero;
         $funcionario['cep'] = $cep;
@@ -257,10 +281,10 @@ try {
 } catch (PDOException $e) {
 
     die('Erro ao carregar funcionário: ' . $e->getMessage());
-
 }
 
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -295,7 +319,7 @@ try {
             background: white;
             padding: 30px;
             border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, .08);
         }
 
         .titulo {
@@ -308,16 +332,24 @@ try {
             border-radius: 10px;
         }
 
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2F80ED;
+            box-shadow: 0 0 0 0.2rem rgba(47, 128, 237, 0.15);
+        }
+
         .btn-principal {
             background: #2F80ED;
             color: white;
             border: none;
             border-radius: 10px;
+            transition: .2s;
         }
 
         .btn-principal:hover {
             background: #1c6ad6;
             color: white;
+            transform: translateY(-1px);
         }
 
         .secao {
@@ -333,19 +365,21 @@ try {
 
 </head>
 
+
 <body>
 
 <div class="container-principal">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <h2 class="titulo">
+        <h2 class="titulo mb-0">
 
             <i class="bi bi-pencil-square"></i>
 
             Editar Funcionário
 
         </h2>
+
 
         <a
             href="funcionario_visualizar.php?id=<?= $id ?>"
@@ -377,9 +411,13 @@ try {
     <form method="POST">
 
         <h5 class="secao">
+
             <i class="bi bi-person"></i>
+
             Dados do Funcionário
+
         </h5>
+
 
         <div class="row g-3">
 
@@ -694,6 +732,7 @@ try {
                 Salvar Alterações
 
             </button>
+
 
             <a
                 href="funcionario_visualizar.php?id=<?= $id ?>"

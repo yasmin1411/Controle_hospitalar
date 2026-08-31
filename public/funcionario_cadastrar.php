@@ -3,7 +3,6 @@
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
-
 /*
 |--------------------------------------------------------------------------
 | VERIFICAR MÉTODO
@@ -11,9 +10,7 @@ require_once '../config/database.php';
 */
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-
     exit("Acesso inválido.");
-
 }
 
 
@@ -24,15 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 */
 
 $nome = trim($_POST['nome'] ?? '');
-
 $funcao = trim($_POST['funcao'] ?? '');
-
 $registro = trim($_POST['registro'] ?? '');
-
 $telefone = trim($_POST['telefone'] ?? '');
-
 $email = trim($_POST['email'] ?? '');
-
 $cpf = trim($_POST['cpf'] ?? '');
 
 $data_nascimento = !empty($_POST['data_nascimento'])
@@ -40,7 +32,6 @@ $data_nascimento = !empty($_POST['data_nascimento'])
     : null;
 
 $sexo = trim($_POST['sexo'] ?? '');
-
 $status = trim($_POST['status'] ?? '');
 
 
@@ -51,13 +42,9 @@ $status = trim($_POST['status'] ?? '');
 */
 
 $rua = trim($_POST['rua'] ?? '');
-
 $numero = trim($_POST['numero'] ?? '');
-
 $cep = trim($_POST['cep'] ?? '');
-
 $cidade = trim($_POST['cidade'] ?? '');
-
 $complemento = trim($_POST['complemento'] ?? '');
 
 
@@ -68,51 +55,35 @@ $complemento = trim($_POST['complemento'] ?? '');
 */
 
 if ($nome === '') {
-
     exit("O nome é obrigatório.");
-
 }
 
 if ($funcao === '') {
-
     exit("A função é obrigatória.");
-
 }
 
 if ($registro === '') {
-
     exit("O registro profissional é obrigatório.");
-
 }
 
 if ($status === '') {
-
     exit("O status é obrigatório.");
-
 }
 
 if ($rua === '') {
-
     exit("A rua é obrigatória.");
-
 }
 
 if ($numero === '') {
-
     exit("O número é obrigatório.");
-
 }
 
 if ($cep === '') {
-
     exit("O CEP é obrigatório.");
-
 }
 
 if ($cidade === '') {
-
     exit("A cidade é obrigatória.");
-
 }
 
 
@@ -124,56 +95,33 @@ if ($cidade === '') {
 
 switch ($funcao) {
 
-
     case 'Médico':
-
         $tabela = 'medico';
-
         $campo_registro = 'crm';
-
         break;
-
 
     case 'Enfermeiro':
-
         $tabela = 'enfermeiro';
-
         $campo_registro = 'coren';
-
         break;
-
 
     case 'Farmacêutico':
-
         $tabela = 'farmaceutico';
-
         $campo_registro = 'crf';
-
         break;
-
 
     case 'Cirurgião':
-
         $tabela = 'cirurgiao';
-
         $campo_registro = 'crm';
-
         break;
-
 
     case 'Anestesista':
-
         $tabela = 'anestesista';
-
         $campo_registro = 'crm';
-
         break;
 
-
     default:
-
         exit("Função inválida.");
-
 }
 
 
@@ -184,7 +132,6 @@ switch ($funcao) {
 */
 
 try {
-
 
     /*
     |--------------------------------------------------------------------------
@@ -225,7 +172,6 @@ try {
         </script>";
 
         exit;
-
     }
 
 
@@ -233,14 +179,9 @@ try {
     |--------------------------------------------------------------------------
     | 2. VERIFICAR CPF
     |--------------------------------------------------------------------------
-    |
-    | O CPF também possui UNIQUE nas suas tabelas.
-    | Só fazemos a verificação se ele foi preenchido.
-    |
     */
 
     if ($cpf !== '') {
-
 
         $sqlVerificaCpf = $pdo->prepare("
             SELECT id, nome
@@ -272,9 +213,7 @@ try {
             </script>";
 
             exit;
-
         }
-
     }
 
 
@@ -294,7 +233,6 @@ try {
     */
 
     $sqlEndereco = $pdo->prepare("
-
         INSERT INTO endereco
         (
             rua,
@@ -303,21 +241,16 @@ try {
             cidade,
             complemento
         )
-
         VALUES
         (?, ?, ?, ?, ?)
-
     ");
 
-
     $sqlEndereco->execute([
-
         $rua,
         $numero,
         $cep,
         $cidade,
         $complemento
-
     ]);
 
 
@@ -337,7 +270,6 @@ try {
     */
 
     $sqlFuncionario = "
-
         INSERT INTO {$tabela}
         (
             nome,
@@ -350,18 +282,13 @@ try {
             status,
             endereco_id
         )
-
         VALUES
         (?, ?, ?, ?, ?, ?, ?, ?, ?)
-
     ";
-
 
     $stmt = $pdo->prepare($sqlFuncionario);
 
-
     $stmt->execute([
-
         $nome,
         $registro,
         $telefone,
@@ -371,7 +298,6 @@ try {
         $sexo,
         $status,
         $endereco_id
-
     ]);
 
 
@@ -388,16 +314,13 @@ try {
     |--------------------------------------------------------------------------
     | 8. SUCESSO
     |--------------------------------------------------------------------------
+    |
+    | Não usamos mais alert().
+    | A mensagem será exibida na página funcionarios.php.
+    |
     */
 
-    echo "<script>
-
-        alert('Funcionário cadastrado com sucesso!');
-
-        window.location.href = 'funcionarios.php';
-
-    </script>";
-
+    header("Location: funcionarios.php?sucesso=funcionario_cadastrado");
     exit;
 
 
@@ -411,9 +334,7 @@ try {
     */
 
     if ($pdo->inTransaction()) {
-
         $pdo->rollBack();
-
     }
 
 
@@ -437,7 +358,6 @@ try {
         </script>";
 
         exit;
-
     }
 
 
@@ -451,7 +371,6 @@ try {
         "Erro ao cadastrar funcionário: " .
         $e->getMessage()
     );
-
 }
-?>
 
+?>
