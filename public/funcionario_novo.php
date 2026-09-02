@@ -11,7 +11,7 @@ require_once '../config/database.php';
 
 <head>
 
-```
+
 <meta charset="UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -437,7 +437,6 @@ require_once '../config/database.php';
     }
 
 </style>
-```
 
 </head>
 
@@ -445,7 +444,6 @@ require_once '../config/database.php';
 
 <div class="container-principal">
 
-```
 <div class="card-principal">
 
     <!-- ======================================================
@@ -999,7 +997,6 @@ require_once '../config/database.php';
     </form>
 
 </div>
-```
 
 </div>
 

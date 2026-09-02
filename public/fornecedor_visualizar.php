@@ -47,6 +47,7 @@ try {
 
         WHERE f.id = ?
           AND f.ativa = 0
+
         LIMIT 1
     ");
 
@@ -55,15 +56,10 @@ try {
     $fornecedor = $sql->fetch(PDO::FETCH_ASSOC);
 
 
-    // ==========================================
-    // VERIFICA SE ENCONTROU
-    // ==========================================
-
     if (!$fornecedor) {
         header('Location: fornecedor_desativados.php');
         exit;
     }
-
 
 } catch (PDOException $e) {
 
@@ -80,7 +76,6 @@ try {
 <html lang="pt-BR">
 
 <head>
-
 
 <meta charset="UTF-8">
 
@@ -119,14 +114,18 @@ try {
     }
 
     body {
+
         margin: 0;
+
         min-height: 100vh;
+
         background:
             linear-gradient(
                 135deg,
                 #eef5ff 0%,
                 #dbeeff 100%
             );
+
         font-family:
             -apple-system,
             BlinkMacSystemFont,
@@ -134,6 +133,7 @@ try {
             Roboto,
             Arial,
             sans-serif;
+
         color: #172033;
     }
 
@@ -145,6 +145,7 @@ try {
     .container-principal {
 
         width: calc(100% - 40px);
+
         max-width: 1050px;
 
         margin: 35px auto;
@@ -193,6 +194,7 @@ try {
     .icone-titulo {
 
         width: 68px;
+
         height: 68px;
 
         border-radius: 20px;
@@ -316,6 +318,7 @@ try {
     .status-icone {
 
         width: 42px;
+
         height: 42px;
 
         border-radius: 12px;
@@ -411,6 +414,7 @@ try {
     .secao-icone {
 
         width: 38px;
+
         height: 38px;
 
         border-radius: 11px;
@@ -528,37 +532,26 @@ try {
 
 
     /* ==========================================
-       RODAPÉ / AÇÕES
+       BOTÃO REATIVAR DENTRO DO QUADRADO BRANCO
     ========================================== */
 
-    .acoes {
+    .area-reativar {
 
         display: flex;
 
-        justify-content: space-between;
+        justify-content: flex-end;
 
         align-items: center;
 
-        gap: 12px;
+        margin-top: 20px;
 
-        margin-top: 25px;
-
-        padding-top: 22px;
+        padding-top: 20px;
 
         border-top: 1px solid #e5ebf2;
     }
 
 
-    .acoes-esquerda,
-    .acoes-direita {
-
-        display: flex;
-
-        gap: 10px;
-    }
-
-
-    .btn-acao {
+    .btn-reativar {
 
         min-height: 44px;
 
@@ -570,7 +563,13 @@ try {
 
         gap: 8px;
 
-        padding: 10px 17px;
+        padding: 10px 20px;
+
+        background: #159447;
+
+        color: #ffffff;
+
+        border: 1px solid #159447;
 
         border-radius: 12px;
 
@@ -578,9 +577,8 @@ try {
 
         font-weight: 700;
 
-        text-decoration: none;
-
-        border: 1px solid transparent;
+        box-shadow:
+            0 5px 14px rgba(21, 148, 71, 0.18);
 
         transition: all 0.2s ease;
 
@@ -588,48 +586,15 @@ try {
     }
 
 
-    .btn-acao:hover {
-
-        transform: translateY(-1px);
-    }
-
-
-    .btn-voltar-acao {
-
-        background: #f5f7fa;
-
-        color: #56677d;
-
-        border-color: #dce3eb;
-    }
-
-
-    .btn-voltar-acao:hover {
-
-        background: #edf1f5;
-
-        color: #3d5067;
-    }
-
-
-    .btn-reativar {
-
-        background: #159447;
-
-        color: #ffffff;
-
-        border-color: #159447;
-
-        box-shadow:
-            0 5px 14px rgba(21, 148, 71, 0.18);
-    }
-
-
     .btn-reativar:hover {
 
         background: #107c3b;
 
+        border-color: #107c3b;
+
         color: #ffffff;
+
+        transform: translateY(-1px);
 
         box-shadow:
             0 7px 18px rgba(21, 148, 71, 0.24);
@@ -637,7 +602,7 @@ try {
 
 
     /* ==========================================
-       MODAL DE REATIVAÇÃO
+       MODAL
     ========================================== */
 
     .modal-backdrop.show {
@@ -665,10 +630,6 @@ try {
     }
 
 
-    /* ==========================================
-       CABEÇALHO DO MODAL
-    ========================================== */
-
     .modal-header-reativar {
 
         display: flex;
@@ -688,6 +649,7 @@ try {
     .modal-icone {
 
         width: 64px;
+
         height: 64px;
 
         border-radius: 18px;
@@ -739,6 +701,7 @@ try {
     .btn-fechar {
 
         width: 43px;
+
         height: 43px;
 
         border: none;
@@ -771,10 +734,6 @@ try {
     }
 
 
-    /* ==========================================
-       CORPO DO MODAL
-    ========================================== */
-
     .modal-body-reativar {
 
         padding: 34px 32px;
@@ -782,10 +741,6 @@ try {
         background: #ffffff;
     }
 
-
-    /* ==========================================
-       AVISO AMARELO
-    ========================================== */
 
     .alerta-reativacao {
 
@@ -834,10 +789,6 @@ try {
         font-weight: 800;
     }
 
-
-    /* ==========================================
-       CARD DE DADOS DO MODAL
-    ========================================== */
 
     .dados-modal {
 
@@ -890,10 +841,6 @@ try {
         word-break: break-word;
     }
 
-
-    /* ==========================================
-       RODAPÉ DO MODAL
-    ========================================== */
 
     .modal-footer-reativar {
 
@@ -1032,22 +979,13 @@ try {
         }
 
 
-        .acoes {
+        .area-reativar {
 
-            flex-direction: column-reverse;
-
-            align-items: stretch;
+            justify-content: stretch;
         }
 
 
-        .acoes-esquerda,
-        .acoes-direita {
-
-            width: 100%;
-        }
-
-
-        .btn-acao {
+        .area-reativar .btn-reativar {
 
             width: 100%;
         }
@@ -1062,7 +1000,6 @@ try {
         .modal-header-reativar {
 
             padding: 22px;
-
         }
 
 
@@ -1084,10 +1021,11 @@ try {
 
             width: 100%;
         }
+
     }
 
 </style>
-```
+
 
 </head>
 
@@ -1095,22 +1033,27 @@ try {
 
 <div class="container-principal">
 
-```
+
 <!-- ==========================================
      TOPO
-========================================== -->
+=========================================== -->
 
 <div class="topo">
 
     <div class="titulo-area">
 
         <div class="icone-titulo">
+
             <i class="bi bi-building-x"></i>
+
         </div>
+
 
         <div>
 
-            <h1>Fornecedor Desativado</h1>
+            <h1>
+                Fornecedor Desativado
+            </h1>
 
             <p>
                 Consulte os dados cadastrais deste fornecedor.
@@ -1137,7 +1080,7 @@ try {
 
 <!-- ==========================================
      STATUS
-========================================== -->
+=========================================== -->
 
 <div class="status-area">
 
@@ -1148,6 +1091,7 @@ try {
             <i class="bi bi-building-x"></i>
 
         </div>
+
 
         <div class="status-texto">
 
@@ -1177,7 +1121,7 @@ try {
 
 <!-- ==========================================
      DADOS DO FORNECEDOR
-========================================== -->
+=========================================== -->
 
 <div class="secao">
 
@@ -1191,7 +1135,9 @@ try {
 
         <div>
 
-            <h2>Dados do fornecedor</h2>
+            <h2>
+                Dados do fornecedor
+            </h2>
 
             <span>
                 Informações cadastrais
@@ -1210,8 +1156,11 @@ try {
         <div class="col-md-12 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-building"></i>
+
                 Nome do fornecedor
+
             </div>
 
             <div class="campo-valor">
@@ -1230,15 +1179,21 @@ try {
         <div class="col-md-6 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-card-text"></i>
+
                 CNPJ
+
             </div>
 
             <div class="campo-valor">
 
-                <?= htmlspecialchars(
-                    $fornecedor['cnpj'] ?? ''
-                ) ?: '<span class="campo-vazio">Não informado</span>' ?>
+                <?=
+                    htmlspecialchars(
+                        $fornecedor['cnpj'] ?? ''
+                    )
+                    ?: '<span class="campo-vazio">Não informado</span>'
+                ?>
 
             </div>
 
@@ -1250,15 +1205,21 @@ try {
         <div class="col-md-6 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-telephone"></i>
+
                 Telefone
+
             </div>
 
             <div class="campo-valor">
 
-                <?= htmlspecialchars(
-                    $fornecedor['telefone'] ?? ''
-                ) ?: '<span class="campo-vazio">Não informado</span>' ?>
+                <?=
+                    htmlspecialchars(
+                        $fornecedor['telefone'] ?? ''
+                    )
+                    ?: '<span class="campo-vazio">Não informado</span>'
+                ?>
 
             </div>
 
@@ -1270,15 +1231,21 @@ try {
         <div class="col-md-12 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-envelope"></i>
+
                 E-mail
+
             </div>
 
             <div class="campo-valor">
 
-                <?= htmlspecialchars(
-                    $fornecedor['email'] ?? ''
-                ) ?: '<span class="campo-vazio">Não informado</span>' ?>
+                <?=
+                    htmlspecialchars(
+                        $fornecedor['email'] ?? ''
+                    )
+                    ?: '<span class="campo-vazio">Não informado</span>'
+                ?>
 
             </div>
 
@@ -1291,7 +1258,7 @@ try {
 
 <!-- ==========================================
      ENDEREÇO
-========================================== -->
+=========================================== -->
 
 <div class="secao">
 
@@ -1305,7 +1272,9 @@ try {
 
         <div>
 
-            <h2>Endereço</h2>
+            <h2>
+                Endereço
+            </h2>
 
             <span>
                 Localização cadastrada do fornecedor
@@ -1324,15 +1293,21 @@ try {
         <div class="col-md-8 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-signpost"></i>
+
                 Rua
+
             </div>
 
             <div class="campo-valor">
 
-                <?= htmlspecialchars(
-                    $fornecedor['rua'] ?? ''
-                ) ?: '<span class="campo-vazio">Não informado</span>' ?>
+                <?=
+                    htmlspecialchars(
+                        $fornecedor['rua'] ?? ''
+                    )
+                    ?: '<span class="campo-vazio">Não informado</span>'
+                ?>
 
             </div>
 
@@ -1344,15 +1319,21 @@ try {
         <div class="col-md-4 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-hash"></i>
+
                 Número
+
             </div>
 
             <div class="campo-valor">
 
-                <?= htmlspecialchars(
-                    $fornecedor['numero'] ?? ''
-                ) ?: '<span class="campo-vazio">Não informado</span>' ?>
+                <?=
+                    htmlspecialchars(
+                        $fornecedor['numero'] ?? ''
+                    )
+                    ?: '<span class="campo-vazio">Não informado</span>'
+                ?>
 
             </div>
 
@@ -1364,15 +1345,21 @@ try {
         <div class="col-md-4 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-mailbox"></i>
+
                 CEP
+
             </div>
 
             <div class="campo-valor">
 
-                <?= htmlspecialchars(
-                    $fornecedor['cep'] ?? ''
-                ) ?: '<span class="campo-vazio">Não informado</span>' ?>
+                <?=
+                    htmlspecialchars(
+                        $fornecedor['cep'] ?? ''
+                    )
+                    ?: '<span class="campo-vazio">Não informado</span>'
+                ?>
 
             </div>
 
@@ -1384,15 +1371,21 @@ try {
         <div class="col-md-8 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-geo"></i>
+
                 Cidade
+
             </div>
 
             <div class="campo-valor">
 
-                <?= htmlspecialchars(
-                    $fornecedor['cidade'] ?? ''
-                ) ?: '<span class="campo-vazio">Não informado</span>' ?>
+                <?=
+                    htmlspecialchars(
+                        $fornecedor['cidade'] ?? ''
+                    )
+                    ?: '<span class="campo-vazio">Não informado</span>'
+                ?>
 
             </div>
 
@@ -1404,15 +1397,21 @@ try {
         <div class="col-md-12 campo">
 
             <div class="campo-label">
+
                 <i class="bi bi-info-circle"></i>
+
                 Complemento
+
             </div>
 
             <div class="campo-valor">
 
-                <?= htmlspecialchars(
-                    $fornecedor['complemento'] ?? ''
-                ) ?: '<span class="campo-vazio">Não informado</span>' ?>
+                <?=
+                    htmlspecialchars(
+                        $fornecedor['complemento'] ?? ''
+                    )
+                    ?: '<span class="campo-vazio">Não informado</span>'
+                ?>
 
             </div>
 
@@ -1420,18 +1419,17 @@ try {
 
     </div>
 
-</div>
 
+    <!-- ==================================================
+         BOTÃO REATIVAR
+         FICA DENTRO DO QUADRADO BRANCO
+    =================================================== -->
 
-
-    </div>
-
-
-    <div class="acoes-direita">
+    <div class="area-reativar">
 
         <button
             type="button"
-            class="btn-acao btn-reativar"
+            class="btn-reativar"
             data-bs-toggle="modal"
             data-bs-target="#modalReativar"
         >
@@ -1445,7 +1443,7 @@ try {
     </div>
 
 </div>
-```
+
 
 </div>
 
@@ -1461,15 +1459,13 @@ try {
     aria-hidden="true"
 >
 
-```
+
 <div class="modal-dialog modal-dialog-centered modal-dialog-reativar">
 
     <div class="modal-content modal-content-reativar">
 
 
-        <!-- ======================================
-             CABEÇALHO
-        ======================================= -->
+        <!-- CABEÇALHO -->
 
         <div class="modal-header-reativar">
 
@@ -1507,9 +1503,7 @@ try {
         </div>
 
 
-        <!-- ======================================
-             CORPO
-        ======================================= -->
+        <!-- CORPO -->
 
         <div class="modal-body-reativar">
 
@@ -1573,9 +1567,12 @@ try {
 
                         <div class="dado-modal-valor">
 
-                            <?= htmlspecialchars(
-                                $fornecedor['cnpj'] ?? ''
-                            ) ?: 'Não informado' ?>
+                            <?=
+                                htmlspecialchars(
+                                    $fornecedor['cnpj'] ?? ''
+                                )
+                                ?: 'Não informado'
+                            ?>
 
                         </div>
 
@@ -1592,9 +1589,12 @@ try {
 
                         <div class="dado-modal-valor">
 
-                            <?= htmlspecialchars(
-                                $fornecedor['telefone'] ?? ''
-                            ) ?: 'Não informado' ?>
+                            <?=
+                                htmlspecialchars(
+                                    $fornecedor['telefone'] ?? ''
+                                )
+                                ?: 'Não informado'
+                            ?>
 
                         </div>
 
@@ -1611,9 +1611,12 @@ try {
 
                         <div class="dado-modal-valor">
 
-                            <?= htmlspecialchars(
-                                $fornecedor['email'] ?? ''
-                            ) ?: 'Não informado' ?>
+                            <?=
+                                htmlspecialchars(
+                                    $fornecedor['email'] ?? ''
+                                )
+                                ?: 'Não informado'
+                            ?>
 
                         </div>
 
@@ -1630,9 +1633,12 @@ try {
 
                         <div class="dado-modal-valor">
 
-                            <?= htmlspecialchars(
-                                $fornecedor['cidade'] ?? ''
-                            ) ?: 'Não informado' ?>
+                            <?=
+                                htmlspecialchars(
+                                    $fornecedor['cidade'] ?? ''
+                                )
+                                ?: 'Não informado'
+                            ?>
 
                         </div>
 
@@ -1645,9 +1651,7 @@ try {
         </div>
 
 
-        <!-- ======================================
-             RODAPÉ
-        ======================================= -->
+        <!-- RODAPÉ -->
 
         <div class="modal-footer-reativar">
 
@@ -1707,3 +1711,4 @@ try {
 </body>
 
 </html>
+
