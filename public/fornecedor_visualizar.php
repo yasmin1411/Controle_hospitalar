@@ -81,7 +81,7 @@ try {
 
 <head>
 
-```
+
 <meta charset="UTF-8">
 
 <meta
@@ -1423,24 +1423,6 @@ try {
 </div>
 
 
-<!-- ==========================================
-     AÇÕES
-========================================== -->
-
-<div class="acoes">
-
-    <div class="acoes-esquerda">
-
-        <a
-            href="fornecedor_desativados.php"
-            class="btn-acao btn-voltar-acao"
-        >
-
-            <i class="bi bi-arrow-left"></i>
-
-            Voltar
-
-        </a>
 
     </div>
 
@@ -1713,7 +1695,6 @@ try {
     </div>
 
 </div>
-```
 
 </div>
 
