@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // ==========================
 
     $nome = trim($_POST['nome']);
-    $cpf = trim($_POST['cpf']);
+    $cpf = trim($_POST['cpf'] ?? '');
     $data_de_nascimento = $_POST['data_de_nascimento'];
     $telefone = trim($_POST['telefone']);
     $cartao_cidadao = trim($_POST['cartao_cidadao']);
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $rua = trim($_POST['rua']);
     $numero = trim($_POST['numero']);
-    $cep = trim($_POST['cep']);
+    $cep = trim($_POST['cep'] ?? '');
     $cidade = trim($_POST['cidade']);
     $complemento = trim($_POST['complemento']);
 
@@ -65,18 +65,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // VERIFICA CPF DO PACIENTE
         // ======================================
 
-        $sql = $pdo->prepare("
-            SELECT id
-            FROM pacientes
-            WHERE cpf = ?
-        ");
+        if ($cpf !== '') {
 
-        $sql->execute([$cpf]);
-
-        if ($sql->rowCount() > 0) {
-            throw new Exception("Já existe um paciente com este CPF.");
+            $sqlVerificaCpf = $pdo->prepare("
+                SELECT id, nome
+                FROM {$tabela}
+                WHERE cpf = ?
+                LIMIT 1
+            ");
+    
+            $sqlVerificaCpf->execute([
+                $cpf
+            ]);
+    
+            $pacienteCpf = $sqlVerificaCpf->fetch(PDO::FETCH_ASSOC);
+    
+    
+            if ($pacienteCpf) {
+    
+                echo "<script>
+    
+                    alert(
+                        'Não foi possível cadastrar este paciente.\\n\\n" .
+                        "O CPF informado já está cadastrado para: " .
+                        addslashes($pacienteCpf['nome']) .
+                        ".'
+                    );
+    
+                    window.history.back();
+    
+                </script>";
+    
+                exit;
+            }
         }
-
+    
+    
         // ======================================
         // VERIFICA CPF DO RESPONSÁVEL
         // ======================================
@@ -739,18 +763,18 @@ required>
 
 <div class="col-md-4 mb-3">
 
-<label class="form-label">
+<label for="cep">
+                        CEP
+                    </label>
 
-CEP
-
-</label>
-
-<input
-type="text"
-id="cep"
-name="cep"
-class="form-control"
-required>
+                    <input
+                        type="text"
+                        name="cep"
+                        id="cep"
+                        class="form-control"
+                        value="<?= htmlspecialchars($cep ?? '') ?>"
+                        maxlength="10"
+                        required
 
 </div>
 
