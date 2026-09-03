@@ -8,237 +8,673 @@ require_once '../config/database.php';
 
 $erro = '';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+/*
+|--------------------------------------------------------------------------
+| FUNÇÕES
+|--------------------------------------------------------------------------
+*/
 
-    // ==========================
-    // DADOS DO PACIENTE
-    // ==========================
+function limparNumero($valor)
+{
+    return preg_replace('/\D/', '', $valor ?? '');
+}
 
-    $nome = trim($_POST['nome']);
-    $cpf = trim($_POST['cpf'] ?? '');
-    $data_de_nascimento = $_POST['data_de_nascimento'];
-    $telefone = trim($_POST['telefone']);
-    $cartao_cidadao = trim($_POST['cartao_cidadao']);
-    
-    $dataNascimento = new DateTime($data_de_nascimento);
-    $hoje = new DateTime();
-    
-    $idade = $hoje->diff($dataNascimento)->y;
-    
-    $precisaResponsavel = ($idade < 18);
 
-    // ==========================
-    // ENDEREÇO PACIENTE
-    // ==========================
+/*
+|--------------------------------------------------------------------------
+| VALIDAR CPF
+|--------------------------------------------------------------------------
+*/
 
-    $rua = trim($_POST['rua']);
-    $numero = trim($_POST['numero']);
-    $cep = trim($_POST['cep'] ?? '');
-    $cidade = trim($_POST['cidade']);
-    $complemento = trim($_POST['complemento']);
+function validarCPF($cpf)
+{
+    $cpf = limparNumero($cpf);
 
-    // ==========================
-    // RESPONSÁVEL
-    // ==========================
+    if (strlen($cpf) != 11) {
+        return false;
+    }
 
-    $responsavel_nome = trim($_POST['responsavel_nome']);
-    $responsavel_cpf = trim($_POST['responsavel_cpf']);
-    $responsavel_telefone = trim($_POST['responsavel_telefone']);
-    $grau_parentesco = trim($_POST['grau_parentesco']);
-    $responsavel_data = $_POST['responsavel_data'];
+    // Impede CPFs com todos os números iguais
+    if (preg_match('/^(\d)\1{10}$/', $cpf)) {
+        return false;
+    }
 
-    // ==========================
-    // ENDEREÇO RESPONSÁVEL
-    // ==========================
+    // Primeiro dígito
+    $soma = 0;
 
-    $r_rua = trim($_POST['r_rua']);
-    $r_numero = trim($_POST['r_numero']);
-    $r_cep = trim($_POST['r_cep']);
-    $r_cidade = trim($_POST['r_cidade']);
-    $r_complemento = trim($_POST['r_complemento']);
+    for ($i = 0; $i < 9; $i++) {
+        $soma += intval($cpf[$i]) * (10 - $i);
+    }
 
-    try {
+    $resto = $soma % 11;
 
-        $pdo->beginTransaction();
+    $digito1 = ($resto < 2)
+        ? 0
+        : 11 - $resto;
 
-        // ======================================
-        // VERIFICA CPF DO PACIENTE
-        // ======================================
+    if ($digito1 != intval($cpf[9])) {
+        return false;
+    }
 
-        if ($cpf !== '') {
+    // Segundo dígito
+    $soma = 0;
 
-            $sqlVerificaCpf = $pdo->prepare("
-                SELECT id, nome
-                FROM {$tabela}
+    for ($i = 0; $i < 10; $i++) {
+        $soma += intval($cpf[$i]) * (11 - $i);
+    }
+
+    $resto = $soma % 11;
+
+    $digito2 = ($resto < 2)
+        ? 0
+        : 11 - $resto;
+
+    return $digito2 == intval($cpf[10]);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| VALIDAR DATA DE NASCIMENTO
+|--------------------------------------------------------------------------
+|
+| Aceita somente:
+| - Datas reais
+| - A partir de 01/01/1900
+| - Até a data de hoje
+|
+|--------------------------------------------------------------------------
+*/
+
+function validarDataNascimento($data)
+{
+    if (empty($data)) {
+        return false;
+    }
+
+    $dataObj = DateTime::createFromFormat(
+        'Y-m-d',
+        $data
+    );
+
+    $erros = DateTime::getLastErrors();
+
+    if ($dataObj === false) {
+        return false;
+    }
+
+    if (
+        $erros !== false &&
+        (
+            $erros['warning_count'] > 0 ||
+            $erros['error_count'] > 0
+        )
+    ) {
+        return false;
+    }
+
+    $dataObj->setTime(0, 0, 0);
+
+    $dataMinima = new DateTime('1900-01-01');
+    $hoje = new DateTime('today');
+
+    if ($dataObj < $dataMinima) {
+        return false;
+    }
+
+    if ($dataObj > $hoje) {
+        return false;
+    }
+
+    return true;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| VALORES DO FORMULÁRIO
+|--------------------------------------------------------------------------
+*/
+
+$nome = trim($_POST['nome'] ?? '');
+
+$cpf = trim($_POST['cpf'] ?? '');
+
+$data_de_nascimento =
+    $_POST['data_de_nascimento'] ?? '';
+
+$telefone =
+    $_POST['telefone'] ?? '';
+
+$cartao_cidadao =
+    $_POST['cartao_cidadao'] ?? '';
+
+
+/*
+|--------------------------------------------------------------------------
+| ENDEREÇO DO PACIENTE
+|--------------------------------------------------------------------------
+*/
+
+$rua =
+    trim($_POST['rua'] ?? '');
+
+$numero =
+    trim($_POST['numero'] ?? '');
+
+$cep =
+    trim($_POST['cep'] ?? '');
+
+$cidade =
+    trim($_POST['cidade'] ?? '');
+
+$complemento =
+    trim($_POST['complemento'] ?? '');
+
+
+/*
+|--------------------------------------------------------------------------
+| RESPONSÁVEL
+|--------------------------------------------------------------------------
+*/
+
+$responsavel_nome =
+    trim($_POST['responsavel_nome'] ?? '');
+
+$responsavel_cpf =
+    trim($_POST['responsavel_cpf'] ?? '');
+
+$responsavel_telefone =
+    $_POST['responsavel_telefone'] ?? '';
+
+$grau_parentesco =
+    trim($_POST['grau_parentesco'] ?? '');
+
+$responsavel_data =
+    $_POST['responsavel_data'] ?? '';
+
+
+/*
+|--------------------------------------------------------------------------
+| ENDEREÇO DO RESPONSÁVEL
+|--------------------------------------------------------------------------
+*/
+
+$r_rua =
+    trim($_POST['r_rua'] ?? '');
+
+$r_numero =
+    trim($_POST['r_numero'] ?? '');
+
+$r_cep =
+    trim($_POST['r_cep'] ?? '');
+
+$r_cidade =
+    trim($_POST['r_cidade'] ?? '');
+
+$r_complemento =
+    trim($_POST['r_complemento'] ?? '');
+
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZAÇÃO
+|--------------------------------------------------------------------------
+*/
+
+$telefoneNumeros =
+    limparNumero($telefone);
+
+$telefoneNumeros =
+    substr($telefoneNumeros, 0, 11);
+
+
+$cartaoNumeros =
+    limparNumero($cartao_cidadao);
+
+$cartaoNumeros =
+    substr($cartaoNumeros, 0, 20);
+
+
+$cpfNumeros =
+    limparNumero($cpf);
+
+
+$responsavelCpfNumeros =
+    limparNumero($responsavel_cpf);
+
+
+$responsavelTelefoneNumeros =
+    limparNumero($responsavel_telefone);
+
+$responsavelTelefoneNumeros =
+    substr(
+        $responsavelTelefoneNumeros,
+        0,
+        11
+    );
+
+
+$cepNumeros =
+    limparNumero($cep);
+
+
+$rCepNumeros =
+    limparNumero($r_cep);
+
+
+/*
+|--------------------------------------------------------------------------
+| VALIDAÇÃO DO FORMULÁRIO
+|--------------------------------------------------------------------------
+*/
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    /*
+    |--------------------------------------------------------------------------
+    | NOME
+    |--------------------------------------------------------------------------
+    */
+
+    if ($nome === '') {
+
+        $erro =
+            "Informe o nome do paciente.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CPF
+    |--------------------------------------------------------------------------
+    */
+
+    elseif ($cpfNumeros === '') {
+
+        $erro =
+            "Informe o CPF do paciente.";
+
+    } elseif (!validarCPF($cpfNumeros)) {
+
+        $erro =
+            "O CPF do paciente é inválido.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DATA DE NASCIMENTO
+    |--------------------------------------------------------------------------
+    */
+
+    elseif ($data_de_nascimento === '') {
+
+        $erro =
+            "Informe a data de nascimento do paciente.";
+
+    } elseif (!validarDataNascimento($data_de_nascimento)) {
+
+        $erro =
+            "A data de nascimento do paciente é inválida. Informe uma data entre 01/01/1900 e hoje.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TELEFONE
+    |--------------------------------------------------------------------------
+    */
+
+    elseif (
+        strlen($telefoneNumeros) != 10 &&
+        strlen($telefoneNumeros) != 11
+    ) {
+
+        $erro =
+            "O telefone do paciente deve possuir DDD e 8 ou 9 números.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CEP DO PACIENTE
+    |--------------------------------------------------------------------------
+    */
+
+    elseif (strlen($cepNumeros) != 8) {
+
+        $erro =
+            "Informe um CEP válido para o endereço do paciente.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RUA
+    |--------------------------------------------------------------------------
+    */
+
+    elseif ($rua === '') {
+
+        $erro =
+            "Informe a rua do paciente.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NÚMERO
+    |--------------------------------------------------------------------------
+    */
+
+    elseif ($numero === '') {
+
+        $erro =
+            "Informe o número do endereço do paciente.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CIDADE
+    |--------------------------------------------------------------------------
+    */
+
+    elseif ($cidade === '') {
+
+        $erro =
+            "Informe a cidade do paciente.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESPONSÁVEL
+    |--------------------------------------------------------------------------
+    |
+    | O responsável é obrigatório para TODOS os pacientes.
+    |
+    |--------------------------------------------------------------------------
+    */
+
+    elseif ($responsavel_nome === '') {
+
+        $erro =
+            "Informe o nome do responsável.";
+
+    } elseif ($responsavelCpfNumeros === '') {
+
+        $erro =
+            "Informe o CPF do responsável.";
+
+    } elseif (!validarCPF($responsavelCpfNumeros)) {
+
+        $erro =
+            "O CPF do responsável é inválido.";
+
+    } elseif (
+        strlen($responsavelTelefoneNumeros) != 10 &&
+        strlen($responsavelTelefoneNumeros) != 11
+    ) {
+
+        $erro =
+            "O telefone do responsável deve possuir DDD e 8 ou 9 números.";
+
+    } elseif ($grau_parentesco === '') {
+
+        $erro =
+            "Selecione o grau de parentesco do responsável.";
+
+    } elseif ($responsavel_data === '') {
+
+        $erro =
+            "Informe a data de nascimento do responsável.";
+
+    } elseif (!validarDataNascimento($responsavel_data)) {
+
+        $erro =
+            "A data de nascimento do responsável é inválida. Informe uma data entre 01/01/1900 e hoje.";
+
+    } elseif (strlen($rCepNumeros) != 8) {
+
+        $erro =
+            "Informe um CEP válido para o endereço do responsável.";
+
+    } elseif ($r_rua === '') {
+
+        $erro =
+            "Informe a rua do responsável.";
+
+    } elseif ($r_numero === '') {
+
+        $erro =
+            "Informe o número do endereço do responsável.";
+
+    } elseif ($r_cidade === '') {
+
+        $erro =
+            "Informe a cidade do responsável.";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GRAVAÇÃO NO BANCO
+    |--------------------------------------------------------------------------
+    */
+
+    if ($erro === '') {
+
+        try {
+
+            $pdo->beginTransaction();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFICAR CPF DO PACIENTE
+            |--------------------------------------------------------------------------
+            */
+
+            $sql = $pdo->prepare("
+                SELECT id
+                FROM pacientes
                 WHERE cpf = ?
-                LIMIT 1
             ");
-    
-            $sqlVerificaCpf->execute([
-                $cpf
+
+            $sql->execute([
+                $cpfNumeros
             ]);
-    
-            $pacienteCpf = $sqlVerificaCpf->fetch(PDO::FETCH_ASSOC);
-    
-    
-            if ($pacienteCpf) {
-    
-                echo "<script>
-    
-                    alert(
-                        'Não foi possível cadastrar este paciente.\\n\\n" .
-                        "O CPF informado já está cadastrado para: " .
-                        addslashes($pacienteCpf['nome']) .
-                        ".'
-                    );
-    
-                    window.history.back();
-    
-                </script>";
-    
-                exit;
-            }
-        }
-    
-    
-        // ======================================
-        // VERIFICA CPF DO RESPONSÁVEL
-        // ======================================
 
-        if ($precisaResponsavel) {
+            if ($sql->fetch()) {
 
-            if (
-                empty($responsavel_nome) ||
-                empty($responsavel_cpf) ||
-                empty($responsavel_telefone)
-            ) {
-                throw new Exception("Menor de idade precisa de responsável completo.");
+                throw new Exception(
+                    "Já existe um paciente com este CPF."
+                );
             }
-        
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFICAR CPF DO RESPONSÁVEL
+            |--------------------------------------------------------------------------
+            */
+
             $sql = $pdo->prepare("
                 SELECT id
                 FROM responsavel
                 WHERE cpf = ?
             ");
-            $sql->execute([$responsavel_cpf]);
-        
-            if ($sql->rowCount() > 0) {
-                throw new Exception("Já existe um responsável com este CPF.");
+
+            $sql->execute([
+                $responsavelCpfNumeros
+            ]);
+
+            if ($sql->fetch()) {
+
+                throw new Exception(
+                    "Já existe um responsável com este CPF."
+                );
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ENDEREÇO DO PACIENTE
+            |--------------------------------------------------------------------------
+            */
+
+            $sql = $pdo->prepare("
+                INSERT INTO endereco
+                (
+                    rua,
+                    numero,
+                    cep,
+                    cidade,
+                    complemento
+                )
+                VALUES (?, ?, ?, ?, ?)
+            ");
+
+            $sql->execute([
+                $rua,
+                $numero,
+                $cep,
+                $cidade,
+                $complemento
+            ]);
+
+            $enderecoPaciente =
+                $pdo->lastInsertId();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ENDEREÇO DO RESPONSÁVEL
+            |--------------------------------------------------------------------------
+            */
+
+            $sql = $pdo->prepare("
+                INSERT INTO endereco
+                (
+                    rua,
+                    numero,
+                    cep,
+                    cidade,
+                    complemento
+                )
+                VALUES (?, ?, ?, ?, ?)
+            ");
+
+            $sql->execute([
+                $r_rua,
+                $r_numero,
+                $r_cep,
+                $r_cidade,
+                $r_complemento
+            ]);
+
+            $enderecoResponsavel =
+                $pdo->lastInsertId();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CADASTRAR RESPONSÁVEL
+            |--------------------------------------------------------------------------
+            */
+
+            $sql = $pdo->prepare("
+                INSERT INTO responsavel
+                (
+                    nome,
+                    cpf,
+                    telefone,
+                    grau_de_parentesco,
+                    data_de_nascimento,
+                    endereco_id
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+            ");
+
+            $sql->execute([
+                $responsavel_nome,
+                $responsavelCpfNumeros,
+                $responsavelTelefoneNumeros,
+                $grau_parentesco,
+                $responsavel_data,
+                $enderecoResponsavel
+            ]);
+
+            $responsavelID =
+                $pdo->lastInsertId();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CADASTRAR PACIENTE
+            |--------------------------------------------------------------------------
+            */
+
+            $sql = $pdo->prepare("
+                INSERT INTO pacientes
+                (
+                    nome,
+                    cpf,
+                    data_de_nascimento,
+                    telefone,
+                    cartao_cidadao,
+                    responsavel_id,
+                    endereco_id
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+
+            $sql->execute([
+                $nome,
+                $cpfNumeros,
+                $data_de_nascimento,
+                $telefoneNumeros,
+
+                $cartaoNumeros !== ''
+                    ? $cartaoNumeros
+                    : null,
+
+                $responsavelID,
+                $enderecoPaciente
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINALIZAR
+            |--------------------------------------------------------------------------
+            */
+
+            $pdo->commit();
+
+            header(
+                "Location: pacientes.php?sucesso=1"
+            );
+
+            exit;
+
+
+        } catch (Exception $e) {
+
+            if ($pdo->inTransaction()) {
+
+                $pdo->rollBack();
+            }
+
+            $erro =
+                $e->getMessage();
         }
-
-        // ======================================
-        // CADASTRA ENDEREÇO DO PACIENTE
-        // ======================================
-
-        $sql = $pdo->prepare("
-            INSERT INTO endereco
-            (rua, numero, cep, cidade, complemento)
-            VALUES (?, ?, ?, ?, ?)
-        ");
-
-        $sql->execute([
-            $rua,
-            $numero,
-            $cep,
-            $cidade,
-            $complemento
-        ]);
-
-        $enderecoPaciente = $pdo->lastInsertId();
-
-        // ======================================
-        // CADASTRA ENDEREÇO DO RESPONSÁVEL
-        // ======================================
-
-        $sql = $pdo->prepare("
-            INSERT INTO endereco
-            (rua, numero, cep, cidade, complemento)
-            VALUES (?, ?, ?, ?, ?)
-        ");
-
-        $sql->execute([
-            $r_rua,
-            $r_numero,
-            $r_cep,
-            $r_cidade,
-            $r_complemento
-        ]);
-
-        $enderecoResponsavel = $pdo->lastInsertId();
-
-        // ======================================
-        // CADASTRA RESPONSÁVEL
-        // ======================================
-
-        $sql = $pdo->prepare("
-    INSERT INTO responsavel
-    (
-        nome,
-        cpf,
-        telefone,
-        grau_de_parentesco,
-        data_de_nascimento,
-        endereco_id
-    )
-    VALUES (?, ?, ?, ?, ?, ?)
-");
-
-$sql->execute([
-    $responsavel_nome,
-    $responsavel_cpf,
-    $responsavel_telefone,
-    $grau_parentesco,
-    $responsavel_data,
-    $enderecoResponsavel
-]);
-
-$responsavelID = $pdo->lastInsertId();
-
-        // ======================================
-        // CADASTRA PACIENTE
-        // ======================================
-
-        $sql = $pdo->prepare("
-            INSERT INTO pacientes
-            (
-                nome,
-                cpf,
-                data_de_nascimento,
-                telefone,
-                cartao_cidadao,
-                responsavel_id,
-                endereco_id
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-
-        $sql->execute([
-            $nome,
-            $cpf,
-            $data_de_nascimento,
-            $telefone,
-            $cartao_cidadao,
-            $responsavelID ?? null,
-            $enderecoPaciente
-        ]);
-
-        $pdo->commit();
-
-        header("Location: pacientes.php?sucesso=1");
-        exit;
-
-    } catch (Exception $e) {
-
-        $pdo->rollBack();
-        $erro = $e->getMessage();
-
     }
-
 }
 
 ?>
-
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -247,273 +683,199 @@ $responsavelID = $pdo->lastInsertId();
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
     <title>Cadastrar Paciente</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
 
-          <style>
+    <style>
 
-:root{
+        :root {
+            --azul-principal: #1976D2;
+            --azul-medio: #2196F3;
+            --azul-claro: #64B5F6;
+            --azul-profundo: #1565C0;
+            --azul-hospital: #0288D1;
+        }
 
-    --azul-principal:#1976D2;
-    --azul-medio:#2196F3;
-    --azul-claro:#64B5F6;
-    --azul-profundo:#1565C0;
-    --azul-hospital:#0288D1;
+        body {
+            background: linear-gradient(
+                135deg,
+                #e3f2fd,
+                #bbdefb
+            );
 
-}
+            font-family: 'Segoe UI', sans-serif;
 
+            min-height: 100vh;
+        }
 
+        .card-principal {
+            background: #ffffff;
 
-/* FUNDO GERAL */
+            border: none;
 
-body{
+            border-radius: 25px;
 
-    background:linear-gradient(
-        135deg,
-        #e3f2fd,
-        #bbdefb
-    );
+            box-shadow:
+                0 15px 40px
+                rgba(33,150,243,.15);
 
-    font-family:'Segoe UI',sans-serif;
+            padding: 35px;
+        }
 
-    min-height:100vh;
+        .card {
+            border: none;
 
-}
+            border-radius: 20px;
 
+            overflow: hidden;
 
+            box-shadow:
+                0 8px 25px
+                rgba(33,150,243,.10);
+        }
 
-/* CARD PRINCIPAL */
+        .card-body {
+            padding: 25px;
+        }
 
-.card-principal{
+        .card-header {
+            color: white;
 
-    background:#ffffff;
+            font-weight: 700;
 
-    border:none;
+            padding: 22px 25px;
 
-    border-radius:25px;
+            font-size: 18px;
+        }
 
-    box-shadow:
-    0 15px 40px rgba(33,150,243,.15);
+        .card-header h3 {
+            font-size: 26px;
 
-    padding:35px;
+            font-weight: 700;
+        }
 
-}
+        .header-principal {
+            background: linear-gradient(
+                135deg,
+                #1976D2,
+                #2196F3
+            );
+        }
 
+        .header-paciente {
+            background: #2196F3;
+        }
 
+        .header-endereco {
+            background: #64B5F6;
+        }
 
-/* CARDS INTERNOS */
+        .header-responsavel {
+            background: #0288D1;
+        }
 
-.card{
+        .header-endereco-responsavel {
+            background: #1565C0;
+        }
 
-    border:none;
+        .form-control,
+        .form-select {
+            border-radius: 12px;
 
-    border-radius:20px;
+            border: 1px solid #bbdefb;
 
-    overflow:hidden;
+            padding: 10px;
+        }
 
-    box-shadow:
-    0 8px 25px rgba(33,150,243,.10);
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #1976D2;
 
-}
+            box-shadow:
+                0 0 0 .2rem
+                rgba(25,118,210,.15);
+        }
 
+        .form-label,
+        label {
+            font-weight: 600;
 
+            color: #37474F;
+        }
 
-.card-body{
+        .btn-sistema {
+            background: #1976D2;
 
-    padding:25px;
+            color: white;
 
-}
+            border: none;
 
+            border-radius: 12px;
 
+            padding: 10px 22px;
 
-/* CABEÇALHOS */
+            font-weight: 600;
+        }
 
-.card-header{
+        .btn-sistema:hover {
+            background: #1565C0;
 
-color:white;
+            color: white;
+        }
 
-font-weight:700;
+        .btn-voltar {
+            border-radius: 12px;
 
-padding:22px 25px;
+            padding: 10px 22px;
 
-font-size:18px;
+            font-weight: 600;
+        }
 
-}
+        .campo-buscando {
+            background-image:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #e3f2fd,
+                    #ffffff
+                );
 
+            background-size: 200% 100%;
 
-.card-header h3{
+            animation:
+                buscando 1s linear infinite;
+        }
 
-font-size:26px;
+        @keyframes buscando {
 
-font-weight:700;
+            from {
+                background-position: 200% 0;
+            }
 
-}
+            to {
+                background-position: -200% 0;
+            }
 
+        }
 
-.card-header p{
-
-font-size:14px;
-
-}
-
-
-
-/* CABEÇALHO PRINCIPAL */
-
-.header-principal{
-
-    background:linear-gradient(
-        135deg,
-        #1976D2,
-        #2196F3
-    );
-
-}
-
-
-
-/* DADOS DO PACIENTE */
-
-.header-paciente{
-
-    background:#2196F3;
-
-}
-
-
-
-/* ENDEREÇO PACIENTE */
-
-.header-endereco{
-
-    background:#64B5F6;
-
-}
-
-
-
-/* RESPONSÁVEL */
-
-.header-responsavel{
-
-    background:#0288D1;
-
-}
-
-
-
-/* ENDEREÇO RESPONSÁVEL */
-
-.header-endereco-responsavel{
-
-    background:#1565C0;
-
-}
-
-
-
-/* INPUTS */
-
-.form-control,
-.form-select{
-
-    border-radius:12px;
-
-    border:1px solid #bbdefb;
-
-    padding:10px;
-
-}
-
-
-
-.form-control:focus,
-.form-select:focus{
-
-    border-color:#1976D2;
-
-    box-shadow:
-    0 0 0 .2rem rgba(25,118,210,.15);
-
-}
-
-
-
-/* LABELS */
-
-.form-label,
-label{
-
-    font-weight:600;
-
-    color:#37474F;
-
-}
-
-
-
-/* BOTÃO SALVAR */
-
-.btn-sistema{
-
-    background:#1976D2;
-
-    color:white;
-
-    border:none;
-
-    border-radius:12px;
-
-    padding:10px 22px;
-
-    font-weight:600;
-
-}
-
-
-
-.btn-sistema:hover{
-
-    background:#1565C0;
-
-    color:white;
-
-}
-
-
-
-/* BOTÃO VOLTAR */
-
-.btn-voltar{
-
-    border-radius:12px;
-
-    padding:10px 22px;
-
-    font-weight:600;
-
-}
-
-
-
-/* ANIMAÇÃO RESPONSÁVEL */
-
-#bloco_responsavel{
-
-    transition:.2s;
-
-}
-
-
-</style>
+    </style>
 
 </head>
+
 
 <body>
 
@@ -524,6 +886,9 @@ label{
 <div class="col-lg-10">
 
 <div class="card-principal">
+
+
+<!-- CABEÇALHO -->
 
 <div class="card-header header-principal">
 
@@ -538,30 +903,30 @@ label{
 <div>
 
 <h3 class="mb-1">
-
 Cadastrar Paciente
-
 </h3>
 
-
 <p class="mb-0 opacity-75">
-
 Gerenciamento de informações pessoais e responsáveis
-
 </p>
 
 </div>
 
-  
 </div>
 
 </div>
+
 
 <div class="card-body">
 
-<?php if(!empty($erro)): ?>
+
+<!-- MENSAGEM DE ERRO -->
+
+<?php if (!empty($erro)): ?>
 
 <div class="alert alert-danger">
+
+<i class="bi bi-exclamation-triangle-fill me-2"></i>
 
 <?= htmlspecialchars($erro) ?>
 
@@ -569,7 +934,11 @@ Gerenciamento de informações pessoais e responsáveis
 
 <?php endif; ?>
 
-<form method="POST">
+
+<!-- FORMULÁRIO -->
+
+<form method="POST" novalidate>
+
 
 <!-- ================================================= -->
 <!-- DADOS DO PACIENTE -->
@@ -578,8 +947,6 @@ Gerenciamento de informações pessoais e responsáveis
 <div class="card mb-4">
 
 <div class="card-header header-paciente">
-
-<div>
 
 <h5 class="mb-1">
 
@@ -590,41 +957,37 @@ Dados do Paciente
 </h5>
 
 <small>
-
 Informe os dados pessoais básicos do paciente
-
 </small>
 
 </div>
 
-</div>
 
 <div class="card-body">
+
 
 <div class="row">
 
 <div class="col-md-6 mb-3">
 
 <label class="form-label">
-
 Nome
-
 </label>
 
 <input
 type="text"
 name="nome"
 class="form-control"
-required>
+value="<?= htmlspecialchars($nome) ?>"
+>
 
 </div>
+
 
 <div class="col-md-3 mb-3">
 
 <label class="form-label">
-
 CPF
-
 </label>
 
 <input
@@ -632,16 +995,18 @@ type="text"
 id="cpf"
 name="cpf"
 class="form-control"
-required>
+maxlength="14"
+inputmode="numeric"
+value="<?= htmlspecialchars($cpf) ?>"
+>
 
 </div>
+
 
 <div class="col-md-3 mb-3">
 
 <label class="form-label">
-
 Data de Nascimento
-
 </label>
 
 <input
@@ -649,30 +1014,42 @@ type="date"
 name="data_de_nascimento"
 id="data_de_nascimento"
 class="form-control"
-required>
+min="1900-01-01"
+max="<?= date('Y-m-d') ?>"
+value="<?= htmlspecialchars($data_de_nascimento) ?>"
+>
 
 </div>
 
 </div>
+
 
 <div class="row">
+
+
+<!-- TELEFONE -->
 
 <div class="col-md-6 mb-3">
 
 <label class="form-label">
-
 Telefone
-
 </label>
 
 <input
 type="text"
 id="telefone"
 name="telefone"
-class="form-control"                                                    
-required>
+class="form-control"
+placeholder="(11) 99999-9999"
+maxlength="15"
+inputmode="numeric"
+value="<?= htmlspecialchars($telefone) ?>"
+>
 
 </div>
+
+
+<!-- CARTÃO DO CIDADÃO -->
 
 <div class="col-md-6 mb-3">
 
@@ -680,13 +1057,22 @@ required>
 
 Cartão do Cidadão
 
+<span class="text-muted fw-normal">
+(opcional)
+</span>
+
 </label>
 
 <input
 type="text"
+id="cartao_cidadao"
 name="cartao_cidadao"
 class="form-control"
-required>
+placeholder="Digite apenas números"
+maxlength="20"
+inputmode="numeric"
+value="<?= htmlspecialchars($cartao_cidadao) ?>"
+>
 
 </div>
 
@@ -695,6 +1081,7 @@ required>
 </div>
 
 </div>
+
 
 <!-- ================================================= -->
 <!-- ENDEREÇO DO PACIENTE -->
@@ -704,8 +1091,6 @@ required>
 
 <div class="card-header header-endereco">
 
-<div>
-
 <h5 class="mb-1">
 
 <i class="bi bi-geo-alt-fill"></i>
@@ -714,26 +1099,39 @@ Endereço do Paciente
 
 </h5>
 
-<small>
-
-Localização e informações de residência
-
-</small>
-
 </div>
 
-</div>
 
 <div class="card-body">
 
+
 <div class="row">
+
+
+<div class="col-md-4 mb-3">
+
+<label class="form-label">
+CEP
+</label>
+
+<input
+type="text"
+id="cep"
+name="cep"
+class="form-control"
+placeholder="00000-000"
+maxlength="9"
+inputmode="numeric"
+value="<?= htmlspecialchars($cep) ?>"
+>
+
+</div>
+
 
 <div class="col-md-6 mb-3">
 
 <label class="form-label">
-
 Rua
-
 </label>
 
 <input
@@ -741,53 +1139,37 @@ type="text"
 name="rua"
 id="rua"
 class="form-control"
-required>
+value="<?= htmlspecialchars($rua) ?>"
+>
 
 </div>
+
 
 <div class="col-md-2 mb-3">
 
 <label class="form-label">
-
 Número
-
 </label>
 
 <input
 type="text"
 name="numero"
 class="form-control"
-required>
-
-</div>
-
-<div class="col-md-4 mb-3">
-
-<label for="cep">
-                        CEP
-                    </label>
-
-                    <input
-                        type="text"
-                        name="cep"
-                        id="cep"
-                        class="form-control"
-                        value="<?= htmlspecialchars($cep ?? '') ?>"
-                        maxlength="10"
-                        required
+value="<?= htmlspecialchars($numero) ?>"
+>
 
 </div>
 
 </div>
+
 
 <div class="row">
+
 
 <div class="col-md-6 mb-3">
 
 <label class="form-label">
-
 Cidade
-
 </label>
 
 <input
@@ -795,22 +1177,27 @@ type="text"
 id="cidade"
 name="cidade"
 class="form-control"
-required>
+value="<?= htmlspecialchars($cidade) ?>"
+>
 
 </div>
+
 
 <div class="col-md-6 mb-3">
 
 <label class="form-label">
-
 Complemento
-
 </label>
 
 <input
 type="text"
 name="complemento"
-class="form-control">
+class="form-control"
+value="<?= htmlspecialchars($complemento) ?>"
+>
+
+</div>
+
 
 </div>
 
@@ -818,18 +1205,17 @@ class="form-control">
 
 </div>
 
-</div>
 
-
-<!-- ===================== -->
+<!-- ================================================= -->
 <!-- RESPONSÁVEL -->
-<!-- ===================== -->
+<!-- ================================================= -->
 
-<div class="card mb-4" id="bloco_responsavel">
+<div
+class="card mb-4"
+id="bloco_responsavel"
+>
 
 <div class="card-header header-responsavel">
-
-<div>
 
 <h5 class="mb-1">
 
@@ -840,69 +1226,131 @@ Responsável / Filiação
 </h5>
 
 <small>
-
-Informações do responsável legal pelo paciente
-
+Pessoa responsável por tomar decisões pelo paciente quando necessário
 </small>
 
 </div>
 
- </div>
-     <div class="card-body">
 
-        <div class="row">
+<div class="card-body">
 
-            <div class="col-md-6 mb-3">
-                <label>Nome</label>
-                <input type="text" name="responsavel_nome" class="form-control" required>
-            </div>
 
-            <div class="col-md-3 mb-3">
-                <label>CPF</label>
-                <input type="text" name="responsavel_cpf" id="responsavel_cpf" class="form-control" required>
-            </div>
+<div class="row">
 
-            <div class="col-md-3 mb-3">
-                <label>Telefone</label>
-                <input type="text" name="responsavel_telefone" id="responsavel_telefone" class="form-control" required>
-            </div>
+<div class="col-md-5 mb-3">
 
-        </div>
+<label>
+Nome
+</label>
 
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label>Grau de Parentesco</label>
-                <select
-            name="grau_parentesco"
-            id="grau_parentesco"
-            class="form-select">
-
-            <option value="">Selecione...</option>
-
-                </select>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label>Data de Nascimento</label>
-                <input type="date" name="responsavel_data" class="form-control" required>
-            </div>
-
-        </div>
-
-    </div>
+<input
+type="text"
+name="responsavel_nome"
+class="form-control"
+value="<?= htmlspecialchars($responsavel_nome) ?>"
+>
 
 </div>
 
-<!-- ===================== -->
-<!-- ENDEREÇO DO RESPONSÁVEL -->
-<!-- ===================== -->
+
+<div class="col-md-3 mb-3">
+
+<label>
+CPF
+</label>
+
+<input
+type="text"
+name="responsavel_cpf"
+id="responsavel_cpf"
+class="form-control"
+maxlength="14"
+inputmode="numeric"
+value="<?= htmlspecialchars($responsavel_cpf) ?>"
+>
+
+</div>
+
+
+<div class="col-md-4 mb-3">
+
+<label>
+Telefone
+</label>
+
+<input
+type="text"
+name="responsavel_telefone"
+id="responsavel_telefone"
+class="form-control"
+placeholder="(11) 99999-9999"
+maxlength="15"
+inputmode="numeric"
+value="<?= htmlspecialchars($responsavel_telefone) ?>"
+>
+
+</div>
+
+</div>
+
+
+<div class="row">
+
+
+<div class="col-md-6 mb-3">
+
+<label>
+Grau de Parentesco
+</label>
+
+<select
+name="grau_parentesco"
+id="grau_parentesco"
+class="form-select"
+>
+
+<option value="">
+Selecione...
+</option>
+
+</select>
+
+</div>
+
+
+<div class="col-md-6 mb-3">
+
+<label>
+Data de Nascimento
+</label>
+
+<input
+type="date"
+name="responsavel_data"
+id="responsavel_data"
+class="form-control"
+min="1900-01-01"
+max="<?= date('Y-m-d') ?>"
+value="<?= htmlspecialchars($responsavel_data) ?>"
+>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- ENDEREÇO RESPONSÁVEL -->
+<!-- ================================================= -->
 
 <div class="card mb-4">
 
 <div class="card-header header-endereco-responsavel">
-
-<div>
 
 <h5 class="mb-1">
 
@@ -912,222 +1360,646 @@ Endereço do Responsável
 
 </h5>
 
-<small>
+</div>
 
-Localização do responsável cadastrado
 
-</small>
+<div class="card-body">
+
+
+<div class="row">
+
+
+<div class="col-md-4 mb-3">
+
+<label>
+CEP
+</label>
+
+<input
+type="text"
+name="r_cep"
+id="r_cep"
+class="form-control"
+placeholder="00000-000"
+maxlength="9"
+inputmode="numeric"
+value="<?= htmlspecialchars($r_cep) ?>"
+>
+
+</div>
+
+
+<div class="col-md-6 mb-3">
+
+<label>
+Rua
+</label>
+
+<input
+type="text"
+name="r_rua"
+id="r_rua"
+class="form-control"
+value="<?= htmlspecialchars($r_rua) ?>"
+>
+
+</div>
+
+
+<div class="col-md-2 mb-3">
+
+<label>
+Número
+</label>
+
+<input
+type="text"
+name="r_numero"
+class="form-control"
+value="<?= htmlspecialchars($r_numero) ?>"
+>
 
 </div>
 
 </div>
 
-    <div class="card-body">
 
-        <div class="row">
+<div class="row">
 
-            <div class="col-md-6 mb-3">
-                <label>Rua</label>
-                <input type="text" name="r_rua" class="form-control" required>
-            </div>
 
-            <div class="col-md-2 mb-3">
-                <label>Número</label>
-                <input type="text" name="r_numero" class="form-control" required>
-            </div>
+<div class="col-md-6 mb-3">
 
-            <div class="col-md-4 mb-3">
-                <label>CEP</label>
-                <input type="text" name="r_cep" id="r_cep" class="form-control" required>
-            </div>
+<label>
+Cidade
+</label>
 
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label>Cidade</label>
-                <input type="text" name="r_cidade" class="form-control" required>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label>Complemento</label>
-                <input type="text" name="r_complemento" class="form-control">
-            </div>
-
-        </div>
-
-    </div>
+<input
+type="text"
+name="r_cidade"
+id="r_cidade"
+class="form-control"
+value="<?= htmlspecialchars($r_cidade) ?>"
+>
 
 </div>
+
+
+<div class="col-md-6 mb-3">
+
+<label>
+Complemento
+</label>
+
+<input
+type="text"
+name="r_complemento"
+class="form-control"
+value="<?= htmlspecialchars($r_complemento) ?>"
+>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- BOTÕES -->
+<!-- ================================================= -->
 
 <div class="text-end mt-4">
 
-    <a href="pacientes.php" class="btn btn-voltar btn-secondary">
+<a
+href="pacientes.php"
+class="btn btn-voltar btn-secondary"
+>
 
-        <i class="bi bi-arrow-left"></i>
-        Voltar
-    </a>
+<i class="bi bi-arrow-left"></i>
+
+Voltar
+
+</a>
 
 
-    <button class="btn btn-sistema">
+<button
+type="submit"
+class="btn btn-sistema"
+>
 
-        <i class="bi bi-save"></i>
-        Salvar Paciente
-    </button>
+<i class="bi bi-save"></i>
+
+Salvar Paciente
+
+</button>
 
 </div>
 
 
-<?php if(!empty($erro)): ?>
-    <div class="alert alert-danger">
-        <?= htmlspecialchars($erro) ?>
-    </div>
-<?php endif; ?>
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 
 <script>
 
-// ===============================
+
+// =====================================================
 // MÁSCARA CPF
-// ===============================
-document.getElementById('cpf').addEventListener('input', function () {
-    let v = this.value;
-    v = v.replace(/\D/g, "");
-    v = v.replace(/(\d{3})(\d)/, "$1.$2");
-    v = v.replace(/(\d{3})(\d)/, "$1.$2");
-    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    this.value = v;
-});
+// =====================================================
 
-// ===============================
-// MÁSCARA CPF RESPONSÁVEL
-// ===============================
-document.getElementById('responsavel_cpf').addEventListener('input', function () {
-    let v = this.value;
-    v = v.replace(/\D/g, "");
-    v = v.replace(/(\d{3})(\d)/, "$1.$2");
-    v = v.replace(/(\d{3})(\d)/, "$1.$2");
-    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    this.value = v;
-});
+function mascaraCPF(campo) {
 
-// ===============================
+    campo.addEventListener(
+        'input',
+        function () {
+
+            let v =
+                this.value.replace(/\D/g, '');
+
+            v =
+                v.slice(0, 11);
+
+            v =
+                v.replace(
+                    /(\d{3})(\d)/,
+                    '$1.$2'
+                );
+
+            v =
+                v.replace(
+                    /(\d{3})(\d)/,
+                    '$1.$2'
+                );
+
+            v =
+                v.replace(
+                    /(\d{3})(\d{1,2})$/,
+                    '$1-$2'
+                );
+
+            this.value = v;
+
+        }
+    );
+
+}
+
+
+mascaraCPF(
+    document.getElementById('cpf')
+);
+
+
+mascaraCPF(
+    document.getElementById('responsavel_cpf')
+);
+
+
+// =====================================================
 // MÁSCARA TELEFONE
-// ===============================
-document.getElementById('telefone').addEventListener('input', function () {
-    let v = this.value;
-    v = v.replace(/\D/g, "");
-    v = v.replace(/(\d{2})(\d)/, "($1) $2");
-    v = v.replace(/(\d{5})(\d)/, "$1-$2");
-    this.value = v;
-});
+// =====================================================
 
-// ===============================
-// MÁSCARA CEP PACIENTE
-// ===============================
-document.getElementById('cep').addEventListener('input', function () {
-    let v = this.value;
-    v = v.replace(/\D/g, "");
-    v = v.replace(/(\d{5})(\d)/, "$1-$2");
-    this.value = v;
-});
+function mascaraTelefone(campo) {
 
-// ===============================
-// MÁSCARA CEP RESPONSÁVEL
-// ===============================
-document.getElementById('r_cep').addEventListener('input', function () {
-    let v = this.value;
-    v = v.replace(/\D/g, "");
-    v = v.replace(/(\d{5})(\d)/, "$1-$2");
-    this.value = v;
-});
+    campo.addEventListener(
+        'input',
+        function () {
 
-// ===============================
-// VIA CEP (PACIENTE)
-// ===============================
-document.getElementById('cep').addEventListener('blur', function () {
+            let v =
+                this.value.replace(/\D/g, '');
 
-    let cep = this.value.replace(/\D/g, "");
+            v =
+                v.slice(0, 11);
 
-    if (cep.length !== 8) return;
+            if (v.length > 0) {
 
-    fetch(`https://viacep.com.br/ws/${cep}/json/`)
-        .then(res => res.json())
-        .then(data => {
+                v = '(' + v;
 
-            if (!data.erro) {
-                document.querySelector('[name="rua"]').value = data.logradouro;
-                document.querySelector('[name="cidade"]').value = data.localidade;
             }
 
-        });
+            if (v.length >= 3) {
 
-});
+                v =
+                    v.slice(0, 3) +
+                    ') ' +
+                    v.slice(3);
 
-</script>
+            }
 
-</body>
-</html>
+            if (v.length >= 10) {
+
+                v =
+                    v.slice(0, 10) +
+                    '-' +
+                    v.slice(10);
+
+            }
+
+            this.value = v;
+
+        }
+    );
+
+}
 
 
+mascaraTelefone(
+    document.getElementById('telefone')
+);
 
-<script>
-const dataNascimento = document.getElementById("data_de_nascimento");
-const parentesco = document.getElementById("grau_parentesco");
 
-function verificarIdade() {
+mascaraTelefone(
+    document.getElementById('responsavel_telefone')
+);
 
-    if (!dataNascimento.value) {
 
-        parentesco.innerHTML = `
-            <option value="">Selecione...</option>
-        `;
+// =====================================================
+// MÁSCARA CARTÃO DO CIDADÃO
+// =====================================================
 
+document
+    .getElementById('cartao_cidadao')
+    .addEventListener(
+        'input',
+        function () {
+
+            this.value =
+                this.value
+                    .replace(/\D/g, '')
+                    .slice(0, 20);
+
+        }
+    );
+
+
+// =====================================================
+// MÁSCARA CEP
+// =====================================================
+
+function mascaraCEP(campo) {
+
+    campo.addEventListener(
+        'input',
+        function () {
+
+            let v =
+                this.value
+                    .replace(/\D/g, '')
+                    .slice(0, 8);
+
+            v =
+                v.replace(
+                    /(\d{5})(\d)/,
+                    '$1-$2'
+                );
+
+            this.value = v;
+
+        }
+    );
+
+}
+
+
+mascaraCEP(
+    document.getElementById('cep')
+);
+
+
+mascaraCEP(
+    document.getElementById('r_cep')
+);
+
+
+// =====================================================
+// VIA CEP - PACIENTE
+// =====================================================
+
+function buscarCepPaciente() {
+
+    const cepCampo =
+        document.getElementById('cep');
+
+    const cep =
+        cepCampo.value
+            .replace(/\D/g, '');
+
+    if (cep.length !== 8) {
         return;
     }
 
-    const nascimento = new Date(dataNascimento.value);
-    const hoje = new Date();
+    const rua =
+        document.getElementById('rua');
 
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const cidade =
+        document.getElementById('cidade');
 
-    const mes = hoje.getMonth() - nascimento.getMonth();
+    rua.classList.add(
+        'campo-buscando'
+    );
 
-    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
-        idade--;
+    cidade.classList.add(
+        'campo-buscando'
+    );
+
+
+    fetch(
+        'https://viacep.com.br/ws/' +
+        cep +
+        '/json/'
+    )
+
+        .then(response => {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    'Erro ao consultar CEP'
+                );
+
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            if (data.erro) {
+
+                alert(
+                    'CEP não encontrado.'
+                );
+
+                return;
+            }
+
+            rua.value =
+                data.logradouro || '';
+
+            cidade.value =
+                data.localidade || '';
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            alert(
+                'Não foi possível consultar o CEP. ' +
+                'Verifique sua conexão com a internet.'
+            );
+
+        })
+
+        .finally(() => {
+
+            rua.classList.remove(
+                'campo-buscando'
+            );
+
+            cidade.classList.remove(
+                'campo-buscando'
+            );
+
+        });
+
+}
+
+
+// =====================================================
+// VIA CEP - RESPONSÁVEL
+// =====================================================
+
+function buscarCepResponsavel() {
+
+    const cepCampo =
+        document.getElementById('r_cep');
+
+    const cep =
+        cepCampo.value
+            .replace(/\D/g, '');
+
+    if (cep.length !== 8) {
+        return;
     }
 
-    parentesco.innerHTML = '<option value="">Selecione...</option>';
+    const rua =
+        document.getElementById('r_rua');
 
-    if (idade < 18) {
+    const cidade =
+        document.getElementById('r_cidade');
 
-        parentesco.innerHTML += `
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-            <option value="Tutor Legal">Tutor Legal</option>
-        `;
+    rua.classList.add(
+        'campo-buscando'
+    );
 
-    } else {
+    cidade.classList.add(
+        'campo-buscando'
+    );
 
-        parentesco.innerHTML += `
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-            <option value="Avô">Avô</option>
-            <option value="Avó">Avó</option>
-            <option value="Tio">Tio</option>
-            <option value="Tia">Tia</option>
-            <option value="Irmão">Irmão</option>
-            <option value="Irmã">Irmã</option>
-            <option value="Tutor Legal">Tutor Legal</option>
-            <option value="Outro">Outro</option>
-        `;
 
+    fetch(
+        'https://viacep.com.br/ws/' +
+        cep +
+        '/json/'
+    )
+
+        .then(response => {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    'Erro ao consultar CEP'
+                );
+
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            if (data.erro) {
+
+                alert(
+                    'CEP do responsável não encontrado.'
+                );
+
+                return;
+            }
+
+            rua.value =
+                data.logradouro || '';
+
+            cidade.value =
+                data.localidade || '';
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            alert(
+                'Não foi possível consultar o CEP. ' +
+                'Verifique sua conexão com a internet.'
+            );
+
+        })
+
+        .finally(() => {
+
+            rua.classList.remove(
+                'campo-buscando'
+            );
+
+            cidade.classList.remove(
+                'campo-buscando'
+            );
+
+        });
+
+}
+
+
+// =====================================================
+// BUSCAR CEP AO SAIR DO CAMPO
+// =====================================================
+
+document
+    .getElementById('cep')
+    .addEventListener(
+        'blur',
+        buscarCepPaciente
+    );
+
+
+document
+    .getElementById('r_cep')
+    .addEventListener(
+        'blur',
+        buscarCepResponsavel
+    );
+
+
+// =====================================================
+// GRAU DE PARENTESCO
+// =====================================================
+
+const parentesco =
+    document.getElementById(
+        'grau_parentesco'
+    );
+
+
+/*
+|--------------------------------------------------------------------------
+| VALOR QUE JÁ FOI DIGITADO
+|--------------------------------------------------------------------------
+*/
+
+const grauAnterior =
+    <?= json_encode($grau_parentesco) ?>;
+
+
+/*
+|--------------------------------------------------------------------------
+| OPÇÕES DE PARENTESCO
+|--------------------------------------------------------------------------
+|
+| O responsável existe para qualquer paciente.
+| Portanto, as opções ficam sempre disponíveis.
+|
+|--------------------------------------------------------------------------
+*/
+
+function carregarParentesco() {
+
+    parentesco.innerHTML = `
+        <option value="">
+            Selecione...
+        </option>
+
+        <option value="Pai">
+            Pai
+        </option>
+
+        <option value="Mãe">
+            Mãe
+        </option>
+
+        <option value="Avô">
+            Avô
+        </option>
+
+        <option value="Avó">
+            Avó
+        </option>
+
+        <option value="Tio">
+            Tio
+        </option>
+
+        <option value="Tia">
+            Tia
+        </option>
+
+        <option value="Irmão">
+            Irmão
+        </option>
+
+        <option value="Irmã">
+            Irmã
+        </option>
+
+        <option value="Tutor Legal">
+            Tutor Legal
+        </option>
+
+        <option value="Outro">
+            Outro
+        </option>
+    `;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESTAURAR VALOR APÓS ERRO
+    |--------------------------------------------------------------------------
+    */
+
+    if (grauAnterior) {
+
+        parentesco.value =
+            grauAnterior;
     }
 
 }
 
-dataNascimento.addEventListener("change", verificarIdade);
 
-window.addEventListener("load", verificarIdade);
+window.addEventListener(
+    'load',
+    carregarParentesco
+);
+
+
 </script>
+
+</body>
+
+</html>

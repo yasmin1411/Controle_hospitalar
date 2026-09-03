@@ -1,7 +1,13 @@
+```php
 <?php
 
 require_once '../includes/auth.php';
 require_once '../config/database.php';
+
+$erro = '';
+
+$erros = [];
+
 
 /*
 |--------------------------------------------------------------------------
@@ -11,7 +17,6 @@ require_once '../config/database.php';
 
 try {
 
-    // Pacientes
     $pacientes = $pdo->query("
         SELECT
             id,
@@ -21,7 +26,6 @@ try {
     ")->fetchAll(PDO::FETCH_ASSOC);
 
 
-    // Médicos ativos
     $medicos = $pdo->query("
         SELECT
             id,
@@ -33,7 +37,6 @@ try {
     ")->fetchAll(PDO::FETCH_ASSOC);
 
 
-    // Enfermeiros ativos
     $enfermeiros = $pdo->query("
         SELECT
             id,
@@ -47,8 +50,61 @@ try {
 
 } catch (PDOException $e) {
 
-    die("Erro ao carregar dados: " . $e->getMessage());
+    die(
+        "Erro ao carregar dados: " .
+        $e->getMessage()
+    );
 
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| VALORES DO FORMULÁRIO
+|--------------------------------------------------------------------------
+*/
+
+$paciente_id =
+    $_POST['paciente_id'] ?? '';
+
+$medico_id =
+    $_POST['medico_id'] ?? '';
+
+$enfermeiro_id =
+    $_POST['enfermeiro_id'] ?? '';
+
+$data_entrada =
+    $_POST['data_entrada'] ?? '';
+
+$quarto =
+    trim($_POST['quarto'] ?? '');
+
+$leito =
+    trim($_POST['leito'] ?? '');
+
+$motivos =
+    trim($_POST['motivos'] ?? '');
+
+$observacoes =
+    trim($_POST['observacoes'] ?? '');
+
+$quadro_clinico =
+    trim($_POST['quadro_clinico'] ?? '');
+
+
+/*
+|--------------------------------------------------------------------------
+| FUNÇÃO DO *
+|--------------------------------------------------------------------------
+*/
+
+function campoComErro($campo, $erros)
+{
+    if (isset($erros[$campo])) {
+        return '<span class="campo-erro">*</span>';
+    }
+
+    return '';
 }
 
 
@@ -60,1327 +116,1221 @@ try {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $paciente_id = $_POST['paciente_id'] ?? '';
-
-    $medico_id = $_POST['medico_id'] ?? '';
-
-    $enfermeiro_id = $_POST['enfermeiro_id'] ?? '';
-
-    $quarto = trim($_POST['quarto'] ?? '');
-
-    $leito = trim($_POST['leito'] ?? '');
-
-    $motivos = trim($_POST['motivos'] ?? '');
-
-    $observacoes = trim($_POST['observacoes'] ?? '');
-
-    $quadro_clinico = trim($_POST['quadro_clinico'] ?? '');
-
 
     /*
     |--------------------------------------------------------------------------
-    | VALIDAÇÕES
+    | VALIDAÇÕES INDIVIDUAIS
     |--------------------------------------------------------------------------
     */
 
-    if (
-        empty($paciente_id) ||
-        empty($medico_id) ||
-        empty($enfermeiro_id) ||
-        empty($quarto) ||
-        empty($leito) ||
-        empty($quadro_clinico)
-    ) {
+    if ($paciente_id === '') {
+        $erros['paciente_id'] = true;
+    }
 
-        die("Preencha todos os campos obrigatórios.");
 
+    if ($medico_id === '') {
+        $erros['medico_id'] = true;
+    }
+
+
+    if ($enfermeiro_id === '') {
+        $erros['enfermeiro_id'] = true;
+    }
+
+
+    if ($data_entrada === '') {
+        $erros['data_entrada'] = true;
+    }
+
+
+    if ($quarto === '') {
+        $erros['quarto'] = true;
+    }
+
+
+    if ($leito === '') {
+        $erros['leito'] = true;
+    }
+
+
+    if ($quadro_clinico === '') {
+        $erros['quadro_clinico'] = true;
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | CADASTRAR INTERNAÇÃO
+    | SE NÃO HOUVER ERROS, SALVA
     |--------------------------------------------------------------------------
     */
 
-    try {
+    if (empty($erros)) {
 
-        $sql = $pdo->prepare("
-            INSERT INTO internacoes
-            (
-                paciente_id,
-                medico_id,
-                enfermeiro_id,
-                data_entrada,
-                data_saida,
-                quarto,
-                leito,
-                motivos,
-                observacoes,
-                quadro_clinico,
-                status
-            )
-            VALUES
-            (
-                ?,
-                ?,
-                ?,
-                NOW(),
-                NULL,
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
-                'Internado'
-            )
-        ");
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | DATA
+            |--------------------------------------------------------------------------
+            */
+
+            $dataEntradaBanco =
+                $data_entrada . ' 00:00:00';
 
 
-        $sql->execute([
-            $paciente_id,
-            $medico_id,
-            $enfermeiro_id,
-            $quarto,
-            $leito,
-            $motivos,
-            $observacoes,
-            $quadro_clinico
-        ]);
+            /*
+            |--------------------------------------------------------------------------
+            | INSERT
+            |--------------------------------------------------------------------------
+            */
+
+            $sql = $pdo->prepare("
+                INSERT INTO internacoes
+                (
+                    paciente_id,
+                    medico_id,
+                    enfermeiro_id,
+                    data_entrada,
+                    data_saida,
+                    quarto,
+                    leito,
+                    motivos,
+                    observacoes,
+                    quadro_clinico,
+                    status
+                )
+                VALUES
+                (
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    NULL,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    'Instável'
+                )
+            ");
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | REDIRECIONAR
-        |--------------------------------------------------------------------------
-        */
+            $sql->execute([
 
-        header("Location: internacoes.php");
+                $paciente_id,
 
-        exit;
+                $medico_id,
+
+                $enfermeiro_id,
+
+                $dataEntradaBanco,
+
+                $quarto,
+
+                $leito,
+
+                $motivos,
+
+                $observacoes,
+
+                $quadro_clinico
+
+            ]);
 
 
-    } catch (PDOException $e) {
+            /*
+            |--------------------------------------------------------------------------
+            | SUCESSO
+            |--------------------------------------------------------------------------
+            */
 
-        die(
-            "Erro ao cadastrar internação: " .
-            $e->getMessage()
-        );
+            header(
+                "Location: internacoes.php?sucesso=1"
+            );
+
+            exit;
+
+
+        } catch (PDOException $e) {
+
+            $erro =
+                "Erro ao cadastrar internação: " .
+                $e->getMessage();
+
+        }
+
+    } else {
+
+        $erro =
+            "Verifique os campos marcados com *.";
 
     }
 
 }
 
 ?>
-
-
 <!DOCTYPE html>
 
 <html lang="pt-br">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
 
-    <title>Nova Internação | Sistema Hospitalar</title>
+<title>
+Nova Internação | Sistema Hospitalar
+</title>
 
-    <!-- Bootstrap -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet"
+>
 
-    <!-- Bootstrap Icons -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-        rel="stylesheet"
-    >
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+rel="stylesheet"
+>
 
-    <style>
 
-        :root {
-            --azul-principal: #2F80ED;
-            --azul-claro: #56CCF2;
-            --azul-suave: #eef5ff;
-            --borda: #dbe7ff;
-            --texto: #2c3e50;
-            --cinza: #6c757d;
-        }
+<style>
 
+:root {
 
-        * {
-            box-sizing: border-box;
-        }
+    --azul-principal: #2F80ED;
 
+    --azul-claro: #56CCF2;
 
-        body {
+    --azul-suave: #eef5ff;
 
-            margin: 0;
+    --borda: #dbe7ff;
 
-            min-height: 100vh;
+    --texto: #2c3e50;
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #eef5ff,
-                    #dbeeff
-                );
+    --cinza: #6c757d;
 
-            font-family: 'Segoe UI', sans-serif;
+}
 
-            color: var(--texto);
 
-        }
+* {
+    box-sizing: border-box;
+}
 
 
-        /* =====================================================
-           CONTAINER PRINCIPAL
-        ===================================================== */
+body {
 
-        .pagina {
+    margin: 0;
 
-            max-width: 1180px;
+    min-height: 100vh;
 
-            margin: 0 auto;
+    background:
+        linear-gradient(
+            135deg,
+            #eef5ff,
+            #dbeeff
+        );
 
-            padding: 35px 20px 50px;
+    font-family: 'Segoe UI', sans-serif;
 
-        }
+    color: var(--texto);
 
+}
 
-        /* =====================================================
-           CABEÇALHO
-        ===================================================== */
 
-        .cabecalho {
+.pagina {
 
-            background:
-                linear-gradient(
-                    135deg,
-                    var(--azul-principal),
-                    var(--azul-claro)
-                );
+    max-width: 1180px;
 
-            border-radius: 25px;
+    margin: 0 auto;
 
-            padding: 28px 32px;
+    padding: 35px 20px 50px;
 
-            color: white;
+}
 
-            box-shadow:
-                0 12px 30px rgba(47, 128, 237, 0.20);
 
-            margin-bottom: 25px;
+.cabecalho {
 
-        }
+    background:
+        linear-gradient(
+            135deg,
+            var(--azul-principal),
+            var(--azul-claro)
+        );
 
+    border-radius: 25px;
 
-        .cabecalho-conteudo {
+    padding: 28px 32px;
 
-            display: flex;
+    color: white;
 
-            align-items: center;
+    box-shadow:
+        0 12px 30px rgba(47, 128, 237, 0.20);
 
-            gap: 18px;
+    margin-bottom: 25px;
 
-        }
+}
 
 
-        .icone-cabecalho {
+.cabecalho-conteudo {
 
-            width: 62px;
+    display: flex;
 
-            height: 62px;
+    align-items: center;
 
-            border-radius: 18px;
+    gap: 18px;
 
-            background: rgba(255,255,255,0.18);
+}
 
-            display: flex;
 
-            align-items: center;
+.icone-cabecalho {
 
-            justify-content: center;
+    width: 62px;
 
-            font-size: 30px;
+    height: 62px;
 
-            flex-shrink: 0;
+    border-radius: 18px;
 
-        }
+    background: rgba(255,255,255,0.18);
 
+    display: flex;
 
-        .cabecalho h1 {
+    align-items: center;
 
-            margin: 0;
+    justify-content: center;
 
-            font-size: 30px;
+    font-size: 30px;
 
-            font-weight: 700;
+}
 
-        }
 
+.cabecalho h1 {
 
-        .cabecalho p {
+    margin: 0;
 
-            margin: 5px 0 0;
+    font-size: 30px;
 
-            font-size: 14px;
+    font-weight: 700;
 
-            opacity: 0.92;
+}
 
-        }
 
+.cabecalho p {
 
-        /* =====================================================
-           CARD PRINCIPAL
-        ===================================================== */
+    margin: 5px 0 0;
 
-        .card-principal {
+    font-size: 14px;
 
-            background: #ffffff;
+    opacity: 0.92;
 
-            border-radius: 25px;
+}
 
-            padding: 28px;
 
-            box-shadow:
-                0 10px 30px rgba(44, 62, 80, 0.08);
+.card-principal {
 
-        }
+    background: #ffffff;
 
+    border-radius: 25px;
 
-        /* =====================================================
-           CABEÇALHO DO FORMULÁRIO
-        ===================================================== */
+    padding: 28px;
 
-        .titulo-formulario {
+    box-shadow:
+        0 10px 30px rgba(44, 62, 80, 0.08);
 
-            display: flex;
+}
 
-            align-items: center;
 
-            justify-content: space-between;
+.titulo-formulario {
 
-            gap: 15px;
+    display: flex;
 
-            margin-bottom: 25px;
+    align-items: center;
 
-            padding-bottom: 20px;
+    justify-content: space-between;
 
-            border-bottom: 1px solid #edf2fa;
+    gap: 15px;
 
-        }
+    margin-bottom: 25px;
 
+    padding-bottom: 20px;
 
-        .titulo-formulario h2 {
+    border-bottom: 1px solid #edf2fa;
 
-            margin: 0;
+}
 
-            color: var(--azul-principal);
 
-            font-size: 22px;
+.titulo-formulario h2 {
 
-            font-weight: 700;
+    margin: 0;
 
-        }
+    color: var(--azul-principal);
 
+    font-size: 22px;
 
-        .titulo-formulario p {
+    font-weight: 700;
 
-            margin: 5px 0 0;
+}
 
-            color: var(--cinza);
 
-            font-size: 14px;
+.titulo-formulario p {
 
-        }
+    margin: 5px 0 0;
 
+    color: var(--cinza);
 
-        .obrigatorio {
+    font-size: 14px;
 
-            color: #dc3545;
+}
 
-            font-weight: 700;
 
-        }
+.obrigatorio {
 
+    color: #dc3545;
 
-        /* =====================================================
-           SEÇÕES
-        ===================================================== */
+    font-weight: 900;
 
-        .secao {
+}
 
-            border: 1px solid #e7eef9;
 
-            border-radius: 18px;
+.campo-erro {
 
-            padding: 22px;
+    color: #dc3545;
 
-            margin-bottom: 22px;
+    font-size: 20px;
 
-            background: #ffffff;
+    font-weight: 900;
 
-        }
+    margin-left: 4px;
 
+}
 
-        .secao-cabecalho {
 
-            display: flex;
+.secao {
 
-            align-items: center;
+    border: 1px solid #e7eef9;
 
-            gap: 12px;
+    border-radius: 18px;
 
-            margin-bottom: 20px;
+    padding: 22px;
 
-        }
+    margin-bottom: 22px;
 
+    background: #ffffff;
 
-        .icone-secao {
+}
 
-            width: 42px;
 
-            height: 42px;
+.secao-cabecalho {
 
-            border-radius: 12px;
+    display: flex;
 
-            display: flex;
+    align-items: center;
 
-            align-items: center;
+    gap: 12px;
 
-            justify-content: center;
+    margin-bottom: 20px;
 
-            background: #e8f3ff;
+}
 
-            color: var(--azul-principal);
 
-            font-size: 19px;
+.icone-secao {
 
-            flex-shrink: 0;
+    width: 42px;
 
-        }
+    height: 42px;
 
+    border-radius: 12px;
 
-        .secao-cabecalho h3 {
+    display: flex;
 
-            margin: 0;
+    align-items: center;
 
-            font-size: 18px;
+    justify-content: center;
 
-            font-weight: 700;
+    background: #e8f3ff;
 
-            color: #2c3e50;
+    color: var(--azul-principal);
 
-        }
+    font-size: 19px;
 
+}
 
-        .secao-cabecalho p {
 
-            margin: 3px 0 0;
+.secao-cabecalho h3 {
 
-            font-size: 13px;
+    margin: 0;
 
-            color: var(--cinza);
+    font-size: 18px;
 
-        }
+    font-weight: 700;
 
+}
 
-        /* =====================================================
-           LABELS
-        ===================================================== */
 
-        .form-label {
+.secao-cabecalho p {
 
-            font-weight: 600;
+    margin: 3px 0 0;
 
-            color: #34495e;
+    font-size: 13px;
 
-            margin-bottom: 7px;
+    color: var(--cinza);
 
-        }
+}
 
 
-        /* =====================================================
-           INPUTS E SELECTS
-        ===================================================== */
+.form-label {
 
-        .form-control,
-        .form-select {
+    font-weight: 600;
 
-            min-height: 46px;
+    color: #34495e;
 
-            border-radius: 12px;
+    margin-bottom: 7px;
 
-            border: 1px solid var(--borda);
+}
 
-            padding: 10px 13px;
 
-            color: #2c3e50;
+.form-control,
+.form-select {
 
-            background-color: #fff;
+    min-height: 46px;
 
-            transition:
-                border-color 0.2s ease,
-                box-shadow 0.2s ease;
+    border-radius: 12px;
 
-        }
+    border: 1px solid var(--borda);
 
+    padding: 10px 13px;
 
-        .form-control:focus,
-        .form-select:focus {
+}
 
-            border-color: var(--azul-principal);
 
-            box-shadow:
-                0 0 0 0.20rem rgba(47, 128, 237, 0.12);
+.form-control:focus,
+.form-select:focus {
 
-        }
+    border-color: var(--azul-principal);
 
+    box-shadow:
+        0 0 0 0.20rem rgba(47, 128, 237, 0.12);
 
-        .form-control::placeholder {
+}
 
-            color: #a0aabd;
 
-        }
+textarea.form-control {
 
+    min-height: 115px;
 
-        textarea.form-control {
+    resize: vertical;
 
-            min-height: 115px;
+}
 
-            resize: vertical;
 
-        }
+.campo-com-icone {
 
+    position: relative;
 
-        /* =====================================================
-           CAMPOS COM ÍCONE
-        ===================================================== */
+}
 
-        .campo-com-icone {
 
-            position: relative;
+.campo-com-icone .icone-campo {
 
-        }
+    position: absolute;
 
+    left: 14px;
 
-        .campo-com-icone .icone-campo {
+    top: 50%;
 
-            position: absolute;
+    transform: translateY(-50%);
 
-            left: 14px;
+    color: var(--azul-principal);
 
-            top: 50%;
+    pointer-events: none;
 
-            transform: translateY(-50%);
+}
 
-            color: var(--azul-principal);
 
-            pointer-events: none;
+.campo-com-icone .form-control {
 
-        }
+    padding-left: 42px;
 
+}
 
-        .campo-com-icone .form-control {
 
-            padding-left: 42px;
+.quadro-clinico {
 
-        }
+    background: #f8fbff;
 
+    border: 1px solid #dceaff;
 
-        /* =====================================================
-           DESTAQUE QUADRO CLÍNICO
-        ===================================================== */
+    border-radius: 15px;
 
-        .quadro-clinico {
+    padding: 18px;
 
-            background: #f8fbff;
+}
 
-            border: 1px solid #dceaff;
 
-            border-radius: 15px;
+.ajuda {
 
-            padding: 18px;
+    margin-top: 7px;
 
-        }
+    color: #7b8794;
 
+    font-size: 12px;
 
-        .quadro-clinico .form-select {
+}
 
-            background-color: #fff;
 
-        }
+.acoes {
 
+    display: flex;
 
-        .ajuda {
+    justify-content: space-between;
 
-            margin-top: 7px;
+    align-items: center;
 
-            color: #7b8794;
+    gap: 15px;
 
-            font-size: 12px;
+    padding-top: 8px;
 
-        }
+}
 
 
-        /* =====================================================
-           RODAPÉ DO FORMULÁRIO
-        ===================================================== */
+.btn {
 
-        .acoes {
+    min-height: 45px;
 
-            display: flex;
+    border-radius: 12px;
 
-            justify-content: space-between;
+    padding: 10px 20px;
 
-            align-items: center;
+    font-weight: 600;
 
-            gap: 15px;
+    display: inline-flex;
 
-            padding-top: 8px;
+    align-items: center;
 
-        }
+    justify-content: center;
 
+    gap: 8px;
 
-        .btn {
+}
 
-            min-height: 45px;
 
-            border-radius: 12px;
+.btn-azul {
 
-            padding: 10px 20px;
+    background: var(--azul-principal);
 
-            font-weight: 600;
+    color: white;
 
-            display: inline-flex;
+    border: none;
 
-            align-items: center;
+}
 
-            justify-content: center;
 
-            gap: 8px;
+.btn-azul:hover {
 
-            transition: all 0.2s ease;
+    background: #1c6ad6;
 
-        }
+    color: white;
 
+}
 
-        .btn-azul {
 
-            background: var(--azul-principal);
+.btn-cancelar {
 
-            color: white;
+    background: #f4f6f9;
 
-            border: none;
+    color: #5f6b7a;
 
-        }
+    border: 1px solid #e2e7ee;
 
+}
 
-        .btn-azul:hover {
 
-            background: #1c6ad6;
+@media (max-width: 768px) {
 
-            color: white;
+    .pagina {
+        padding: 20px 12px 35px;
+    }
 
-            transform: translateY(-1px);
+    .card-principal {
+        padding: 18px;
+    }
 
-            box-shadow:
-                0 6px 15px rgba(47, 128, 237, 0.20);
+    .acoes {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
 
-        }
+    .acoes .btn {
+        width: 100%;
+    }
 
+}
 
-        .btn-cancelar {
-
-            background: #f4f6f9;
-
-            color: #5f6b7a;
-
-            border: 1px solid #e2e7ee;
-
-        }
-
-
-        .btn-cancelar:hover {
-
-            background: #e9edf2;
-
-            color: #394452;
-
-        }
-
-
-        /* =====================================================
-           RESPONSIVIDADE
-        ===================================================== */
-
-        @media (max-width: 768px) {
-
-            .pagina {
-
-                padding: 20px 12px 35px;
-
-            }
-
-
-            .cabecalho {
-
-                padding: 22px;
-
-                border-radius: 20px;
-
-            }
-
-
-            .cabecalho-conteudo {
-
-                align-items: flex-start;
-
-            }
-
-
-            .icone-cabecalho {
-
-                width: 52px;
-
-                height: 52px;
-
-                font-size: 25px;
-
-            }
-
-
-            .cabecalho h1 {
-
-                font-size: 25px;
-
-            }
-
-
-            .card-principal {
-
-                padding: 18px;
-
-                border-radius: 20px;
-
-            }
-
-
-            .secao {
-
-                padding: 17px;
-
-                border-radius: 15px;
-
-            }
-
-
-            .titulo-formulario {
-
-                align-items: flex-start;
-
-            }
-
-
-            .acoes {
-
-                flex-direction: column-reverse;
-
-                align-items: stretch;
-
-            }
-
-
-            .acoes .btn {
-
-                width: 100%;
-
-            }
-
-        }
-
-    </style>
+</style>
 
 </head>
 
 
 <body>
 
-
 <div class="pagina">
 
 
-    <!-- =====================================================
-         CABEÇALHO
-    ====================================================== -->
+<div class="cabecalho">
 
-    <div class="cabecalho">
+<div class="cabecalho-conteudo">
 
-        <div class="cabecalho-conteudo">
+<div class="icone-cabecalho">
 
-            <div class="icone-cabecalho">
+<i class="bi bi-hospital"></i>
 
-                <i class="bi bi-hospital"></i>
+</div>
 
-            </div>
+<div>
 
-            <div>
+<h1>
+Nova Internação
+</h1>
 
-                <h1>Nova Internação</h1>
+<p>
+Cadastre e organize as informações da nova internação hospitalar.
+</p>
 
-                <p>
-                    Cadastre e organize as informações da nova internação hospitalar.
-                </p>
+</div>
 
-            </div>
+</div>
 
-        </div>
+</div>
 
-    </div>
 
+<div class="card-principal">
 
-    <!-- =====================================================
-         CARD PRINCIPAL
-    ====================================================== -->
 
-    <div class="card-principal">
+<div class="titulo-formulario">
 
+<div>
 
-        <div class="titulo-formulario">
+<h2>
 
-            <div>
+<i class="bi bi-clipboard2-plus me-2"></i>
 
-                <h2>
-                    <i class="bi bi-clipboard2-plus me-2"></i>
-                    Dados da Internação
-                </h2>
+Dados da Internação
 
-                <p>
-                    Preencha os dados abaixo para registrar uma nova internação.
-                </p>
+</h2>
 
-            </div>
+<p>
+Preencha os dados abaixo para registrar uma nova internação.
+</p>
 
-            <div class="text-end">
+</div>
 
-                <small class="text-muted">
-                    <span class="obrigatorio">*</span>
-                    Campo obrigatório
-                </small>
 
-            </div>
+<div class="text-end">
 
-        </div>
+<small class="text-muted">
 
+<span class="obrigatorio">*</span>
 
-        <form method="POST">
+Campo obrigatório
 
+</small>
 
-            <!-- =================================================
-                 PACIENTE
-            ================================================== -->
+</div>
 
-            <div class="secao">
+</div>
 
-                <div class="secao-cabecalho">
 
-                    <div class="icone-secao">
+<form method="POST">
 
-                        <i class="bi bi-person-heart"></i>
 
-                    </div>
+<!-- PACIENTE -->
 
-                    <div>
+<div class="secao">
 
-                        <h3>Paciente</h3>
+<div class="secao-cabecalho">
 
-                        <p>
-                            Selecione o paciente que será internado.
-                        </p>
+<div class="icone-secao">
+<i class="bi bi-person-heart"></i>
+</div>
 
-                    </div>
+<div>
 
-                </div>
+<h3>
+Paciente
+</h3>
 
+<p>
+Selecione o paciente que será internado.
+</p>
 
-                <div class="row g-4">
+</div>
 
-                    <div class="col-12">
+</div>
 
-                        <label class="form-label">
 
-                            Paciente
+<div class="row g-4">
 
-                            <span class="obrigatorio">*</span>
+<div class="col-12">
 
-                        </label>
+<label class="form-label">
 
-                        <select
-                            name="paciente_id"
-                            class="form-select"
-                            required
-                        >
+Paciente
 
-                            <option value="">
-                                Selecione o paciente
-                            </option>
+<?= campoComErro('paciente_id', $erros) ?>
 
-                            <?php foreach ($pacientes as $p): ?>
+</label>
 
-                                <option value="<?= $p['id'] ?>">
 
-                                    <?= htmlspecialchars($p['nome']) ?>
+<select
+name="paciente_id"
+class="form-select"
+>
 
-                                </option>
+<option value="">
+Selecione o paciente
+</option>
 
-                            <?php endforeach; ?>
 
-                        </select>
+<?php foreach ($pacientes as $p): ?>
 
-                    </div>
+<option
+value="<?= $p['id'] ?>"
+<?= ($paciente_id == $p['id']) ? 'selected' : '' ?>
+>
 
-                </div>
+<?= htmlspecialchars($p['nome']) ?>
 
-            </div>
+</option>
 
+<?php endforeach; ?>
 
-            <!-- =================================================
-                 EQUIPE RESPONSÁVEL
-            ================================================== -->
+</select>
 
-            <div class="secao">
+</div>
 
-                <div class="secao-cabecalho">
+</div>
 
-                    <div class="icone-secao">
+</div>
 
-                        <i class="bi bi-people"></i>
 
-                    </div>
+<!-- EQUIPE -->
 
-                    <div>
+<div class="secao">
 
-                        <h3>Equipe Responsável</h3>
+<div class="secao-cabecalho">
 
-                        <p>
-                            Defina os profissionais responsáveis pelo atendimento.
-                        </p>
+<div class="icone-secao">
+<i class="bi bi-people"></i>
+</div>
 
-                    </div>
+<div>
 
-                </div>
+<h3>
+Equipe Responsável
+</h3>
 
+<p>
+Defina os profissionais responsáveis pelo atendimento.
+</p>
 
-                <div class="row g-4">
+</div>
 
+</div>
 
-                    <!-- MÉDICO -->
 
-                    <div class="col-lg-6">
+<div class="row g-4">
 
-                        <label class="form-label">
 
-                            Médico responsável
+<div class="col-lg-6">
 
-                            <span class="obrigatorio">*</span>
+<label class="form-label">
 
-                        </label>
+Médico responsável
 
-                        <select
-                            name="medico_id"
-                            class="form-select"
-                            required
-                        >
+<?= campoComErro('medico_id', $erros) ?>
 
-                            <option value="">
-                                Selecione o médico
-                            </option>
+</label>
 
-                            <?php foreach ($medicos as $m): ?>
 
-                                <option value="<?= $m['id'] ?>">
+<select
+name="medico_id"
+class="form-select"
+>
 
-                                    <?= htmlspecialchars($m['nome']) ?>
+<option value="">
+Selecione o médico
+</option>
 
-                                    - CRM:
 
-                                    <?= htmlspecialchars($m['crm']) ?>
+<?php foreach ($medicos as $m): ?>
 
-                                </option>
+<option
+value="<?= $m['id'] ?>"
+<?= ($medico_id == $m['id']) ? 'selected' : '' ?>
+>
 
-                            <?php endforeach; ?>
+<?= htmlspecialchars($m['nome']) ?>
 
-                        </select>
+- CRM:
 
-                    </div>
+<?= htmlspecialchars($m['crm']) ?>
 
+</option>
 
-                    <!-- ENFERMEIRO -->
+<?php endforeach; ?>
 
-                    <div class="col-lg-6">
+</select>
 
-                        <label class="form-label">
+</div>
 
-                            Enfermeiro responsável
 
-                            <span class="obrigatorio">*</span>
+<div class="col-lg-6">
 
-                        </label>
+<label class="form-label">
 
-                        <select
-                            name="enfermeiro_id"
-                            class="form-select"
-                            required
-                        >
+Enfermeiro responsável
 
-                            <option value="">
-                                Selecione o enfermeiro
-                            </option>
+<?= campoComErro('enfermeiro_id', $erros) ?>
 
-                            <?php foreach ($enfermeiros as $e): ?>
+</label>
 
-                                <option value="<?= $e['id'] ?>">
 
-                                    <?= htmlspecialchars($e['nome']) ?>
+<select
+name="enfermeiro_id"
+class="form-select"
+>
 
-                                    - COREN:
+<option value="">
+Selecione o enfermeiro
+</option>
 
-                                    <?= htmlspecialchars($e['coren']) ?>
 
-                                </option>
+<?php foreach ($enfermeiros as $e): ?>
 
-                            <?php endforeach; ?>
+<option
+value="<?= $e['id'] ?>"
+<?= ($enfermeiro_id == $e['id']) ? 'selected' : '' ?>
+>
 
-                        </select>
+<?= htmlspecialchars($e['nome']) ?>
 
-                    </div>
+- COREN:
 
-                </div>
+<?= htmlspecialchars($e['coren']) ?>
 
-            </div>
+</option>
 
+<?php endforeach; ?>
 
-            <!-- =================================================
-                 ACOMODAÇÃO
-            ================================================== -->
+</select>
 
-            <div class="secao">
+</div>
 
-                <div class="secao-cabecalho">
+</div>
 
-                    <div class="icone-secao">
+</div>
 
-                        <i class="bi bi-hospital"></i>
 
-                    </div>
+<!-- ACOMODAÇÃO -->
 
-                    <div>
+<div class="secao">
 
-                        <h3>Acomodação</h3>
+<div class="secao-cabecalho">
 
-                        <p>
-                            Informe a localização do paciente dentro da unidade.
-                        </p>
+<div class="icone-secao">
+<i class="bi bi-hospital"></i>
+</div>
 
-                    </div>
+<div>
 
-                </div>
+<h3>
+Acomodação
+</h3>
 
+<p>
+Informe a localização do paciente dentro da unidade.
+</p>
 
-                <div class="row g-4">
+</div>
 
+</div>
 
-                    <!-- DATA -->
 
-                    <div class="col-lg-4">
+<div class="row g-4">
 
-                        <label class="form-label">
 
-                            Data de entrada
+<div class="col-lg-4">
 
-                            <span class="obrigatorio">*</span>
+<label class="form-label">
 
-                        </label>
+Data de entrada
 
-                        <div class="campo-com-icone">
+<?= campoComErro('data_entrada', $erros) ?>
 
-                            <i class="bi bi-calendar3 icone-campo"></i>
+</label>
 
-                            <input
-                                type="date"
-                                name="data_entrada"
-                                class="form-control"
-                                required
-                            >
 
-                        </div>
+<div class="campo-com-icone">
 
-                    </div>
+<i class="bi bi-calendar3 icone-campo"></i>
 
+<input
+type="date"
+name="data_entrada"
+class="form-control"
+value="<?= htmlspecialchars($data_entrada) ?>"
+>
 
-                    <!-- QUARTO -->
+</div>
 
-                    <div class="col-lg-4">
+</div>
 
-                        <label class="form-label">
 
-                            Quarto
+<div class="col-lg-4">
 
-                            <span class="obrigatorio">*</span>
+<label class="form-label">
 
-                        </label>
+Quarto
 
-                        <div class="campo-com-icone">
+<?= campoComErro('quarto', $erros) ?>
 
-                            <i class="bi bi-door-open icone-campo"></i>
+</label>
 
-                            <input
-                                type="text"
-                                name="quarto"
-                                class="form-control"
-                                placeholder="Ex.: 204"
-                                autocomplete="off"
-                                required
-                            >
 
-                        </div>
+<div class="campo-com-icone">
 
-                    </div>
+<i class="bi bi-door-open icone-campo"></i>
 
+<input
+type="text"
+name="quarto"
+class="form-control"
+placeholder="Ex.: 204"
+autocomplete="off"
+value="<?= htmlspecialchars($quarto) ?>"
+>
 
-                    <!-- LEITO -->
+</div>
 
-                    <div class="col-lg-4">
+</div>
 
-                        <label class="form-label">
 
-                            Leito
+<div class="col-lg-4">
 
-                            <span class="obrigatorio">*</span>
+<label class="form-label">
 
-                        </label>
+Leito
 
-                        <div class="campo-com-icone">
+<?= campoComErro('leito', $erros) ?>
 
-                            <i class="bi bi-bed icone-campo"></i>
+</label>
 
-                            <input
-                                type="text"
-                                name="leito"
-                                class="form-control"
-                                placeholder="Ex.: 02"
-                                autocomplete="off"
-                                required
-                            >
 
-                        </div>
+<div class="campo-com-icone">
 
-                    </div>
+<i class="bi bi-bed icone-campo"></i>
 
-                </div>
+<input
+type="text"
+name="leito"
+class="form-control"
+placeholder="Ex.: 02"
+autocomplete="off"
+value="<?= htmlspecialchars($leito) ?>"
+>
 
-            </div>
+</div>
 
+</div>
 
-            <!-- =================================================
-                 INFORMAÇÕES CLÍNICAS
-            ================================================== -->
+</div>
 
-            <div class="secao">
+</div>
 
-                <div class="secao-cabecalho">
 
-                    <div class="icone-secao">
+<!-- INFORMAÇÕES CLÍNICAS -->
 
-                        <i class="bi bi-heart-pulse"></i>
+<div class="secao">
 
-                    </div>
+<div class="secao-cabecalho">
 
-                    <div>
+<div class="icone-secao">
 
-                        <h3>Informações Clínicas</h3>
+<i class="bi bi-heart-pulse"></i>
 
-                        <p>
-                            Registre informações importantes sobre o estado do paciente.
-                        </p>
+</div>
 
-                    </div>
+<div>
 
-                </div>
+<h3>
+Informações Clínicas
+</h3>
 
+<p>
+Registre informações importantes sobre o estado do paciente.
+</p>
 
-                <div class="row g-4">
+</div>
 
+</div>
 
-                    <!-- MOTIVO -->
 
-                    <div class="col-lg-6">
+<div class="row g-4">
 
-                        <label class="form-label">
 
-                            Motivo da internação
+<div class="col-lg-6">
 
-                        </label>
+<label class="form-label">
 
-                        <textarea
-                            name="motivos"
-                            class="form-control"
-                            placeholder="Descreva o motivo ou a principal razão da internação..."
-                        ></textarea>
+Motivo da internação
 
-                    </div>
+</label>
 
 
-                    <!-- OBSERVAÇÕES -->
+<textarea
+name="motivos"
+class="form-control"
+placeholder="Descreva o motivo ou a principal razão da internação..."
+><?= htmlspecialchars($motivos) ?></textarea>
 
-                    <div class="col-lg-6">
+</div>
 
-                        <label class="form-label">
 
-                            Observações
+<div class="col-lg-6">
 
-                        </label>
+<label class="form-label">
 
-                        <textarea
-                            name="observacoes"
-                            class="form-control"
-                            placeholder="Adicione informações ou observações importantes..."
-                        ></textarea>
+Observações
 
-                    </div>
+</label>
 
 
-                    <!-- QUADRO CLÍNICO -->
+<textarea
+name="observacoes"
+class="form-control"
+placeholder="Adicione informações ou observações importantes..."
+><?= htmlspecialchars($observacoes) ?></textarea>
 
-                    <div class="col-12">
+</div>
 
-                        <div class="quadro-clinico">
 
-                            <label class="form-label">
+<div class="col-12">
 
-                                <i class="bi bi-activity me-1"></i>
+<div class="quadro-clinico">
 
-                                Quadro clínico
+<label class="form-label">
 
-                                <span class="obrigatorio">*</span>
+<i class="bi bi-activity me-1"></i>
 
-                            </label>
+Quadro clínico
 
-                            <select
-                                name="quadro_clinico"
-                                class="form-select"
-                                required
-                            >
+<?= campoComErro('quadro_clinico', $erros) ?>
 
-                                <option value="">
-                                    Selecione o quadro clínico
-                                </option>
+</label>
 
-                                <option value="Estável">
-                                    Estável
-                                </option>
 
-                                <option value="Grave">
-                                    Grave
-                                </option>
+<select
+name="quadro_clinico"
+class="form-select"
+>
 
-                                <option value="Gravíssimo">
-                                    Gravíssimo
-                                </option>
+<option value="">
+Selecione o quadro clínico
+</option>
 
-                                <option value="Crítico">
-                                    Crítico
-                                </option>
 
-                                <option value="Em Recuperação">
-                                    Em Recuperação
-                                </option>
+<?php
 
-                                <option value="Pós-operatório">
-                                    Pós-operatório
-                                </option>
+$quadros = [
 
-                                <option value="Em Observação">
-                                    Em Observação
-                                </option>
+    'Estável',
+    'Grave',
+    'Gravíssimo',
+    'Crítico',
+    'Em Recuperação',
+    'Pós-operatório',
+    'Em Observação',
+    'Sedado',
+    'Intubado',
+    'Consciente',
+    'Inconsciente',
+    'Com Ventilação Mecânica'
 
-                                <option value="Sedado">
-                                    Sedado
-                                </option>
+];
 
-                                <option value="Intubado">
-                                    Intubado
-                                </option>
+?>
 
-                                <option value="Consciente">
-                                    Consciente
-                                </option>
 
-                                <option value="Inconsciente">
-                                    Inconsciente
-                                </option>
+<?php foreach ($quadros as $quadro): ?>
 
-                                <option value="Com Ventilação Mecânica">
-                                    Com Ventilação Mecânica
-                                </option>
+<option
+value="<?= htmlspecialchars($quadro) ?>"
+<?= ($quadro_clinico === $quadro) ? 'selected' : '' ?>
+>
 
-                            </select>
+<?= htmlspecialchars($quadro) ?>
 
-                            <div class="ajuda">
+</option>
 
-                                <i class="bi bi-info-circle me-1"></i>
+<?php endforeach; ?>
 
-                                Selecione a condição que melhor representa o estado atual do paciente.
+</select>
 
-                            </div>
 
-                        </div>
+<div class="ajuda">
 
-                    </div>
+<i class="bi bi-info-circle me-1"></i>
 
-                </div>
+Selecione a condição que melhor representa o estado atual do paciente.
 
-            </div>
+</div>
 
+</div>
 
-            <!-- =================================================
-                 AÇÕES
-            ================================================== -->
+</div>
 
-            <div class="acoes">
+</div>
 
-                <a
-                    href="internacoes.php"
-                    class="btn btn-cancelar"
-                >
+</div>
 
-                    <i class="bi bi-arrow-left"></i>
 
-                    Cancelar
+<!-- AÇÕES -->
 
-                </a>
+<div class="acoes">
 
+<a
+href="internacoes.php"
+class="btn btn-cancelar"
+>
 
-                <button
-                    type="submit"
-                    class="btn btn-azul"
-                >
+<i class="bi bi-arrow-left"></i>
 
-                    <i class="bi bi-check2-circle"></i>
+Cancelar
 
-                    Salvar Internação
+</a>
 
-                </button>
 
-            </div>
+<button
+type="submit"
+class="btn btn-azul"
+>
 
+<i class="bi bi-check2-circle"></i>
 
-        </form>
+Salvar Internação
 
-    </div>
+</button>
+
+</div>
+
+
+</form>
+
+</div>
 
 </div>
 

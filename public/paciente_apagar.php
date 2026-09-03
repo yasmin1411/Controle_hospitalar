@@ -1,3 +1,4 @@
+```php
 <?php
 
 // Inclui arquivo responsável pela autenticação do usuário
@@ -180,12 +181,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     <!-- Bootstrap -->
+
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
+
     <!-- Bootstrap Icons -->
+
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
@@ -265,7 +269,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
 
-
 <div class="container py-5">
 
     <div class="row justify-content-center">
@@ -276,6 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                 <!-- Ícone de alerta -->
+
                 <div class="alerta mb-4">
 
                     <i class="bi bi-exclamation-triangle-fill"></i>
@@ -284,75 +288,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                 <!-- Título -->
+
                 <h2 class="titulo text-center">
-
                     Confirmar Exclusão
-
                 </h2>
 
 
                 <p class="text-center text-muted">
-
                     Esta ação não poderá ser desfeita.
-
                 </p>
 
 
                 <!-- Informações do paciente -->
+
                 <div class="info-box">
 
 
                     <p>
-
                         <strong>Paciente:</strong>
 
                         <?= htmlspecialchars($paciente['nome']) ?>
-
                     </p>
 
 
                     <p>
-
                         <strong>CPF:</strong>
 
                         <?= htmlspecialchars($paciente['cpf']) ?>
-
                     </p>
 
 
                     <p>
-
                         <strong>Data de Nascimento:</strong>
 
                         <?= htmlspecialchars($paciente['data_de_nascimento']) ?>
-
                     </p>
 
 
                     <p>
-
                         <strong>Telefone:</strong>
 
                         <?= htmlspecialchars($paciente['telefone']) ?>
-
                     </p>
 
+
+                    <!-- CARTÃO DO CIDADÃO NÃO OBRIGATÓRIO -->
 
                     <p>
 
                         <strong>Cartão do Cidadão:</strong>
 
-                        <?= htmlspecialchars($paciente['cartao_cidadao']) ?>
+                        <?php if (
+                            isset($paciente['cartao_cidadao']) &&
+                            !empty(trim($paciente['cartao_cidadao']))
+                        ): ?>
+
+                            <?= htmlspecialchars($paciente['cartao_cidadao']) ?>
+
+                        <?php else: ?>
+
+                            <span class="text-muted">
+                                Não informado
+                            </span>
+
+                        <?php endif; ?>
 
                     </p>
 
 
                     <p>
-
                         <strong>Cidade:</strong>
 
                         <?= htmlspecialchars($paciente['cidade']) ?>
-
                     </p>
 
 
@@ -379,6 +386,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                 <!-- Botões -->
+
                 <form method="POST" class="mt-4 text-center">
 
 
@@ -421,3 +429,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 
 </html>
+```
