@@ -1,4 +1,3 @@
-```php
 <?php
 
 // Inclui arquivo responsável pela autenticação do usuário
@@ -429,4 +428,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 
 </html>
-```
