@@ -445,7 +445,6 @@ body{
 <!-- =====================================================
      RELATÓRIOS
 ===================================================== -->
-
 <div class="col-md-4">
 
     <div class="card modulo-card">
@@ -453,36 +452,29 @@ body{
         <div class="card-body text-center p-4">
 
             <div class="icone-modulo azul-escuro">
-
                 <i class="bi bi-bar-chart-line"></i>
-
             </div>
 
             <h4>Relatórios</h4>
 
             <p class="text-muted">
-
                 Consultas e relatórios do sistema.
-
             </p>
 
-            <span class="badge-dev">
+            <a href="relatorios.php"
+               class="btn btn-modulo">
 
-                🚧 Disponível em breve
+                <i class="bi bi-arrow-right-circle"></i>
 
-            </span>
+                Acessar módulo
+
+            </a>
 
         </div>
 
     </div>
 
 </div>
-
-
-</div>
-
-</div>
-
 
 </body>
 

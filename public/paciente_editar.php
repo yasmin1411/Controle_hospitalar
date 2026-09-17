@@ -131,7 +131,10 @@ $_POST['nome'],
 $_POST['cpf'],
 $_POST['data_de_nascimento'],
 $_POST['telefone'],
-$_POST['cartao_cidadao'],
+
+// Cartão do Cidadão / Cartão do SUS é opcional.
+$_POST['cartao_cidadao'] ?? '',
+
 $id
 
 ]);
@@ -621,20 +624,32 @@ Atualize as informações do paciente cadastrado
 
             </div>
 
+            <!-- CARTÃO DO CIDADÃO / CARTÃO DO SUS -->
+
             <div class="col-md-6 mb-3">
 
                 <label class="form-label">
 
-                    Cartão do Cidadão
+                    <i class="bi bi-card-text"></i>
+                    Cartão do Cidadão / Cartão do SUS
+
+                    <span class="text-muted fw-normal">
+                        (opcional)
+                    </span>
 
                 </label>
 
                 <input
                     type="text"
+                    id="cartao_cidadao"
                     name="cartao_cidadao"
                     class="form-control"
-                    value="<?= htmlspecialchars($paciente['cartao_cidadao']) ?>"
-                    required>
+                    placeholder="Digite apenas números"
+                    maxlength="20"
+                    inputmode="numeric"
+                    value="<?= htmlspecialchars($paciente['cartao_cidadao'] ?? '') ?>"
+
+                >
 
             </div>
 

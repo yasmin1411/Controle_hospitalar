@@ -1,18 +1,26 @@
 <?php
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: funcionarios.php');
+    exit;
+}
+
 /*
 |--------------------------------------------------------------------------
-| VERIFICAR MÉTODO
+| FUNÇÕES
 |--------------------------------------------------------------------------
 */
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    exit("Acesso inválido.");
+function somenteNumeros($valor)
+{
+    return preg_replace('/\D/', '', $valor ?? '');
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -22,74 +30,140 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $nome = trim($_POST['nome'] ?? '');
 $funcao = trim($_POST['funcao'] ?? '');
-$registro = trim($_POST['registro'] ?? '');
-$telefone = trim($_POST['telefone'] ?? '');
+
+$registro = somenteNumeros($_POST['registro'] ?? '');
+
+$telefone = somenteNumeros($_POST['telefone'] ?? '');
 $email = trim($_POST['email'] ?? '');
-$cpf = trim($_POST['cpf'] ?? '');
+$cpf = somenteNumeros($_POST['cpf'] ?? '');
 
-$data_nascimento = !empty($_POST['data_nascimento'])
-    ? $_POST['data_nascimento']
-    : null;
-
+$data_nascimento = trim($_POST['data_nascimento'] ?? '');
 $sexo = trim($_POST['sexo'] ?? '');
 $status = trim($_POST['status'] ?? '');
 
-
 /*
 |--------------------------------------------------------------------------
-| DADOS DO ENDEREÇO
+| ENDEREÇO
 |--------------------------------------------------------------------------
 */
 
 $rua = trim($_POST['rua'] ?? '');
 $numero = trim($_POST['numero'] ?? '');
-$cep = trim($_POST['cep'] ?? '');
+
+$cep = somenteNumeros($_POST['cep'] ?? '');
+
 $cidade = trim($_POST['cidade'] ?? '');
 $complemento = trim($_POST['complemento'] ?? '');
 
-
 /*
 |--------------------------------------------------------------------------
-| VALIDAÇÕES
+| VALIDAÇÕES BÁSICAS
 |--------------------------------------------------------------------------
 */
 
-if ($nome === '') {
-    exit("O nome é obrigatório.");
+if (
+    empty($nome) ||
+    empty($funcao) ||
+    empty($registro) ||
+    empty($status) ||
+    empty($rua) ||
+    empty($numero) ||
+    empty($cep) ||
+    empty($cidade)
+) {
+    die('Preencha todos os campos obrigatórios.');
 }
-
-if ($funcao === '') {
-    exit("A função é obrigatória.");
-}
-
-if ($registro === '') {
-    exit("O registro profissional é obrigatório.");
-}
-
-if ($status === '') {
-    exit("O status é obrigatório.");
-}
-
-if ($rua === '') {
-    exit("A rua é obrigatória.");
-}
-
-if ($numero === '') {
-    exit("O número é obrigatório.");
-}
-
-if ($cep === '') {
-    exit("O CEP é obrigatório.");
-}
-
-if ($cidade === '') {
-    exit("A cidade é obrigatória.");
-}
-
 
 /*
 |--------------------------------------------------------------------------
-| DEFINIR TABELA E CAMPO DO REGISTRO
+| VALIDAÇÃO DO REGISTRO PROFISSIONAL
+|--------------------------------------------------------------------------
+|
+| Neste sistema o registro profissional deve possuir exatamente
+| 6 números.
+|
+*/
+
+if (!preg_match('/^\d{6}$/', $registro)) {
+    die('O registro profissional deve conter exatamente 6 números.');
+}
+
+/*
+|--------------------------------------------------------------------------
+| VALIDAÇÃO DO CPF
+|--------------------------------------------------------------------------
+*/
+
+if (!preg_match('/^\d{11}$/', $cpf)) {
+    die('O CPF deve conter exatamente 11 números.');
+}
+
+/*
+|--------------------------------------------------------------------------
+| VALIDAÇÃO DO TELEFONE
+|--------------------------------------------------------------------------
+*/
+
+if (!empty($telefone)) {
+
+    if (!preg_match('/^\d{10,11}$/', $telefone)) {
+        die('O telefone deve conter 10 ou 11 números.');
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| VALIDAÇÃO DO CEP
+|--------------------------------------------------------------------------
+*/
+
+if (!preg_match('/^\d{8}$/', $cep)) {
+    die('O CEP deve conter exatamente 8 números.');
+}
+
+/*
+|--------------------------------------------------------------------------
+| VALIDAÇÃO DA DATA DE NASCIMENTO
+|--------------------------------------------------------------------------
+*/
+
+if (empty($data_nascimento)) {
+    die('Informe a data de nascimento.');
+}
+
+$data = DateTime::createFromFormat('Y-m-d', $data_nascimento);
+
+if (!$data || $data->format('Y-m-d') !== $data_nascimento) {
+    die('Data de nascimento inválida.');
+}
+
+/*
+|--------------------------------------------------------------------------
+| NÃO PERMITIR DATA FUTURA
+|--------------------------------------------------------------------------
+*/
+
+$hoje = new DateTime();
+
+if ($data > $hoje) {
+    die('A data de nascimento não pode ser posterior à data de hoje.');
+}
+
+/*
+|--------------------------------------------------------------------------
+| FUNCIONÁRIO DEVE TER 18 ANOS OU MAIS
+|--------------------------------------------------------------------------
+*/
+
+$idade = $data->diff($hoje)->y;
+
+if ($idade < 18) {
+    die('O funcionário precisa ter 18 anos ou mais para ser cadastrado.');
+}
+
+/*
+|--------------------------------------------------------------------------
+| DEFINIÇÃO DA TABELA E CAMPO DO REGISTRO
 |--------------------------------------------------------------------------
 */
 
@@ -97,142 +171,90 @@ switch ($funcao) {
 
     case 'Médico':
         $tabela = 'medico';
-        $campo_registro = 'crm';
+        $campoRegistro = 'crm';
         break;
 
     case 'Enfermeiro':
         $tabela = 'enfermeiro';
-        $campo_registro = 'coren';
+        $campoRegistro = 'coren';
         break;
 
     case 'Farmacêutico':
         $tabela = 'farmaceutico';
-        $campo_registro = 'crf';
+        $campoRegistro = 'crf';
         break;
 
     case 'Cirurgião':
         $tabela = 'cirurgiao';
-        $campo_registro = 'crm';
+        $campoRegistro = 'crm';
         break;
 
     case 'Anestesista':
         $tabela = 'anestesista';
-        $campo_registro = 'crm';
+        $campoRegistro = 'crm';
         break;
 
     default:
-        exit("Função inválida.");
+        die('Função profissional inválida.');
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| PROCESSAMENTO
+| VERIFICA SE O REGISTRO JÁ EXISTE
 |--------------------------------------------------------------------------
 */
 
 try {
 
-    /*
-    |--------------------------------------------------------------------------
-    | 1. VERIFICAR REGISTRO PROFISSIONAL
-    |--------------------------------------------------------------------------
-    */
+    $sql = "SELECT id 
+            FROM `$tabela`
+            WHERE `$campoRegistro` = :registro
+            LIMIT 1";
 
-    $sqlVerificaRegistro = $pdo->prepare("
-        SELECT id, nome
-        FROM {$tabela}
-        WHERE {$campo_registro} = ?
-        LIMIT 1
-    ");
-
-    $sqlVerificaRegistro->execute([
-        $registro
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':registro' => $registro
     ]);
 
-    $funcionarioExistente = $sqlVerificaRegistro->fetch(PDO::FETCH_ASSOC);
-
-
-    if ($funcionarioExistente) {
-
-        echo "<script>
-
-            alert(
-                'Não foi possível cadastrar este funcionário.\\n\\n" .
-                addslashes($campo_registro) .
-                " " .
-                addslashes($registro) .
-                " já está cadastrado para: " .
-                addslashes($funcionarioExistente['nome']) .
-                ".'
-            );
-
-            window.history.back();
-
-        </script>";
-
-        exit;
+    if ($stmt->fetch()) {
+        die('Este registro profissional já está cadastrado.');
     }
-
 
     /*
     |--------------------------------------------------------------------------
-    | 2. VERIFICAR CPF
+    | VERIFICA SE O CPF JÁ EXISTE
     |--------------------------------------------------------------------------
     */
 
-    if ($cpf !== '') {
+    $sql = "SELECT id 
+            FROM `$tabela`
+            WHERE cpf = :cpf
+            LIMIT 1";
 
-        $sqlVerificaCpf = $pdo->prepare("
-            SELECT id, nome
-            FROM {$tabela}
-            WHERE cpf = ?
-            LIMIT 1
-        ");
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':cpf' => $cpf
+    ]);
 
-        $sqlVerificaCpf->execute([
-            $cpf
-        ]);
-
-        $funcionarioCpf = $sqlVerificaCpf->fetch(PDO::FETCH_ASSOC);
-
-
-        if ($funcionarioCpf) {
-
-            echo "<script>
-
-                alert(
-                    'Não foi possível cadastrar este funcionário.\\n\\n" .
-                    "O CPF informado já está cadastrado para: " .
-                    addslashes($funcionarioCpf['nome']) .
-                    ".'
-                );
-
-                window.history.back();
-
-            </script>";
-
-            exit;
-        }
+    if ($stmt->fetch()) {
+        die('Este CPF já está cadastrado.');
     }
-
 
     /*
     |--------------------------------------------------------------------------
-    | 3. INICIAR TRANSAÇÃO
+    | INICIA TRANSAÇÃO
     |--------------------------------------------------------------------------
     */
 
     $pdo->beginTransaction();
 
-
     /*
     |--------------------------------------------------------------------------
-    | 4. CADASTRAR ENDEREÇO
+    | CADASTRA ENDEREÇO
     |--------------------------------------------------------------------------
     */
 
-    $sqlEndereco = $pdo->prepare("
+    $sqlEndereco = "
         INSERT INTO endereco
         (
             rua,
@@ -242,38 +264,38 @@ try {
             complemento
         )
         VALUES
-        (?, ?, ?, ?, ?)
-    ");
+        (
+            :rua,
+            :numero,
+            :cep,
+            :cidade,
+            :complemento
+        )
+    ";
 
-    $sqlEndereco->execute([
-        $rua,
-        $numero,
-        $cep,
-        $cidade,
-        $complemento
+    $stmtEndereco = $pdo->prepare($sqlEndereco);
+
+    $stmtEndereco->execute([
+        ':rua' => $rua,
+        ':numero' => $numero,
+        ':cep' => $cep,
+        ':cidade' => $cidade,
+        ':complemento' => $complemento
     ]);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | 5. PEGAR ID DO ENDEREÇO
-    |--------------------------------------------------------------------------
-    */
 
     $endereco_id = $pdo->lastInsertId();
 
-
     /*
     |--------------------------------------------------------------------------
-    | 6. CADASTRAR FUNCIONÁRIO
+    | CADASTRA FUNCIONÁRIO
     |--------------------------------------------------------------------------
     */
 
     $sqlFuncionario = "
-        INSERT INTO {$tabela}
+        INSERT INTO `$tabela`
         (
             nome,
-            {$campo_registro},
+            `$campoRegistro`,
             telefone,
             email,
             cpf,
@@ -283,53 +305,49 @@ try {
             endereco_id
         )
         VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (
+            :nome,
+            :registro,
+            :telefone,
+            :email,
+            :cpf,
+            :data_nascimento,
+            :sexo,
+            :status,
+            :endereco_id
+        )
     ";
 
-    $stmt = $pdo->prepare($sqlFuncionario);
+    $stmtFuncionario = $pdo->prepare($sqlFuncionario);
 
-    $stmt->execute([
-        $nome,
-        $registro,
-        $telefone,
-        $email,
-        $cpf,
-        $data_nascimento,
-        $sexo,
-        $status,
-        $endereco_id
+    $stmtFuncionario->execute([
+        ':nome' => $nome,
+        ':registro' => $registro,
+        ':telefone' => $telefone,
+        ':email' => $email,
+        ':cpf' => $cpf,
+        ':data_nascimento' => $data_nascimento,
+        ':sexo' => $sexo,
+        ':status' => $status,
+        ':endereco_id' => $endereco_id
     ]);
-
 
     /*
     |--------------------------------------------------------------------------
-    | 7. CONFIRMAR
+    | FINALIZA TRANSAÇÃO
     |--------------------------------------------------------------------------
     */
 
     $pdo->commit();
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | 8. SUCESSO
-    |--------------------------------------------------------------------------
-    |
-    | Não usamos mais alert().
-    | A mensagem será exibida na página funcionarios.php.
-    |
-    */
-
-    header("Location: funcionarios.php?sucesso=funcionario_cadastrado");
+    header('Location: funcionarios.php?sucesso=funcionario_cadastrado');
     exit;
-
 
 } catch (PDOException $e) {
 
-
     /*
     |--------------------------------------------------------------------------
-    | DESFAZER TRANSAÇÃO
+    | DESFAZ TRANSAÇÃO EM CASO DE ERRO
     |--------------------------------------------------------------------------
     */
 
@@ -337,29 +355,15 @@ try {
         $pdo->rollBack();
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | TRATAMENTO DE DUPLICIDADE
+    | ERRO DE DUPLICIDADE
     |--------------------------------------------------------------------------
     */
 
     if ($e->getCode() == 23000) {
-
-        echo "<script>
-
-            alert(
-                'Não foi possível cadastrar o funcionário.\\n\\n' +
-                'O registro profissional ou CPF informado já está cadastrado.'
-            );
-
-            window.history.back();
-
-        </script>";
-
-        exit;
+        die('Erro: CPF ou registro profissional já cadastrado.');
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -367,10 +371,5 @@ try {
     |--------------------------------------------------------------------------
     */
 
-    die(
-        "Erro ao cadastrar funcionário: " .
-        $e->getMessage()
-    );
+    die('Erro ao cadastrar funcionário: ' . $e->getMessage());
 }
-
-?>

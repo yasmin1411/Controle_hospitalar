@@ -710,8 +710,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $telefoneNumeros,
 
                     $cartaoNumeros !== ''
-                        ? $cartaoNumeros
-                        : null,
+                  ? $cartaoNumeros
+                    : '',
 
                     $responsavelID,
                     $enderecoPaciente
@@ -754,7 +754,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="pt-BR">
 
 <head>
-
 
 <meta charset="UTF-8">
 
@@ -1079,7 +1078,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </style>
 
-
 </head>
 
 <body>
@@ -1289,35 +1287,32 @@ value="<?= htmlspecialchars($telefone) ?>"
 
 <!-- CARTÃO DO CIDADÃO -->
 
+<!-- CARTÃO DO CIDADÃO / CARTÃO DO SUS -->
+
 <div class="col-md-6 mb-3">
 
-<label class="form-label">
+    <label class="form-label">
 
-Cartão do Cidadão
+        <i class="bi bi-card-text"></i>
+        Cartão do Cidadão / Cartão do SUS
 
-<span class="text-muted fw-normal">
-(opcional)
-</span>
+        <span class="text-muted fw-normal">
+            (opcional)
+        </span>
 
-</label>
+    </label>
 
-<input
-type="text"
-id="cartao_cidadao"
-name="cartao_cidadao"
-class="form-control"
-placeholder="Digite apenas números"
-maxlength="20"
-inputmode="numeric"
-value="<?= htmlspecialchars($cartao_cidadao) ?>"
+    <input
+        type="text"
+        id="cartao_cidadao"
+        name="cartao_cidadao"
+        class="form-control"
+        placeholder="Digite apenas números"
+        maxlength="20"
+        inputmode="numeric"
+        value="<?= htmlspecialchars($cartao_cidadao) ?>"
 
->
-
-</div>
-
-</div>
-
-</div>
+    >
 
 </div>
 

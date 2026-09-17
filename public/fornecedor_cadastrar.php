@@ -31,6 +31,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $complemento = trim($_POST['complemento'] ?? '');
 
     // ==========================================
+    // REMOVE FORMATAÇÃO DO TELEFONE
+    // ==========================================
+
+    $telefoneNumeros = preg_replace('/\D/', '', $telefone);
+
+    // ==========================================
+    // REMOVE FORMATAÇÃO DO CEP
+    // ==========================================
+
+    $cepNumeros = preg_replace('/\D/', '', $cep);
+
+    // ==========================================
     // VALIDAÇÕES
     // ==========================================
 
@@ -44,9 +56,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         empty($cep) ||
         empty($cidade)
     ) {
+
         $erro = 'Preencha todos os campos obrigatórios.';
+
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
         $erro = 'Digite um e-mail válido.';
+
+    } elseif (strlen($telefoneNumeros) !== 10 && strlen($telefoneNumeros) !== 11) {
+
+        $erro = 'O telefone deve possuir DDD e o número completo.';
+
+    } elseif (strlen($cepNumeros) !== 8) {
+
+        $erro = 'O CEP deve possuir 8 números.';
+
     } else {
 
         try {
@@ -71,7 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($sql->fetch()) {
 
-                throw new Exception('Já existe um fornecedor cadastrado com este CNPJ.');
+                throw new Exception(
+                    'Já existe um fornecedor cadastrado com este CNPJ.'
+                );
             }
 
             // ==========================================
@@ -138,7 +164,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cnpj = '';
             $email = '';
             $telefone = '';
-
             $rua = '';
             $numero = '';
             $cep = '';
@@ -149,6 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Se alguma coisa der errado,
             // desfaz todas as alterações
+
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
@@ -161,110 +187,115 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Novo Fornecedor</title>
+<title>Novo Fornecedor</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+<link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+>
 
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+>
 
-    <style>
+<style>
 
-        body {
-            background: #eaf4ff;
-        }
+    body {
+        background: #eaf4ff;
+    }
 
-        .container-principal {
-            max-width: 900px;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }
+    .container-principal {
+        max-width: 900px;
+        margin: 20px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
 
-        .cabecalho {
-            background: linear-gradient(90deg, #2583e9, #4cc2e8);
-            color: white;
-            padding: 14px;
-            border-radius: 10px;
-            margin-bottom: 18px;
-        }
+    .cabecalho {
+        background: linear-gradient(90deg, #2583e9, #4cc2e8);
+        color: white;
+        padding: 14px;
+        border-radius: 10px;
+        margin-bottom: 18px;
+    }
 
-        .cabecalho h4 {
-            margin: 0;
-            font-size: 17px;
-            font-weight: bold;
-        }
+    .cabecalho h4 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: bold;
+    }
 
-        .cabecalho small {
-            font-size: 10px;
-        }
+    .cabecalho small {
+        font-size: 10px;
+    }
 
-        .titulo-pagina {
-            color: #2477df;
-            font-weight: bold;
-            font-size: 19px;
-        }
+    .titulo-pagina {
+        color: #2477df;
+        font-weight: bold;
+        font-size: 19px;
+    }
 
-        .subtitulo {
-            color: #777;
-            font-size: 11px;
-        }
+    .subtitulo {
+        color: #777;
+        font-size: 11px;
+    }
 
-        .secao {
-            border: 1px solid #d8e7ff;
-            background: #f8fbff;
-            border-radius: 12px;
-            padding: 13px;
-            margin-top: 12px;
-        }
+    .secao {
+        border: 1px solid #d8e7ff;
+        background: #f8fbff;
+        border-radius: 12px;
+        padding: 13px;
+        margin-top: 12px;
+    }
 
-        .secao h5 {
-            color: #1769e0;
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
+    .secao h5 {
+        color: #1769e0;
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
 
-        label {
-            font-size: 10px;
-            margin-bottom: 4px;
-        }
+    label {
+        font-size: 10px;
+        margin-bottom: 4px;
+    }
 
-        .form-control {
-            border: 1px solid #cfe0ff;
-            border-radius: 7px;
-            font-size: 12px;
-        }
+    .form-control {
+        border: 1px solid #cfe0ff;
+        border-radius: 7px;
+        font-size: 12px;
+    }
 
-        .form-control:focus {
-            border-color: #2583e9;
-            box-shadow: 0 0 0 0.15rem rgba(37, 131, 233, 0.15);
-        }
+    .form-control:focus {
+        border-color: #2583e9;
+        box-shadow: 0 0 0 0.15rem rgba(37, 131, 233, 0.15);
+    }
 
-        .btn {
-            font-size: 11px;
-        }
+    .btn {
+        font-size: 11px;
+    }
 
-        .botoes {
-            margin-top: 12px;
-        }
+    .botoes {
+        margin-top: 12px;
+    }
 
-    </style>
+    .campo-carregado {
+        background-color: #eef7ff;
+    }
+
+</style>
 
 </head>
 
@@ -272,332 +303,606 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="container-principal">
 
-    <!-- ========================================== -->
-    <!-- CABEÇALHO -->
-    <!-- ========================================== -->
+<!-- ========================================== -->
+<!-- CABEÇALHO -->
+<!-- ========================================== -->
 
-    <div class="cabecalho">
+<div class="cabecalho">
 
-        <h4>
+    <h4>
+
+        <i class="bi bi-building"></i>
+
+        Sistema Hospitalar
+
+    </h4>
+
+    <small>
+        Cadastro de fornecedor e controle de medicamentos hospitalares.
+    </small>
+
+</div>
+
+
+<!-- ========================================== -->
+<!-- TÍTULO -->
+<!-- ========================================== -->
+
+<div class="d-flex justify-content-between align-items-center">
+
+    <div>
+
+        <div class="titulo-pagina">
+
             <i class="bi bi-building"></i>
-            Sistema Hospitalar
-        </h4>
 
-        <small>
-            Cadastro de fornecedor e controle de medicamentos hospitalares.
-        </small>
+            Novo Fornecedor
+
+        </div>
+
+        <div class="subtitulo">
+
+            Preencha os dados abaixo para cadastrar um fornecedor.
+
+        </div>
 
     </div>
 
+    <a
+        href="fornecedor.php"
+        class="btn btn-secondary btn-sm"
+    >
 
-    <!-- ========================================== -->
-    <!-- TÍTULO -->
-    <!-- ========================================== -->
+        <i class="bi bi-arrow-left"></i>
 
-    <div class="d-flex justify-content-between align-items-center">
+        Voltar
 
-        <div>
+    </a>
 
-            <div class="titulo-pagina">
-                <i class="bi bi-building"></i>
-                Novo Fornecedor
+</div>
+
+
+<!-- ========================================== -->
+<!-- MENSAGENS -->
+<!-- ========================================== -->
+
+<?php if (!empty($erro)): ?>
+
+    <div class="alert alert-danger mt-3">
+
+        <i class="bi bi-exclamation-triangle"></i>
+
+        <?= htmlspecialchars($erro) ?>
+
+    </div>
+
+<?php endif; ?>
+
+
+<?php if (!empty($sucesso)): ?>
+
+    <div class="alert alert-success mt-3">
+
+        <i class="bi bi-check-circle"></i>
+
+        <?= htmlspecialchars($sucesso) ?>
+
+    </div>
+
+<?php endif; ?>
+
+
+<!-- ========================================== -->
+<!-- FORMULÁRIO -->
+<!-- ========================================== -->
+
+<form method="POST">
+
+
+    <!-- ====================================== -->
+    <!-- DADOS DO FORNECEDOR -->
+    <!-- ====================================== -->
+
+    <div class="secao">
+
+        <h5>
+
+            <i class="bi bi-person-vcard"></i>
+
+            Dados do Fornecedor
+
+        </h5>
+
+
+        <div class="row">
+
+
+            <!-- NOME -->
+
+            <div class="col-md-12 mb-2">
+
+                <label for="nome">
+                    Nome do Fornecedor
+                </label>
+
+                <input
+                    type="text"
+                    name="nome"
+                    id="nome"
+                    class="form-control"
+                    value="<?= htmlspecialchars($nome ?? '') ?>"
+                    required
+                >
+
             </div>
 
-            <div class="subtitulo">
-                Preencha os dados abaixo para cadastrar um fornecedor.
+
+            <!-- CNPJ -->
+
+            <div class="col-md-6 mb-2">
+
+                <label for="cnpj">
+                    CNPJ
+                </label>
+
+                <input
+                    type="text"
+                    name="cnpj"
+                    id="cnpj"
+                    class="form-control"
+                    value="<?= htmlspecialchars($cnpj ?? '') ?>"
+                    maxlength="20"
+                    required
+                >
+
+            </div>
+
+
+            <!-- TELEFONE -->
+
+            <div class="col-md-6 mb-2">
+
+                <label for="telefone">
+                    Telefone
+                </label>
+
+                <input
+                    type="text"
+                    name="telefone"
+                    id="telefone"
+                    class="form-control"
+                    value="<?= htmlspecialchars($telefone ?? '') ?>"
+                    maxlength="15"
+                    placeholder="(11) 99999-9999"
+                    inputmode="numeric"
+                    required
+                >
+
+            </div>
+
+
+            <!-- EMAIL -->
+
+            <div class="col-md-12 mb-2">
+
+                <label for="email">
+                    E-mail
+                </label>
+
+                <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    class="form-control"
+                    value="<?= htmlspecialchars($email ?? '') ?>"
+                    maxlength="120"
+                    required
+                >
+
             </div>
 
         </div>
 
-        <a href="fornecedor.php" class="btn btn-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i>
-            Voltar
+    </div>
+
+
+    <!-- ====================================== -->
+    <!-- ENDEREÇO -->
+    <!-- ====================================== -->
+
+    <div class="secao">
+
+        <h5>
+
+            <i class="bi bi-geo-alt-fill"></i>
+
+            Endereço do Fornecedor
+
+        </h5>
+
+
+        <div class="row">
+
+
+            <!-- RUA -->
+
+            <div class="col-md-12 mb-2">
+
+                <label for="rua">
+                    Rua
+                </label>
+
+                <input
+                    type="text"
+                    name="rua"
+                    id="rua"
+                    class="form-control"
+                    value="<?= htmlspecialchars($rua ?? '') ?>"
+                    maxlength="150"
+                    required
+                >
+
+            </div>
+
+
+            <!-- NÚMERO -->
+
+            <div class="col-md-6 mb-2">
+
+                <label for="numero">
+                    Número
+                </label>
+
+                <input
+                    type="text"
+                    name="numero"
+                    id="numero"
+                    class="form-control"
+                    value="<?= htmlspecialchars($numero ?? '') ?>"
+                    maxlength="20"
+                    required
+                >
+
+            </div>
+
+
+            <!-- CEP -->
+
+            <div class="col-md-6 mb-2">
+
+                <label for="cep">
+                    CEP
+                </label>
+
+                <input
+                    type="text"
+                    name="cep"
+                    id="cep"
+                    class="form-control"
+                    value="<?= htmlspecialchars($cep ?? '') ?>"
+                    maxlength="9"
+                    placeholder="00000-000"
+                    inputmode="numeric"
+                    required
+                >
+            </div>
+
+
+            <!-- CIDADE -->
+
+            <div class="col-md-12 mb-2">
+
+                <label for="cidade">
+                    Cidade
+                </label>
+
+                <input
+                    type="text"
+                    name="cidade"
+                    id="cidade"
+                    class="form-control"
+                    value="<?= htmlspecialchars($cidade ?? '') ?>"
+                    maxlength="100"
+                    required
+                >
+
+            </div>
+
+
+            <!-- COMPLEMENTO -->
+
+            <div class="col-md-12 mb-2">
+
+                <label for="complemento">
+                    Complemento
+                </label>
+
+                <input
+                    type="text"
+                    name="complemento"
+                    id="complemento"
+                    class="form-control"
+                    value="<?= htmlspecialchars($complemento ?? '') ?>"
+                    maxlength="150"
+                >
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ====================================== -->
+    <!-- BOTÕES -->
+    <!-- ====================================== -->
+
+    <div class="botoes">
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+
+            <i class="bi bi-check-circle"></i>
+
+            Salvar Fornecedor
+
+        </button>
+
+
+        <a
+            href="fornecedor.php"
+            class="btn btn-secondary"
+        >
+
+            <i class="bi bi-x-circle"></i>
+
+            Cancelar
+
         </a>
 
     </div>
 
-
-    <!-- ========================================== -->
-    <!-- MENSAGENS -->
-    <!-- ========================================== -->
-
-    <?php if (!empty($erro)): ?>
-
-        <div class="alert alert-danger mt-3">
-            <i class="bi bi-exclamation-triangle"></i>
-            <?= htmlspecialchars($erro) ?>
-        </div>
-
-    <?php endif; ?>
-
-
-    <?php if (!empty($sucesso)): ?>
-
-        <div class="alert alert-success mt-3">
-            <i class="bi bi-check-circle"></i>
-            <?= htmlspecialchars($sucesso) ?>
-        </div>
-
-    <?php endif; ?>
-
-
-    <!-- ========================================== -->
-    <!-- FORMULÁRIO -->
-    <!-- ========================================== -->
-
-    <form method="POST">
-
-
-        <!-- ====================================== -->
-        <!-- DADOS DO FORNECEDOR -->
-        <!-- ====================================== -->
-
-        <div class="secao">
-
-            <h5>
-                <i class="bi bi-person-vcard"></i>
-                Dados do Fornecedor
-            </h5>
-
-
-            <div class="row">
-
-                <!-- NOME -->
-
-                <div class="col-md-12 mb-2">
-
-                    <label for="nome">
-                        Nome do Fornecedor
-                    </label>
-
-                    <input
-                        type="text"
-                        name="nome"
-                        id="nome"
-                        class="form-control"
-                        value="<?= htmlspecialchars($nome ?? '') ?>"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- CNPJ -->
-
-                <div class="col-md-6 mb-2">
-
-                    <label for="cnpj">
-                        CNPJ
-                    </label>
-
-                    <input
-                        type="text"
-                        name="cnpj"
-                        id="cnpj"
-                        class="form-control"
-                        value="<?= htmlspecialchars($cnpj ?? '') ?>"
-                        maxlength="20"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- TELEFONE -->
-
-                <div class="col-md-6 mb-2">
-
-                    <label for="telefone">
-                        Telefone
-                    </label>
-
-                    <input
-                        type="text"
-                        name="telefone"
-                        id="telefone"
-                        class="form-control"
-                        value="<?= htmlspecialchars($telefone ?? '') ?>"
-                        maxlength="20"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- EMAIL -->
-
-                <div class="col-md-12 mb-2">
-
-                    <label for="email">
-                        E-mail
-                    </label>
-
-                    <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        class="form-control"
-                        value="<?= htmlspecialchars($email ?? '') ?>"
-                        maxlength="120"
-                        required
-                    >
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ====================================== -->
-        <!-- ENDEREÇO -->
-        <!-- ====================================== -->
-
-        <div class="secao">
-
-            <h5>
-                <i class="bi bi-geo-alt-fill"></i>
-                Endereço do Fornecedor
-            </h5>
-
-
-            <div class="row">
-
-                <!-- RUA -->
-
-                <div class="col-md-12 mb-2">
-
-                    <label for="rua">
-                        Rua
-                    </label>
-
-                    <input
-                        type="text"
-                        name="rua"
-                        id="rua"
-                        class="form-control"
-                        value="<?= htmlspecialchars($rua ?? '') ?>"
-                        maxlength="150"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- NÚMERO -->
-
-                <div class="col-md-6 mb-2">
-
-                    <label for="numero">
-                        Número
-                    </label>
-
-                    <input
-                        type="text"
-                        name="numero"
-                        id="numero"
-                        class="form-control"
-                        value="<?= htmlspecialchars($numero ?? '') ?>"
-                        maxlength="20"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- CEP -->
-
-                <div class="col-md-6 mb-2">
-
-                    <label for="cep">
-                        CEP
-                    </label>
-
-                    <input
-                        type="text"
-                        name="cep"
-                        id="cep"
-                        class="form-control"
-                        value="<?= htmlspecialchars($cep ?? '') ?>"
-                        maxlength="10"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- CIDADE -->
-
-                <div class="col-md-12 mb-2">
-
-                    <label for="cidade">
-                        Cidade
-                    </label>
-
-                    <input
-                        type="text"
-                        name="cidade"
-                        id="cidade"
-                        class="form-control"
-                        value="<?= htmlspecialchars($cidade ?? '') ?>"
-                        maxlength="100"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- COMPLEMENTO -->
-
-                <div class="col-md-12 mb-2">
-
-                    <label for="complemento">
-                        Complemento
-                    </label>
-
-                    <input
-                        type="text"
-                        name="complemento"
-                        id="complemento"
-                        class="form-control"
-                        value="<?= htmlspecialchars($complemento ?? '') ?>"
-                        maxlength="150"
-                    >
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ====================================== -->
-        <!-- BOTÕES -->
-        <!-- ====================================== -->
-
-        <div class="botoes">
-
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
-                <i class="bi bi-check-circle"></i>
-                Salvar Fornecedor
-            </button>
-
-            <a
-                href="fornecedor.php"
-                class="btn btn-secondary"
-            >
-                <i class="bi bi-x-circle"></i>
-                Cancelar
-            </a>
-
-        </div>
-
-    </form>
+</form>
 
 </div>
+
+<!-- ========================================== -->
+
+<!-- JAVASCRIPT -->
+
+<!-- ========================================== -->
+
+<script>
+
+    // ==========================================
+    // MÁSCARA DE TELEFONE
+    // ==========================================
+
+    const telefone = document.getElementById('telefone');
+
+    telefone.addEventListener('input', function () {
+
+        let valor = this.value.replace(/\D/g, '');
+
+        // Limita a 11 números:
+        // 2 números do DDD + 9 números do celular
+        valor = valor.substring(0, 11);
+
+        if (valor.length <= 10) {
+
+            // Telefone fixo
+            // (11) 9999-9999
+
+            if (valor.length > 2) {
+
+                valor =
+                    '(' +
+                    valor.substring(0, 2) +
+                    ') ' +
+                    valor.substring(2);
+
+            }
+
+            if (valor.length > 9) {
+
+                valor =
+                    valor.substring(0, 9) +
+                    '-' +
+                    valor.substring(9);
+
+            }
+
+        } else {
+
+            // Celular
+            // (11) 99999-9999
+
+            valor =
+                '(' +
+                valor.substring(0, 2) +
+                ') ' +
+                valor.substring(2, 7) +
+                '-' +
+                valor.substring(7, 11);
+
+        }
+
+        this.value = valor;
+
+    });
+
+
+    // ==========================================
+    // MÁSCARA DE CEP
+    // ==========================================
+
+    const cep = document.getElementById('cep');
+
+    cep.addEventListener('input', function () {
+
+        let valor = this.value.replace(/\D/g, '');
+
+        valor = valor.substring(0, 8);
+
+        if (valor.length > 5) {
+
+            valor =
+                valor.substring(0, 5) +
+                '-' +
+                valor.substring(5);
+
+        }
+
+        this.value = valor;
+
+        // Quando tiver 8 números, busca o endereço
+        if (valor.replace(/\D/g, '').length === 8) {
+
+            buscarCep(valor.replace(/\D/g, ''));
+
+        }
+
+    });
+
+
+    // ==========================================
+    // BUSCA CEP - VIACEP
+    // ==========================================
+
+    async function buscarCep(cepNumero) {
+
+        const rua = document.getElementById('rua');
+        const cidade = document.getElementById('cidade');
+        const mensagem = document.getElementById('mensagemCep');
+
+        mensagem.innerHTML =
+            '<span class="text-primary">Consultando CEP...</span>';
+
+        try {
+
+            const resposta = await fetch(
+                'https://viacep.com.br/ws/' +
+                cepNumero +
+                '/json/'
+            );
+
+            if (!resposta.ok) {
+
+                throw new Error('Erro ao consultar CEP');
+
+            }
+
+            const dados = await resposta.json();
+
+            if (dados.erro) {
+
+                mensagem.innerHTML =
+                    '<span class="text-danger">CEP não encontrado.</span>';
+
+                rua.value = '';
+                cidade.value = '';
+
+                rua.removeAttribute('readonly');
+                cidade.removeAttribute('readonly');
+
+                rua.classList.remove('campo-carregado');
+                cidade.classList.remove('campo-carregado');
+
+                return;
+
+            }
+
+
+            // ==========================================
+            // PREENCHE RUA
+            // ==========================================
+
+            rua.value = dados.logradouro || '';
+
+
+            // ==========================================
+            // PREENCHE CIDADE
+            // ==========================================
+
+            cidade.value = dados.localidade || '';
+
+
+            // ==========================================
+            // BLOQUEIA OS CAMPOS PREENCHIDOS
+            // ==========================================
+
+            if (dados.logradouro) {
+
+                rua.setAttribute('readonly', true);
+                rua.classList.add('campo-carregado');
+
+            }
+
+            if (dados.localidade) {
+
+                cidade.setAttribute('readonly', true);
+                cidade.classList.add('campo-carregado');
+
+            }
+
+
+            mensagem.innerHTML =
+                '<span class="text-success">' +
+                '<i class="bi bi-check-circle"></i> ' +
+                'Endereço encontrado automaticamente.' +
+                '</span>';
+
+        }
+
+        catch (erro) {
+
+            mensagem.innerHTML =
+                '<span class="text-danger">' +
+                'Não foi possível consultar o CEP. ' +
+                'Preencha rua e cidade manualmente.' +
+                '</span>';
+
+            rua.removeAttribute('readonly');
+            cidade.removeAttribute('readonly');
+
+            rua.classList.remove('campo-carregado');
+            cidade.classList.remove('campo-carregado');
+
+        }
+
+    }
+
+
+    // ==========================================
+    // VALIDAÇÃO FINAL DO TELEFONE
+    // ==========================================
+
+    document.querySelector('form').addEventListener('submit', function (event) {
+
+        const telefoneNumeros =
+            telefone.value.replace(/\D/g, '');
+
+        if (
+            telefoneNumeros.length !== 10 &&
+            telefoneNumeros.length !== 11
+        ) {
+
+            event.preventDefault();
+
+            alert(
+                'Digite um telefone válido com DDD. ' +
+                'Exemplo: (11) 99999-9999'
+            );
+
+            telefone.focus();
+
+        }
+
+    });
+
+</script>
 
 </body>
 
