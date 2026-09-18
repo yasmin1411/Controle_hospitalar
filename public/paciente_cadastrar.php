@@ -2142,77 +2142,212 @@ document
 
 
 // =====================================================
-// GRAU DE PARENTESCO
+// GRAU DE PARENTESCO DE ACORDO COM A IDADE DO PACIENTE
 // =====================================================
 
-const parentesco =
-    document.getElementById(
-        'grau_parentesco'
-    );
+const parentesco = document.getElementById('grau_parentesco');
 
+const dataNascimento =
+    document.getElementById('data_de_nascimento');
 
 const grauAnterior =
     <?= json_encode($grau_parentesco) ?>;
 
 
+// -----------------------------------------------------
+// CALCULAR IDADE
+// -----------------------------------------------------
+
+function calcularIdade(dataNascimento) {
+
+    if (!dataNascimento) {
+        return null;
+    }
+
+    const hoje = new Date();
+
+    const nascimento = new Date(
+        dataNascimento + 'T00:00:00'
+    );
+
+    let idade =
+        hoje.getFullYear() -
+        nascimento.getFullYear();
+
+    const mesAtual =
+        hoje.getMonth();
+
+    const mesNascimento =
+        nascimento.getMonth();
+
+    const diaAtual =
+        hoje.getDate();
+
+    const diaNascimento =
+        nascimento.getDate();
+
+
+    // Se ainda não fez aniversário este ano
+    if (
+        mesAtual < mesNascimento ||
+        (
+            mesAtual === mesNascimento &&
+            diaAtual < diaNascimento
+        )
+    ) {
+
+        idade--;
+    }
+
+    return idade;
+}
+
+
+// -----------------------------------------------------
+// CARREGAR OPÇÕES DE PARENTESCO
+// -----------------------------------------------------
+
 function carregarParentesco() {
 
-    parentesco.innerHTML = `
+    const data =
+        dataNascimento.value;
 
-        <option value="">
-            Selecione...
-        </option>
+    const idade =
+        calcularIdade(data);
 
-        <option value="Pai">
-            Pai
-        </option>
 
-        <option value="Mãe">
-            Mãe
-        </option>
+    // Limpa as opções atuais
+    parentesco.innerHTML = '';
 
-        <option value="Avô">
-            Avô
-        </option>
 
-        <option value="Avó">
-            Avó
-        </option>
+    // Opção padrão
+    const opcaoInicial =
+        document.createElement('option');
 
-        <option value="Tio">
-            Tio
-        </option>
+    opcaoInicial.value = '';
+    opcaoInicial.textContent = 'Selecione...';
 
-        <option value="Tia">
-            Tia
-        </option>
+    parentesco.appendChild(
+        opcaoInicial
+    );
 
-        <option value="Irmão">
-            Irmão
-        </option>
 
-        <option value="Irmã">
-            Irmã
-        </option>
+    // -------------------------------------------------
+    // SE A DATA AINDA NÃO FOI INFORMADA
+    // -------------------------------------------------
 
-        <option value="Tutor Legal">
-            Tutor Legal
-        </option>
+    if (idade === null) {
+        return;
+    }
 
-        <option value="Outro">
-            Outro
-        </option>
 
-    `;
+    // -------------------------------------------------
+    // MENOR DE 18 ANOS
+    // -------------------------------------------------
 
+    if (idade < 18) {
+
+        const opcoesMenor = [
+            'Pai',
+            'Mãe',
+            'Tutor Legal'
+        ];
+
+
+        opcoesMenor.forEach(function(grau) {
+
+            const option =
+                document.createElement('option');
+
+            option.value = grau;
+            option.textContent = grau;
+
+            parentesco.appendChild(
+                option
+            );
+
+        });
+
+    }
+
+
+    // -------------------------------------------------
+    // 18 ANOS OU MAIS
+    // -------------------------------------------------
+
+    else {
+
+        const opcoesMaior = [
+            'Pai',
+            'Mãe',
+            'Avô',
+            'Avó',
+            'Tio',
+            'Tia',
+            'Irmão',
+            'Irmã',
+            'Tutor Legal',
+            'Outro'
+        ];
+
+
+        opcoesMaior.forEach(function(grau) {
+
+            const option =
+                document.createElement('option');
+
+            option.value = grau;
+            option.textContent = grau;
+
+            parentesco.appendChild(
+                option
+            );
+
+        });
+
+    }
+
+
+    // -------------------------------------------------
+    // RESTAURAR VALOR ANTERIOR
+    // -------------------------------------------------
 
     if (grauAnterior) {
 
-        parentesco.value =
-            grauAnterior;
+        const opcaoExiste =
+            Array.from(
+                parentesco.options
+            ).some(
+                option =>
+                    option.value === grauAnterior
+            );
+
+
+        if (opcaoExiste) {
+
+            parentesco.value =
+                grauAnterior;
+
+        }
+
     }
+
 }
 
+
+// -----------------------------------------------------
+// ATUALIZAR AUTOMATICAMENTE AO ALTERAR A DATA
+// -----------------------------------------------------
+
+dataNascimento.addEventListener(
+    'change',
+    carregarParentesco
+);
+
+
+// -----------------------------------------------------
+// CARREGAR AO ABRIR A PÁGINA
+// -----------------------------------------------------
 
 window.addEventListener(
     'load',

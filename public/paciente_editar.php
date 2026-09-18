@@ -131,10 +131,7 @@ $_POST['nome'],
 $_POST['cpf'],
 $_POST['data_de_nascimento'],
 $_POST['telefone'],
-
-// Cartão do Cidadão / Cartão do SUS é opcional.
-$_POST['cartao_cidadao'] ?? '',
-
+$_POST['cartao_cidadao'],
 $id
 
 ]);
@@ -624,8 +621,6 @@ Atualize as informações do paciente cadastrado
 
             </div>
 
-            <!-- CARTÃO DO CIDADÃO / CARTÃO DO SUS -->
-
             <div class="col-md-6 mb-3">
 
                 <label class="form-label">
@@ -647,9 +642,7 @@ Atualize as informações do paciente cadastrado
                     placeholder="Digite apenas números"
                     maxlength="20"
                     inputmode="numeric"
-                    value="<?= htmlspecialchars($paciente['cartao_cidadao'] ?? '') ?>"
-
-                >
+                    value="<?= htmlspecialchars($paciente['cartao_cidadao'] ?? '') ?>">
 
             </div>
 
@@ -836,34 +829,10 @@ Atualize as informações do paciente cadastrado
 
                 <select
                     name="grau_parentesco"
+                    id="grau_parentesco"
                     class="form-select">
 
                     <option value="">Selecione...</option>
-
-                    <?php
-
-                    $graus = [
-                        "Pai",
-                        "Mãe",
-                        "Avô",
-                        "Avó",
-                        "Tio",
-                        "Tia",
-                        "Irmão",
-                        "Irmã",
-                        "Tutor Legal",
-                        "Outro"
-                    ];
-
-                    foreach($graus as $grau){
-
-                        $selected = ($paciente['grau_de_parentesco'] == $grau) ? 'selected' : '';
-
-                        echo "<option $selected>$grau</option>";
-
-                    }
-
-                    ?>
 
                 </select>
 
@@ -1100,3 +1069,123 @@ document.getElementById('cpf').addEventListener('input', function(){
     this.value = v;
 
 });
+
+
+// =====================================================
+// GRAU DE PARENTESCO DE ACORDO COM A IDADE DO PACIENTE
+// =====================================================
+
+const dataNascimento = document.getElementById('data_de_nascimento');
+const parentesco = document.getElementById('grau_parentesco');
+const grauAtual = <?= json_encode($paciente['grau_de_parentesco'] ?? '') ?>;
+
+function calcularIdade(data) {
+
+    if (!data) {
+        return null;
+    }
+
+    const hoje = new Date();
+    const nascimento = new Date(data + 'T00:00:00');
+
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+
+    const mesAtual = hoje.getMonth();
+    const mesNascimento = nascimento.getMonth();
+    const diaAtual = hoje.getDate();
+    const diaNascimento = nascimento.getDate();
+
+    if (
+        mesAtual < mesNascimento ||
+        (mesAtual === mesNascimento && diaAtual < diaNascimento)
+    ) {
+        idade--;
+    }
+
+    return idade;
+}
+
+function carregarParentesco() {
+
+    const idade = calcularIdade(dataNascimento.value);
+    const valorSelecionado = parentesco.value || grauAtual;
+
+    parentesco.innerHTML = '';
+
+    const opcaoInicial = document.createElement('option');
+    opcaoInicial.value = '';
+    opcaoInicial.textContent = 'Selecione...';
+    parentesco.appendChild(opcaoInicial);
+
+    if (idade === null) {
+        return;
+    }
+
+    let opcoes;
+
+    if (idade < 18) {
+
+        opcoes = [
+            'Pai',
+            'Mãe',
+            'Tutor Legal'
+        ];
+
+    } else {
+
+        opcoes = [
+            'Pai',
+            'Mãe',
+            'Avô',
+            'Avó',
+            'Tio',
+            'Tia',
+            'Irmão',
+            'Irmã',
+            'Tutor Legal',
+            'Outro'
+        ];
+    }
+
+    opcoes.forEach(function(grau) {
+
+        const option = document.createElement('option');
+        option.value = grau;
+        option.textContent = grau;
+        parentesco.appendChild(option);
+
+    });
+
+    // Mantém o grau já cadastrado somente se ele for permitido para a idade atual.
+    if (opcoes.includes(valorSelecionado)) {
+        parentesco.value = valorSelecionado;
+    } else {
+        parentesco.value = '';
+    }
+}
+
+// Atualiza as opções quando a data de nascimento é alterada.
+dataNascimento.addEventListener('change', carregarParentesco);
+
+// Carrega as opções automaticamente ao abrir a edição.
+window.addEventListener('load', carregarParentesco);
+
+
+// =====================================================
+// MÁSCARA CARTÃO DO CIDADÃO / CARTÃO DO SUS
+// =====================================================
+
+const cartaoCidadao = document.getElementById('cartao_cidadao');
+
+if (cartaoCidadao) {
+
+    cartaoCidadao.addEventListener('input', function() {
+
+        this.value = this.value
+            .replace(/\D/g, '')
+            .slice(0, 20);
+
+    });
+}
+
+</script>

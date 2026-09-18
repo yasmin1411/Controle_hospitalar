@@ -13,6 +13,7 @@ require_once __DIR__ . '/../config/database.php';
 | 2. Histórico de internações
 | 3. Pacientes atualmente internados
 | 4. Doenças/diagnósticos mais frequentes
+| 5. Movimentações do estoque
 |--------------------------------------------------------------------------
 */
 
@@ -95,11 +96,15 @@ $stmt = $pdo->query("
         p.observacoes,
         pac.nome AS paciente_nome,
         med.nome AS medico_nome
+
     FROM prontuario p
+
     INNER JOIN pacientes pac
         ON pac.id = p.paciente_id
+
     INNER JOIN medico med
         ON med.id = p.medico_id
+
     ORDER BY p.data_hora DESC
 ");
 
@@ -125,13 +130,18 @@ $stmt = $pdo->query("
         pac.nome AS paciente_nome,
         med.nome AS medico_nome,
         enf.nome AS enfermeiro_nome
+
     FROM internacoes i
+
     INNER JOIN pacientes pac
         ON pac.id = i.paciente_id
+
     INNER JOIN medico med
         ON med.id = i.medico_id
+
     INNER JOIN enfermeiro enf
         ON enf.id = i.enfermeiro_id
+
     ORDER BY i.data_entrada DESC
 ");
 
@@ -155,12 +165,17 @@ $stmt = $pdo->query("
         i.quadro_clinico,
         pac.nome AS paciente_nome,
         med.nome AS medico_nome
+
     FROM internacoes i
+
     INNER JOIN pacientes pac
         ON pac.id = i.paciente_id
+
     INNER JOIN medico med
         ON med.id = i.medico_id
+
     WHERE i.status <> 'Alta'
+
     ORDER BY i.data_entrada ASC
 ");
 
@@ -179,39 +194,115 @@ $stmt = $pdo->query("
     SELECT
         diagnostico,
         COUNT(*) AS quantidade
+
     FROM prontuario
+
     WHERE diagnostico IS NOT NULL
       AND diagnostico <> ''
+
     GROUP BY diagnostico
+
     ORDER BY quantidade DESC
 ");
 
 $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+
+/*
+|--------------------------------------------------------------------------
+| 9. RESUMO DAS MOVIMENTAÇÕES DO ESTOQUE
+|--------------------------------------------------------------------------
+*/
+
+$stmt = $pdo->query("
+    SELECT
+
+        COUNT(*) AS total_movimentacoes,
+
+        COALESCE(
+            SUM(
+                CASE
+                    WHEN tipo = 'entrada' THEN 1
+                    ELSE 0
+                END
+            ),
+            0
+        ) AS total_entradas,
+
+        COALESCE(
+            SUM(
+                CASE
+                    WHEN tipo = 'saida' THEN 1
+                    ELSE 0
+                END
+            ),
+            0
+        ) AS total_saidas,
+
+        COALESCE(
+            SUM(
+                CASE
+                    WHEN tipo = 'ajuste' THEN 1
+                    ELSE 0
+                END
+            ),
+            0
+        ) AS total_ajustes,
+
+        COALESCE(
+            SUM(
+                CASE
+                    WHEN tipo = 'perda' THEN 1
+                    ELSE 0
+                END
+            ),
+            0
+        ) AS total_perdas
+
+    FROM movimentacoes
+");
+
+$resumoMovimentacoes = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$totalMovimentacoes = (int) $resumoMovimentacoes['total_movimentacoes'];
+$totalEntradas = (int) $resumoMovimentacoes['total_entradas'];
+$totalSaidas = (int) $resumoMovimentacoes['total_saidas'];
+$totalAjustes = (int) $resumoMovimentacoes['total_ajustes'];
+$totalPerdas = (int) $resumoMovimentacoes['total_perdas'];
+
 ?>
 
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 
 <head>
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Relatórios - Controle Hospitalar</title>
 
+
     <!-- Bootstrap -->
+
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
+
     <!-- Bootstrap Icons -->
+
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
+
 
     <style>
 
@@ -292,13 +383,32 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             color: #6c757d;
         }
 
+        .card-movimentacao {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 18px;
+            height: 100%;
+        }
+
+        .numero-movimentacao {
+            font-size: 25px;
+            font-weight: 700;
+        }
+
+        .botao-relatorio {
+            min-width: 190px;
+        }
+
     </style>
 
 </head>
 
+
 <body>
 
+
 <div class="container-principal">
+
 
     <!-- ===================================================== -->
     <!-- CABEÇALHO -->
@@ -306,16 +416,47 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="cabecalho">
 
-        <h2>
-            <i class="bi bi-bar-chart-line"></i>
-            Relatórios
-        </h2>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
 
-        <p>
-            Consulte informações e indicadores do Controle Hospitalar.
-        </p>
+        <div>
+
+            <h2>
+
+                <i class="bi bi-bar-chart-line"></i>
+
+                Relatórios
+
+            </h2>
+
+            <p>
+
+                Consulte informações e indicadores do Controle Hospitalar.
+
+            </p>
+
+        </div>
+
+
+        <!-- BOTÃO VOLTAR -->
+
+        <div>
+
+            <a
+                href="dashboard.php"
+                class="btn btn-outline-primary"
+            >
+
+                <i class="bi bi-arrow-left me-1"></i>
+
+                Voltar
+
+            </a>
+
+        </div>
 
     </div>
+
+</div>
 
 
     <!-- ===================================================== -->
@@ -324,6 +465,7 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="row g-4">
 
+
         <!-- PACIENTES -->
 
         <div class="col-md-6 col-lg-3">
@@ -331,15 +473,21 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="card-indicador bg-white">
 
                 <div class="icone-indicador text-primary">
+
                     <i class="bi bi-people-fill"></i>
+
                 </div>
 
                 <div class="numero-indicador">
+
                     <?= $totalPacientes ?>
+
                 </div>
 
                 <div class="titulo-indicador">
+
                     Pacientes cadastrados
+
                 </div>
 
             </div>
@@ -354,15 +502,21 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="card-indicador bg-white">
 
                 <div class="icone-indicador text-success">
+
                     <i class="bi bi-hospital-fill"></i>
+
                 </div>
 
                 <div class="numero-indicador">
+
                     <?= $totalInternacoes ?>
+
                 </div>
 
                 <div class="titulo-indicador">
+
                     Internações registradas
+
                 </div>
 
             </div>
@@ -377,15 +531,21 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="card-indicador bg-white">
 
                 <div class="icone-indicador text-warning">
+
                     <i class="bi bi-person-vcard-fill"></i>
+
                 </div>
 
                 <div class="numero-indicador">
+
                     <?= $totalInternados ?>
+
                 </div>
 
                 <div class="titulo-indicador">
+
                     Pacientes internados
+
                 </div>
 
             </div>
@@ -400,20 +560,27 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="card-indicador bg-white">
 
                 <div class="icone-indicador text-danger">
+
                     <i class="bi bi-file-medical-fill"></i>
+
                 </div>
 
                 <div class="numero-indicador">
+
                     <?= $totalProntuarios ?>
+
                 </div>
 
                 <div class="titulo-indicador">
+
                     Prontuários registrados
+
                 </div>
 
             </div>
 
         </div>
+
 
     </div>
 
@@ -465,23 +632,41 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <tr>
 
                             <td>
-                                <?= htmlspecialchars($prontuario['paciente_nome']) ?>
+
+                                <?= htmlspecialchars(
+                                    $prontuario['paciente_nome']
+                                ) ?>
+
                             </td>
 
+
                             <td>
+
                                 <?= date(
                                     'd/m/Y H:i',
                                     strtotime($prontuario['data_hora'])
                                 ) ?>
+
                             </td>
 
-                            <td>
-                                <?= htmlspecialchars($prontuario['diagnostico']) ?>
-                            </td>
 
                             <td>
-                                <?= htmlspecialchars($prontuario['medico_nome']) ?>
+
+                                <?= htmlspecialchars(
+                                    $prontuario['diagnostico']
+                                ) ?>
+
                             </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $prontuario['medico_nome']
+                                ) ?>
+
+                            </td>
+
 
                             <td>
 
@@ -515,6 +700,7 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                 <div class="modal-content">
 
+
                                     <div class="modal-header">
 
                                         <h5 class="modal-title">
@@ -524,6 +710,7 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             Prontuário do Paciente
 
                                         </h5>
+
 
                                         <button
                                             type="button"
@@ -537,62 +724,103 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <div class="modal-body">
 
                                         <h5>
-                                            <?= htmlspecialchars($prontuario['paciente_nome']) ?>
+
+                                            <?= htmlspecialchars(
+                                                $prontuario['paciente_nome']
+                                            ) ?>
+
                                         </h5>
+
 
                                         <hr>
 
 
-                                        <strong>Data e hora:</strong>
+                                        <strong>
+                                            Data e hora:
+                                        </strong>
 
                                         <p>
+
                                             <?= date(
                                                 'd/m/Y H:i',
-                                                strtotime($prontuario['data_hora'])
+                                                strtotime(
+                                                    $prontuario['data_hora']
+                                                )
                                             ) ?>
+
                                         </p>
 
 
-                                        <strong>Diagnóstico:</strong>
+                                        <strong>
+                                            Diagnóstico:
+                                        </strong>
 
                                         <p>
+
                                             <?= nl2br(
-                                                htmlspecialchars($prontuario['diagnostico'])
+                                                htmlspecialchars(
+                                                    $prontuario['diagnostico']
+                                                )
                                             ) ?>
+
                                         </p>
 
 
-                                        <strong>Histórico:</strong>
+                                        <strong>
+                                            Histórico:
+                                        </strong>
 
                                         <p>
+
                                             <?= nl2br(
-                                                htmlspecialchars($prontuario['historico'])
+                                                htmlspecialchars(
+                                                    $prontuario['historico']
+                                                )
                                             ) ?>
+
                                         </p>
 
 
-                                        <strong>Prescrições:</strong>
+                                        <strong>
+                                            Prescrições:
+                                        </strong>
 
                                         <p>
+
                                             <?= nl2br(
-                                                htmlspecialchars($prontuario['prescricoes'])
+                                                htmlspecialchars(
+                                                    $prontuario['prescricoes']
+                                                )
                                             ) ?>
+
                                         </p>
 
 
-                                        <strong>Observações:</strong>
+                                        <strong>
+                                            Observações:
+                                        </strong>
 
                                         <p>
+
                                             <?= nl2br(
-                                                htmlspecialchars($prontuario['observacoes'])
+                                                htmlspecialchars(
+                                                    $prontuario['observacoes']
+                                                )
                                             ) ?>
+
                                         </p>
 
 
-                                        <strong>Médico responsável:</strong>
+                                        <strong>
+                                            Médico responsável:
+                                        </strong>
 
                                         <p>
-                                            <?= htmlspecialchars($prontuario['medico_nome']) ?>
+
+                                            <?= htmlspecialchars(
+                                                $prontuario['medico_nome']
+                                            ) ?>
+
                                         </p>
 
                                     </div>
@@ -612,6 +840,7 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                     </div>
 
+
                                 </div>
 
                             </div>
@@ -624,7 +853,10 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <tr>
 
-                        <td colspan="5" class="mensagem-vazia">
+                        <td
+                            colspan="5"
+                            class="mensagem-vazia"
+                        >
 
                             <i class="bi bi-file-earmark-x fs-2"></i>
 
@@ -698,15 +930,23 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <tr>
 
                             <td>
-                                <?= htmlspecialchars($internacao['paciente_nome']) ?>
+
+                                <?= htmlspecialchars(
+                                    $internacao['paciente_nome']
+                                ) ?>
+
                             </td>
 
+
                             <td>
+
                                 <?= date(
                                     'd/m/Y',
                                     strtotime($internacao['data_entrada'])
                                 ) ?>
+
                             </td>
+
 
                             <td>
 
@@ -725,30 +965,52 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                             </td>
 
-                            <td>
-                                <?= htmlspecialchars($internacao['quarto']) ?>
-                            </td>
 
                             <td>
-                                <?= htmlspecialchars($internacao['leito']) ?>
+
+                                <?= htmlspecialchars(
+                                    $internacao['quarto']
+                                ) ?>
+
                             </td>
 
+
                             <td>
-                                <?= htmlspecialchars($internacao['motivos']) ?>
+
+                                <?= htmlspecialchars(
+                                    $internacao['leito']
+                                ) ?>
+
                             </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $internacao['motivos']
+                                ) ?>
+
+                            </td>
+
 
                             <td>
 
                                 <?php if ($internacao['status'] === 'Alta'): ?>
 
                                     <span class="badge bg-success badge-status">
+
                                         Alta
+
                                     </span>
 
                                 <?php else: ?>
 
                                     <span class="badge bg-warning text-dark badge-status">
-                                        <?= htmlspecialchars($internacao['status']) ?>
+
+                                        <?= htmlspecialchars(
+                                            $internacao['status']
+                                        ) ?>
+
                                     </span>
 
                                 <?php endif; ?>
@@ -763,7 +1025,10 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <tr>
 
-                        <td colspan="7" class="mensagem-vazia">
+                        <td
+                            colspan="7"
+                            class="mensagem-vazia"
+                        >
 
                             Nenhuma internação registrada.
 
@@ -833,37 +1098,67 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <tr>
 
                             <td>
-                                <?= htmlspecialchars($internado['paciente_nome']) ?>
+
+                                <?= htmlspecialchars(
+                                    $internado['paciente_nome']
+                                ) ?>
+
                             </td>
 
+
                             <td>
+
                                 <?= date(
                                     'd/m/Y',
                                     strtotime($internado['data_entrada'])
                                 ) ?>
+
                             </td>
 
-                            <td>
-                                <?= htmlspecialchars($internado['quarto']) ?>
-                            </td>
 
                             <td>
-                                <?= htmlspecialchars($internado['leito']) ?>
+
+                                <?= htmlspecialchars(
+                                    $internado['quarto']
+                                ) ?>
+
                             </td>
 
-                            <td>
-                                <?= htmlspecialchars($internado['motivos']) ?>
-                            </td>
 
                             <td>
-                                <?= htmlspecialchars($internado['medico_nome']) ?>
+
+                                <?= htmlspecialchars(
+                                    $internado['leito']
+                                ) ?>
+
                             </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $internado['motivos']
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $internado['medico_nome']
+                                ) ?>
+
+                            </td>
+
 
                             <td>
 
                                 <span class="badge bg-warning text-dark badge-status">
 
-                                    <?= htmlspecialchars($internado['status']) ?>
+                                    <?= htmlspecialchars(
+                                        $internado['status']
+                                    ) ?>
 
                                 </span>
 
@@ -877,7 +1172,10 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <tr>
 
-                        <td colspan="7" class="mensagem-vazia">
+                        <td
+                            colspan="7"
+                            class="mensagem-vazia"
+                        >
 
                             <i class="bi bi-check-circle fs-2"></i>
 
@@ -941,8 +1239,13 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <tr>
 
                             <td>
-                                <?= htmlspecialchars($doenca['diagnostico']) ?>
+
+                                <?= htmlspecialchars(
+                                    $doenca['diagnostico']
+                                ) ?>
+
                             </td>
+
 
                             <td>
 
@@ -962,7 +1265,10 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <tr>
 
-                        <td colspan="2" class="mensagem-vazia">
+                        <td
+                            colspan="2"
+                            class="mensagem-vazia"
+                        >
 
                             Nenhum diagnóstico registrado nos prontuários.
 
@@ -980,6 +1286,191 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     </div>
 
+
+    <!-- ===================================================== -->
+    <!-- 5. MOVIMENTAÇÕES DO ESTOQUE -->
+    <!-- ===================================================== -->
+
+    <div class="secao-relatorio">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+            <div>
+
+                <h4 class="titulo-secao mb-2">
+
+                    <i class="bi bi-arrow-left-right text-primary"></i>
+
+                    Movimentações do Estoque
+
+                </h4>
+
+                <p class="text-muted mb-0">
+
+                    Consulte o histórico de entradas, saídas, ajustes e perdas
+                    dos medicamentos registrados no estoque.
+
+                </p>
+
+            </div>
+
+
+            <div>
+
+                <a
+                    href="relatorio_movimentacoes.php"
+                    class="btn btn-primary botao-relatorio"
+                >
+
+                    <i class="bi bi-file-earmark-bar-graph me-1"></i>
+
+                    Acessar relatório
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- RESUMO DAS MOVIMENTAÇÕES -->
+
+        <div class="row g-3">
+
+
+            <!-- TOTAL -->
+
+            <div class="col-md-6 col-xl-3">
+
+                <div class="card-movimentacao bg-light">
+
+                    <div class="text-primary mb-2">
+
+                        <i
+                            class="bi bi-arrow-left-right"
+                            style="font-size: 28px;"
+                        ></i>
+
+                    </div>
+
+                    <div class="numero-movimentacao">
+
+                        <?= $totalMovimentacoes ?>
+
+                    </div>
+
+                    <div class="text-muted">
+
+                        Total de movimentações
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ENTRADAS -->
+
+            <div class="col-md-6 col-xl-3">
+
+                <div class="card-movimentacao bg-light">
+
+                    <div class="text-success mb-2">
+
+                        <i
+                            class="bi bi-box-arrow-in-down"
+                            style="font-size: 28px;"
+                        ></i>
+
+                    </div>
+
+                    <div class="numero-movimentacao text-success">
+
+                        <?= $totalEntradas ?>
+
+                    </div>
+
+                    <div class="text-muted">
+
+                        Entradas
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SAÍDAS -->
+
+            <div class="col-md-6 col-xl-3">
+
+                <div class="card-movimentacao bg-light">
+
+                    <div class="text-danger mb-2">
+
+                        <i
+                            class="bi bi-box-arrow-up"
+                            style="font-size: 28px;"
+                        ></i>
+
+                    </div>
+
+                    <div class="numero-movimentacao text-danger">
+
+                        <?= $totalSaidas ?>
+
+                    </div>
+
+                    <div class="text-muted">
+
+                        Saídas
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- AJUSTES/PERDAS -->
+
+            <div class="col-md-6 col-xl-3">
+
+                <div class="card-movimentacao bg-light">
+
+                    <div class="text-warning mb-2">
+
+                        <i
+                            class="bi bi-clipboard-data"
+                            style="font-size: 28px;"
+                        ></i>
+
+                    </div>
+
+                    <div class="numero-movimentacao text-warning-emphasis">
+
+                        <?= $totalAjustes + $totalPerdas ?>
+
+                    </div>
+
+                    <div class="text-muted">
+
+                        Ajustes / Perdas
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
 </div>
 
 
@@ -988,6 +1479,7 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </script>
+
 
 </body>
 
