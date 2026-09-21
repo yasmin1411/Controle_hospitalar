@@ -186,25 +186,21 @@ $pacientesInternados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 |--------------------------------------------------------------------------
 | 8. DOENÇAS / DIAGNÓSTICOS MAIS FREQUENTES
 |--------------------------------------------------------------------------
-| Os diagnósticos são obtidos da tabela prontuario.
+| São exibidos somente os diagnósticos registrados 5 vezes ou mais.
+| Diagnósticos com 4 ou menos ocorrências não aparecem nesta seção.
 |--------------------------------------------------------------------------
 */
-
 $stmt = $pdo->query("
     SELECT
         diagnostico,
         COUNT(*) AS quantidade
-
     FROM prontuario
-
     WHERE diagnostico IS NOT NULL
       AND diagnostico <> ''
-
     GROUP BY diagnostico
-
+    HAVING COUNT(*) >= 5
     ORDER BY quantidade DESC
 ");
-
 $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
@@ -1205,13 +1201,14 @@ $totalPerdas = (int) $resumoMovimentacoes['total_perdas'];
 
     <div class="secao-relatorio">
 
-        <h4 class="titulo-secao">
+    <h4 class="titulo-secao">
+    <i class="bi bi-virus"></i>
+    Diagnósticos Recorrentes
+</h4>
 
-            <i class="bi bi-virus"></i>
-
-            Doenças / Diagnósticos Mais Frequentes
-
-        </h4>
+<p class="text-muted">
+    São exibidos apenas diagnósticos registrados 5 vezes ou mais.
+</p>
 
 
         <div class="tabela-container">
@@ -1271,8 +1268,11 @@ $totalPerdas = (int) $resumoMovimentacoes['total_perdas'];
                             class="mensagem-vazia"
                         >
 
-                            Nenhum diagnóstico registrado nos prontuários.
-
+                        Nenhum diagnóstico recorrente encontrado.
+<br>
+<small>
+    Um diagnóstico precisa ter 5 ou mais registros para aparecer neste relatório.
+</small>
                         </td>
 
                     </tr>
