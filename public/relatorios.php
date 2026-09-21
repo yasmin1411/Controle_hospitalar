@@ -584,6 +584,7 @@ $totalPerdas = (int) $resumoMovimentacoes['total_perdas'];
 
     </div>
 
+    
 
     <!-- ===================================================== -->
     <!-- 1. PRONTUÁRIOS -->
