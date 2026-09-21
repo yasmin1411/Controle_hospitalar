@@ -2467,6 +2467,272 @@ $totalPerdas =
 
         }
 
+/* ======================================================
+   BARRA DE PESQUISA DOS RELATÓRIOS
+====================================================== */
+
+.area-pesquisa-relatorio {
+
+    background: #ffffff;
+
+    border: 1px solid #E3EAF2;
+
+    border-radius: 20px;
+
+    padding: 16px;
+
+    margin-bottom: 30px;
+
+    box-shadow:
+        0 8px 25px
+        rgba(31,62,94,.05);
+
+}
+
+
+.pesquisa-relatorio {
+
+    position: relative;
+
+}
+
+
+.pesquisa-relatorio .icone-pesquisa {
+
+    position: absolute;
+
+    left: 17px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #7A8AA0;
+
+    font-size: 20px;
+
+    pointer-events: none;
+
+}
+
+
+#campoPesquisaRelatorio {
+
+    min-height: 52px;
+
+    padding-left: 50px;
+
+    padding-right: 50px;
+
+    border: 1px solid #D5DEE9;
+
+    border-radius: 14px;
+
+    font-size: 16px;
+
+    color: #182B49;
+
+}
+
+
+#campoPesquisaRelatorio::placeholder {
+
+    color: #98A2B3;
+
+}
+
+
+#campoPesquisaRelatorio:focus {
+
+    border-color:
+        var(--azul-principal);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(47,128,237,.12);
+
+}
+
+
+.btn-limpar-pesquisa {
+
+    position: absolute;
+
+    right: 12px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 34px;
+
+    height: 34px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #F2F4F7;
+
+    color: #667085;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition: .2s;
+
+}
+
+
+.btn-limpar-pesquisa:hover {
+
+    background: #E4E7EC;
+
+    color: #344054;
+
+}
+
+
+.info-pesquisa {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-top: 10px;
+
+    padding: 0 4px;
+
+}
+
+
+.info-pesquisa-texto {
+
+    color: #667085;
+
+    font-size: 13px;
+
+}
+
+
+.info-pesquisa-resultado {
+
+    color: var(--azul-principal);
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+}
+
+
+.linha-pesquisa-oculta {
+
+    display: none !important;
+
+}
+
+
+.item-pesquisa-oculto {
+
+    display: none !important;
+
+}
+
+
+.mensagem-sem-resultado-pesquisa {
+
+    display: none;
+
+    text-align: center;
+
+    padding: 45px 20px;
+
+    color: #667085;
+
+}
+
+
+.mensagem-sem-resultado-pesquisa .icone {
+
+    width: 65px;
+
+    height: 65px;
+
+    border-radius: 18px;
+
+    background: #F2F4F7;
+
+    color: #98A2B3;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin: 0 auto 15px;
+
+    font-size: 28px;
+
+}
+
+
+.mensagem-sem-resultado-pesquisa h5 {
+
+    margin: 0 0 5px;
+
+    color: #344054;
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+}
+
+
+.mensagem-sem-resultado-pesquisa p {
+
+    margin: 0;
+
+    font-size: 14px;
+
+}
+
+
+@media (max-width: 576px) {
+
+    .area-pesquisa-relatorio {
+
+        padding: 12px;
+
+    }
+
+    #campoPesquisaRelatorio {
+
+        font-size: 15px;
+
+    }
+
+    .info-pesquisa {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+    }
+
+}
+
     </style>
 
 </head>
@@ -2734,6 +3000,56 @@ $totalPerdas =
 
 
     </section>
+
+
+    <!-- ======================================================
+         BARRA DE PESQUISA
+    ====================================================== -->
+
+    <div class="area-pesquisa-relatorio">
+
+        <div class="pesquisa-relatorio">
+
+            <i class="bi bi-search icone-pesquisa"></i>
+
+            <input
+                type="text"
+                id="campoPesquisaRelatorio"
+                class="form-control"
+                placeholder="Pesquisar nas informações do relatório..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                class="btn-limpar-pesquisa"
+                id="btnLimparPesquisa"
+                title="Limpar pesquisa"
+            >
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+
+        <div class="info-pesquisa">
+
+            <span class="info-pesquisa-texto">
+
+                A pesquisa será aplicada ao relatório selecionado.
+
+            </span>
+
+            <span
+                class="info-pesquisa-resultado"
+                id="resultadoPesquisa"
+            ></span>
+
+        </div>
+
+    </div>
 
 
     <!-- ======================================================
@@ -4461,6 +4777,181 @@ document.addEventListener(
             }
         );
 
+    }
+);
+
+</script>
+
+
+<script>
+
+/*
+|--------------------------------------------------------------------------
+| PESQUISA DOS RELATÓRIOS
+|--------------------------------------------------------------------------
+*/
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const campoPesquisa =
+            document.getElementById(
+                'campoPesquisaRelatorio'
+            );
+
+        const btnLimpar =
+            document.getElementById(
+                'btnLimparPesquisa'
+            );
+
+        const resultadoPesquisa =
+            document.getElementById(
+                'resultadoPesquisa'
+            );
+
+        if (
+            !campoPesquisa ||
+            !btnLimpar ||
+            !resultadoPesquisa
+        ) {
+            return;
+        }
+
+        function executarPesquisa() {
+
+            const termo =
+                campoPesquisa.value
+                    .trim()
+                    .toLowerCase();
+
+            const painelAtivo =
+                document.querySelector(
+                    '.painel-relatorio.ativo'
+                );
+
+            if (!painelAtivo) {
+                return;
+            }
+
+            if (termo !== '') {
+                btnLimpar.style.display = 'flex';
+            } else {
+                btnLimpar.style.display = 'none';
+            }
+
+            let encontrados = 0;
+
+            const linhas =
+                painelAtivo.querySelectorAll(
+                    'table tbody tr'
+                );
+
+            linhas.forEach(
+                function (linha) {
+
+                    const estadoVazio =
+                        linha.querySelector(
+                            '.estado-vazio'
+                        );
+
+                    if (estadoVazio) {
+                        return;
+                    }
+
+                    const texto =
+                        linha.textContent
+                            .toLowerCase();
+
+                    if (
+                        termo === '' ||
+                        texto.includes(termo)
+                    ) {
+                        linha.style.display = '';
+                        encontrados++;
+                    } else {
+                        linha.style.display = 'none';
+                    }
+                }
+            );
+
+            const diagnosticos =
+                painelAtivo.querySelectorAll(
+                    '.diagnostico-card'
+                );
+
+            diagnosticos.forEach(
+                function (card) {
+
+                    const texto =
+                        card.textContent
+                            .toLowerCase();
+
+                    if (
+                        termo === '' ||
+                        texto.includes(termo)
+                    ) {
+                        card.style.display = '';
+                        encontrados++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            );
+
+            if (termo === '') {
+                resultadoPesquisa.textContent = '';
+            } else {
+                resultadoPesquisa.textContent =
+                    encontrados +
+                    (
+                        encontrados === 1
+                            ? ' resultado encontrado'
+                            : ' resultados encontrados'
+                    );
+            }
+        }
+
+        campoPesquisa.addEventListener(
+            'input',
+            executarPesquisa
+        );
+
+        btnLimpar.addEventListener(
+            'click',
+            function () {
+
+                campoPesquisa.value = '';
+
+                executarPesquisa();
+
+                campoPesquisa.focus();
+
+            }
+        );
+
+        const botoesRelatorio =
+            document.querySelectorAll(
+                '.botao-relatorio'
+            );
+
+        botoesRelatorio.forEach(
+            function (botao) {
+
+                botao.addEventListener(
+                    'click',
+                    function () {
+
+                        campoPesquisa.value = '';
+
+                        btnLimpar.style.display = 'none';
+
+                        resultadoPesquisa.textContent = '';
+
+                    }
+                );
+            }
+        );
     }
 );
 
