@@ -1,7 +1,10 @@
 <?php
 
+// Inclui o arquivo responsável pela autenticação do sistema.
+// Ele verifica se o usuário possui permissão para acessar esta página.
 require_once '../includes/auth.php';
 
+// Inclui o arquivo responsável pela conexão com o banco de dados.
 require_once '../config/database.php';
 
 
@@ -9,14 +12,20 @@ require_once '../config/database.php';
 // VERIFICA ID
 // =========================================================
 
+// Verifica se o parâmetro "id" foi enviado pela URL
+// e se ele possui algum valor.
+// Caso o ID não exista ou esteja vazio, o usuário será redirecionado.
 if (!isset($_GET['id']) || empty($_GET['id'])) {
 
+    // Redireciona o usuário de volta para a página de estoque.
     header("Location: estoque.php");
 
+    // Encerra a execução do código.
     exit;
 }
 
-
+// Converte o ID recebido pela URL para um número inteiro.
+// Isso garante que o valor utilizado como ID seja tratado como inteiro.
 $id = (int) $_GET['id'];
 
 
@@ -24,35 +33,58 @@ $id = (int) $_GET['id'];
 // BUSCA ITEM DO ESTOQUE
 // =========================================================
 
+// Prepara uma consulta SQL para buscar os dados do item de estoque.
+// Também são buscados o nome do medicamento e o nome do fornecedor.
 $sql = $pdo->prepare("
 
+    // Seleciona todos os campos da tabela estoque.
     SELECT
+
         e.*,
+
+        // Busca o nome do medicamento e cria o apelido "medicamento".
         m.nome AS medicamento,
+
+        // Busca o nome do fornecedor e cria o apelido "fornecedor".
         f.nome AS fornecedor
 
+    // Define a tabela principal da consulta.
     FROM estoque e
 
+    // Relaciona a tabela estoque com a tabela medicamento.
     INNER JOIN medicamento m
+
+        // Relaciona o medicamento_id do estoque com o id do medicamento.
         ON e.medicamento_id = m.id
 
+    // Relaciona a tabela estoque com a tabela fornecedor.
     INNER JOIN fornecedor f
+
+        // Relaciona o fornecedor_id do estoque com o id do fornecedor.
         ON e.fornecedor_id = f.id
 
+    // Busca somente o item que possui o ID recebido pela URL.
     WHERE e.id = ?
 
 ");
 
+// Executa a consulta substituindo o ponto de interrogação pelo ID do item.
 $sql->execute([$id]);
 
+// Recupera o primeiro resultado da consulta como um array associativo.
+// Dessa forma, os campos podem ser acessados pelo nome da coluna.
 $item = $sql->fetch(PDO::FETCH_ASSOC);
 
 
 // Caso não encontre
+
+// Verifica se nenhum item foi encontrado no banco de dados.
 if (!$item) {
 
+    // Redireciona o usuário para a página de estoque.
     header("Location: estoque.php");
 
+    // Encerra a execução do código.
     exit;
 }
 
@@ -61,15 +93,19 @@ if (!$item) {
 // CONFIRMA EXCLUSÃO
 // =========================================================
 
+// Verifica se a página recebeu uma requisição do tipo POST.
+// Isso acontece quando o usuário confirma a exclusão através do formulário.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // Inicia um bloco para tentar executar as operações no banco de dados.
     try {
 
-        // Inicia transação
+        // Inicia uma transação no banco de dados.
+        // As alterações realizadas poderão ser confirmadas ou desfeitas em conjunto.
         $pdo->beginTransaction();
 
-
-        // Guarda o ID do medicamento
+        // Guarda o ID do medicamento relacionado ao item do estoque.
+        // O valor é convertido para inteiro.
         $medicamentoId = (int) $item['medicamento_id'];
 
 
@@ -77,13 +113,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 1. Exclui o item do estoque
         // -------------------------------------------------
 
+        // Prepara a consulta SQL responsável por excluir o registro do estoque.
         $deleteEstoque = $pdo->prepare("
 
+            // Exclui o registro da tabela estoque.
             DELETE FROM estoque
+
+            // Utiliza o ID do item para identificar qual registro será excluído.
             WHERE id = ?
 
         ");
 
+        // Executa a exclusão utilizando o ID do item.
         $deleteEstoque->execute([$id]);
 
 
@@ -91,188 +132,243 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 2. Exclui o medicamento correspondente
         // -------------------------------------------------
 
+        // Prepara a consulta SQL responsável por excluir o medicamento relacionado.
         $deleteMedicamento = $pdo->prepare("
 
+            // Exclui o registro correspondente da tabela medicamento.
             DELETE FROM medicamento
+
+            // Utiliza o ID do medicamento para identificar o registro.
             WHERE id = ?
 
         ");
 
+        // Executa a exclusão utilizando o ID do medicamento.
         $deleteMedicamento->execute([$medicamentoId]);
 
 
-        // Confirma as alterações
+        // Confirma todas as alterações realizadas durante a transação.
         $pdo->commit();
 
 
-        // Volta para o estoque
+        // Redireciona o usuário novamente para a página de estoque.
         header("Location: estoque.php");
 
+        // Encerra a execução do código.
         exit;
 
 
+    // Captura possíveis erros relacionados ao banco de dados.
     } catch (PDOException $e) {
 
         // Se acontecer algum erro,
-        // desfaz tudo
+
+        // verifica se existe uma transação em andamento.
         if ($pdo->inTransaction()) {
 
+            // Desfaz todas as alterações realizadas desde o início da transação.
             $pdo->rollBack();
         }
 
-
+        // Encerra a execução e mostra uma mensagem contendo o erro ocorrido.
         die("Erro ao excluir item do estoque: " . $e->getMessage());
     }
 }
 
 ?>
+```
 
+### Estrutura visual da página
+
+```html
 <!DOCTYPE html>
 
+<!-- Informa ao navegador que o documento utiliza HTML5. -->
 <html lang="pt-BR">
 
 <head>
 
-<meta charset="UTF-8">
+    <!-- Define a codificação de caracteres da página. -->
+    <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Faz a página se adaptar a diferentes tamanhos de tela. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
-<title>Excluir Item do Estoque</title>
+    <!-- Define o título que aparecerá na aba do navegador. -->
+    <title>Excluir Item do Estoque</title>
 
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-rel="stylesheet">
+    <!-- Importa o Bootstrap 5.3.3 para utilizar seus estilos e componentes. -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
 
 
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Importa a biblioteca Bootstrap Icons para utilizar os ícones. -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 
-<style>
+    <style>
 
-body{
+        /* Define o estilo geral do corpo da página. */
+        body{
 
-background:linear-gradient(135deg,#eef5ff,#dbeeff);
+            /* Cria um degradê como plano de fundo. */
+            background:linear-gradient(135deg,#eef5ff,#dbeeff);
 
-min-height:100vh;
+            /* Faz o corpo ocupar pelo menos toda a altura da tela. */
+            min-height:100vh;
 
-font-family:'Segoe UI',sans-serif;
+            /* Define a fonte utilizada na página. */
+            font-family:'Segoe UI',sans-serif;
+        }
 
-}
 
+        /* Define o comportamento da linha principal da página. */
+        .row{
 
-.row{
+            /* Define uma altura mínima para a área. */
+            min-height:80vh;
 
-min-height:80vh;
+            /* Centraliza verticalmente o conteúdo. */
+            align-items:center;
+        }
 
-align-items:center;
 
-}
+        /* Define o estilo do cartão de confirmação de exclusão. */
+        .card-excluir{
 
+            /* Define o fundo branco. */
+            background:white;
 
-.card-excluir{
+            /* Remove a borda padrão. */
+            border:none;
 
-background:white;
+            /* Arredonda os cantos do cartão. */
+            border-radius:25px;
 
-border:none;
+            /* Define o espaçamento interno. */
+            padding:35px;
 
-border-radius:25px;
+            /* Adiciona uma sombra ao cartão. */
+            box-shadow:0 15px 40px rgba(47,128,237,.12);
+        }
 
-padding:35px;
 
-box-shadow:0 15px 40px rgba(47,128,237,.12);
+        /* Define o estilo do círculo que contém o ícone de alerta. */
+        .alerta{
 
-}
+            /* Define a largura do círculo. */
+            width:90px;
 
+            /* Define a altura do círculo. */
+            height:90px;
 
-.alerta{
+            /* Centraliza o círculo horizontalmente. */
+            margin:auto;
 
-width:90px;
+            /* Transforma o elemento em um círculo. */
+            border-radius:50%;
 
-height:90px;
+            /* Define a cor de fundo do alerta. */
+            background:#fff3cd;
 
-margin:auto;
+            /* Define a cor do ícone. */
+            color:#856404;
 
-border-radius:50%;
+            /* Utiliza Flexbox para posicionar o ícone. */
+            display:flex;
 
-background:#fff3cd;
+            /* Centraliza o ícone verticalmente. */
+            align-items:center;
 
-color:#856404;
+            /* Centraliza o ícone horizontalmente. */
+            justify-content:center;
 
-display:flex;
+            /* Define o tamanho do ícone. */
+            font-size:40px;
 
-align-items:center;
+            /* Adiciona uma sombra ao círculo. */
+            box-shadow:0 5px 15px rgba(0,0,0,.08);
+        }
 
-justify-content:center;
 
-font-size:40px;
+        /* Define o estilo do título de confirmação. */
+        .titulo{
 
-box-shadow:0 5px 15px rgba(0,0,0,.08);
+            /* Define a cor vermelha do título. */
+            color:#dc3545;
 
-}
+            /* Deixa o texto mais espesso. */
+            font-weight:700;
+        }
 
 
-.titulo{
+        /* Define o estilo da caixa que apresenta as informações do item. */
+        .info-box{
 
-color:#dc3545;
+            /* Define o fundo cinza claro. */
+            background:#f8f9fa;
 
-font-weight:700;
+            /* Arredonda os cantos da caixa. */
+            border-radius:15px;
 
-}
+            /* Define o espaçamento interno. */
+            padding:20px;
 
+            /* Adiciona espaço acima da caixa. */
+            margin-top:20px;
+        }
 
-.info-box{
 
-background:#f8f9fa;
+        /* Define o espaçamento entre os parágrafos da caixa de informações. */
+        .info-box p{
 
-border-radius:15px;
+            /* Adiciona uma margem inferior aos parágrafos. */
+            margin-bottom:10px;
+        }
 
-padding:20px;
 
-margin-top:20px;
+        /* Define o estilo do botão de exclusão. */
+        .btn-excluir{
 
-}
+            /* Define o fundo vermelho. */
+            background:#dc3545;
 
+            /* Remove a borda. */
+            border:none;
 
-.info-box p{
+            /* Define o texto na cor branca. */
+            color:white;
 
-margin-bottom:10px;
+            /* Arredonda os cantos. */
+            border-radius:12px;
 
-}
+            /* Define o espaçamento interno. */
+            padding:10px 18px;
+        }
 
 
-.btn-excluir{
+        /* Define o comportamento do botão de exclusão ao passar o mouse. */
+        .btn-excluir:hover{
 
-background:#dc3545;
+            /* Deixa o vermelho um pouco mais escuro. */
+            background:#bb2d3b;
 
-border:none;
+            /* Mantém o texto branco. */
+            color:white;
+        }
 
-color:white;
 
-border-radius:12px;
+        /* Define o arredondamento do botão de cancelar. */
+        .btn-cancelar{
 
-padding:10px 18px;
+            /* Arredonda os cantos do botão. */
+            border-radius:12px;
+        }
 
-}
-
-
-.btn-excluir:hover{
-
-background:#bb2d3b;
-
-color:white;
-
-}
-
-
-.btn-cancelar{
-
-border-radius:12px;
-
-}
-
-</style>
+    </style>
 
 </head>
 
@@ -280,132 +376,170 @@ border-radius:12px;
 <body>
 
 
+<!-- Cria o container principal da página.
+     py-5 adiciona espaçamento vertical. -->
 <div class="container py-5">
 
 
-<div class="row justify-content-center">
+    <!-- Cria uma linha para organizar o conteúdo.
+         justify-content-center centraliza a coluna horizontalmente. -->
+    <div class="row justify-content-center">
 
 
-<div class="col-lg-6">
+        <!-- Define a largura do cartão em telas grandes.
+             col-lg-6 ocupa metade da largura disponível. -->
+        <div class="col-lg-6">
 
 
-<div class="card-excluir">
+            <!-- Cria o cartão de confirmação da exclusão. -->
+            <div class="card-excluir">
 
 
-<div class="alerta mb-4">
+                <!-- Área circular utilizada para apresentar o alerta. -->
+                <div class="alerta mb-4">
 
-<i class="bi bi-exclamation-triangle-fill"></i>
+                    <!-- Exibe o ícone de alerta. -->
+                    <i class="bi bi-exclamation-triangle-fill"></i>
 
-</div>
+                </div>
 
 
-<h2 class="titulo text-center">
+                <!-- Título principal da página. -->
+                <h2 class="titulo text-center">
 
-Confirmar Exclusão
+                    Confirmar Exclusão
 
-</h2>
+                </h2>
 
 
-<p class="text-center text-muted">
+                <!-- Mensagem informando que a exclusão não poderá ser desfeita. -->
+                <p class="text-center text-muted">
 
-Esta ação não poderá ser desfeita.
+                    Esta ação não poderá ser desfeita.
 
-</p>
+                </p>
 
 
-<div class="info-box">
+                <!-- Caixa onde são apresentadas as informações do item. -->
+                <div class="info-box">
 
 
-<p>
+                    <!-- Exibe o nome do medicamento. -->
+                    <p>
 
-<strong>Medicamento:</strong>
+                        <!-- Deixa o texto "Medicamento:" em negrito. -->
+                        <strong>Medicamento:</strong>
 
-<?= htmlspecialchars($item['medicamento']) ?>
+                        <!-- Exibe o nome do medicamento encontrado no banco.
+                             htmlspecialchars evita que caracteres especiais
+                             sejam interpretados como HTML. -->
+                        <?= htmlspecialchars($item['medicamento']) ?>
 
-</p>
+                    </p>
 
 
-<p>
+                    <!-- Exibe a quantidade disponível no registro. -->
+                    <p>
 
-<strong>Quantidade:</strong>
+                        <strong>Quantidade:</strong>
 
-<?= htmlspecialchars($item['quantidade']) ?>
+                        <!-- Exibe a quantidade do item. -->
+                        <?= htmlspecialchars($item['quantidade']) ?>
 
-</p>
+                    </p>
 
 
-<p>
+                    <!-- Exibe o número do lote. -->
+                    <p>
 
-<strong>Lote:</strong>
+                        <strong>Lote:</strong>
 
-<?= htmlspecialchars($item['lote']) ?>
+                        <!-- Exibe o lote armazenado no banco. -->
+                        <?= htmlspecialchars($item['lote']) ?>
 
-</p>
+                    </p>
 
 
-<p>
+                    <!-- Exibe a data de validade do medicamento. -->
+                    <p>
 
-<strong>Validade:</strong>
+                        <strong>Validade:</strong>
 
-<?= date('d/m/Y', strtotime($item['validade'])) ?>
+                        <!-- Converte a data do banco para o formato
+                             dia/mês/ano antes de exibi-la. -->
+                        <?= date('d/m/Y', strtotime($item['validade'])) ?>
 
-</p>
+                    </p>
 
 
-<p>
+                    <!-- Exibe o fornecedor relacionado ao medicamento. -->
+                    <p>
 
-<strong>Fornecedor:</strong>
+                        <strong>Fornecedor:</strong>
 
-<?= htmlspecialchars($item['fornecedor']) ?>
+                        <!-- Exibe o nome do fornecedor de forma segura. -->
+                        <?= htmlspecialchars($item['fornecedor']) ?>
 
-</p>
+                    </p>
 
 
-<p class="mb-0">
+                    <!-- Exibe o código de barras.
+                         mb-0 remove a margem inferior deste último parágrafo. -->
+                    <p class="mb-0">
 
-<strong>Código de Barras:</strong>
+                        <strong>Código de Barras:</strong>
 
-<?= htmlspecialchars($item['codigo_de_barra']) ?>
+                        <!-- Exibe o código de barras do item. -->
+                        <?= htmlspecialchars($item['codigo_de_barra']) ?>
 
-</p>
+                    </p>
 
 
-</div>
+                </div>
 
 
-<form method="POST" class="mt-4 text-center">
+                <!-- Formulário responsável por enviar a confirmação da exclusão.
+                     method="POST" faz com que os dados sejam enviados através
+                     de uma requisição POST. -->
+                <form method="POST" class="mt-4 text-center">
 
 
-<button
-type="submit"
-class="btn btn-excluir">
+                    <!-- Botão que confirma a exclusão do item. -->
+                    <button
+                        type="submit"
+                        class="btn btn-excluir">
 
-<i class="bi bi-trash"></i>
+                        <!-- Ícone de lixeira. -->
+                        <i class="bi bi-trash"></i>
 
-Excluir Item
+                        <!-- Texto apresentado no botão. -->
+                        Excluir Item
 
-</button>
+                    </button>
 
 
-<a
-href="estoque.php"
-class="btn btn-secondary btn-cancelar">
+                    <!-- Link que cancela a operação e retorna ao estoque. -->
+                    <a
+                        href="estoque.php"
+                        class="btn btn-secondary btn-cancelar">
 
-<i class="bi bi-arrow-left"></i>
+                        <!-- Ícone de seta para voltar. -->
+                        <i class="bi bi-arrow-left"></i>
 
-Cancelar
+                        <!-- Texto apresentado no botão. -->
+                        Cancelar
 
-</a>
+                    </a>
 
 
-</form>
+                </form>
 
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-</div>
+    </div>
 
 </div>
 

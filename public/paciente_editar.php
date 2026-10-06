@@ -1,1191 +1,1413 @@
 <?php
 
+// Ativa o sistema de autenticação para garantir que somente usuários
+// autorizados possam acessar esta página.
 require_once '../includes/auth.php';
+
+// Carrega a conexão com o banco de dados através da variável $pdo.
 require_once '../config/database.php';
 
 
+// Recupera o ID do paciente enviado pela URL.
+// Exemplo: paciente_editar.php?id=5
 $id = $_GET['id'] ?? null;
 
 
+// Se nenhum ID foi informado, volta para a lista de pacientes.
 if (!$id) {
-
     header("Location: pacientes.php");
     exit;
-
 }
-
 
 
 /*
 ==================================================
 BUSCAR PACIENTE + ENDEREÇOS + RESPONSÁVEL
 ==================================================
+
+Nesta consulta são buscadas todas as informações
+necessárias para preencher o formulário de edição:
+
+- Dados do paciente;
+- Endereço do paciente;
+- Dados do responsável;
+- Endereço do responsável.
 */
 
-
+// Prepara a consulta SQL para buscar o paciente pelo ID.
 $sql = $pdo->prepare("
+    SELECT
+        p.*,
 
-SELECT
+        -- Dados do endereço do paciente
+        e.rua,
+        e.numero,
+        e.cep,
+        e.cidade,
+        e.complemento,
 
-p.*,
+        -- Dados do responsável
+        r.nome AS responsavel_nome,
+        r.cpf AS responsavel_cpf,
+        r.telefone AS responsavel_telefone,
+        r.grau_de_parentesco,
+        r.data_de_nascimento AS responsavel_data,
 
-e.rua,
-e.numero,
-e.cep,
-e.cidade,
-e.complemento,
+        -- Dados do endereço do responsável
+        er.rua AS r_rua,
+        er.numero AS r_numero,
+        er.cep AS r_cep,
+        er.cidade AS r_cidade,
+        er.complemento AS r_complemento
 
+    FROM pacientes p
 
-r.nome AS responsavel_nome,
-r.cpf AS responsavel_cpf,
-r.telefone AS responsavel_telefone,
-r.grau_de_parentesco,
-r.data_de_nascimento AS responsavel_data,
+    -- Relaciona o paciente com seu endereço.
+    INNER JOIN endereco e
+        ON p.endereco_id = e.id
 
+    -- Relaciona o paciente com o responsável.
+    -- O LEFT JOIN permite que o paciente continue sendo encontrado
+    -- mesmo que não possua responsável cadastrado.
+    LEFT JOIN responsavel r
+        ON p.responsavel_id = r.id
 
-er.rua AS r_rua,
-er.numero AS r_numero,
-er.cep AS r_cep,
-er.cidade AS r_cidade,
-er.complemento AS r_complemento
+    -- Relaciona o responsável ao endereço dele.
+    LEFT JOIN endereco er
+        ON r.endereco_id = er.id
 
-
-FROM pacientes p
-
-
-INNER JOIN endereco e
-ON p.endereco_id = e.id
-
-
-LEFT JOIN responsavel r
-ON p.responsavel_id = r.id
-
-
-LEFT JOIN endereco er
-ON r.endereco_id = er.id
-
-
-WHERE p.id = ?
-
+    -- Seleciona somente o paciente correspondente ao ID recebido.
+    WHERE p.id = ?
 ");
 
 
+// Executa a consulta utilizando o ID como parâmetro.
 $sql->execute([$id]);
 
 
+// Recupera os dados encontrados como um array associativo.
 $paciente = $sql->fetch(PDO::FETCH_ASSOC);
 
 
-
+// Caso nenhum paciente seja encontrado, interrompe a execução
+// e informa o usuário.
 if (!$paciente) {
-
     die("Paciente não encontrado.");
-
 }
-
 
 
 /*
 ==================================================
 ATUALIZAR DADOS
 ==================================================
-*/
 
+Verifica se o formulário foi enviado através do método POST.
+Quando o usuário clicar em "Salvar Alterações", esta parte
+será executada.
+*/
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-
-try {
-
-
-$pdo->beginTransaction();
-
-
-
-/*
-==============================
-PACIENTE
-==============================
-*/
-
-
-$sql = $pdo->prepare("
-
-UPDATE pacientes SET
-
-nome=?,
-cpf=?,
-data_de_nascimento=?,
-telefone=?,
-cartao_cidadao=?
-
-WHERE id=?
-
-");
-
-
-
-$sql->execute([
-
-$_POST['nome'],
-$_POST['cpf'],
-$_POST['data_de_nascimento'],
-$_POST['telefone'],
-$_POST['cartao_cidadao'],
-$id
-
-]);
-
-
-
-
-
-/*
-==============================
-ENDEREÇO PACIENTE
-==============================
-*/
-
-
-$sql=$pdo->prepare("
-
-UPDATE endereco SET
-
-rua=?,
-numero=?,
-cep=?,
-cidade=?,
-complemento=?
-
-WHERE id=?
-
-");
-
-
-
-$sql->execute([
-
-$_POST['rua'],
-$_POST['numero'],
-$_POST['cep'],
-$_POST['cidade'],
-$_POST['complemento'],
-$paciente['endereco_id']
-
-]);
-
-
-
-
-
-
-/*
-==============================
-RESPONSÁVEL
-==============================
-*/
-
-
-if(!empty($paciente['responsavel_id'])){
-
-
-$sql=$pdo->prepare("
-
-UPDATE responsavel SET
-
-nome=?,
-cpf=?,
-telefone=?,
-grau_de_parentesco=?,
-data_de_nascimento=?
-
-WHERE id=?
-
-");
-
-
-
-$sql->execute([
-
-$_POST['responsavel_nome'],
-$_POST['responsavel_cpf'],
-$_POST['responsavel_telefone'],
-$_POST['grau_parentesco'],
-$_POST['responsavel_data'],
-$paciente['responsavel_id']
-
-]);
-
-
-
-
-
-
-$sql=$pdo->prepare("
-
-UPDATE endereco SET
-
-rua=?,
-numero=?,
-cep=?,
-cidade=?,
-complemento=?
-
-WHERE id=(
-
-SELECT endereco_id 
-FROM responsavel
-WHERE id=?
-
-)
-
-");
-
-
-
-$sql->execute([
-
-$_POST['r_rua'],
-$_POST['r_numero'],
-$_POST['r_cep'],
-$_POST['r_cidade'],
-$_POST['r_complemento'],
-$paciente['responsavel_id']
-
-]);
-
-
+    try {
+
+        // Inicia uma transação no banco de dados.
+        //
+        // Isso permite que todas as alterações sejam confirmadas
+        // juntas ou desfeitas caso aconteça algum erro.
+        $pdo->beginTransaction();
+
+
+        /*
+        ==============================
+        PACIENTE
+        ==============================
+        */
+
+        // Prepara o comando responsável por atualizar
+        // os dados principais do paciente.
+        $sql = $pdo->prepare("
+            UPDATE pacientes SET
+                nome=?,
+                cpf=?,
+                data_de_nascimento=?,
+                telefone=?,
+                cartao_cidadao=?
+            WHERE id=?
+        ");
+
+
+        // Executa a atualização utilizando os valores enviados
+        // pelo formulário.
+        $sql->execute([
+            $_POST['nome'],
+            $_POST['cpf'],
+            $_POST['data_de_nascimento'],
+            $_POST['telefone'],
+            $_POST['cartao_cidadao'],
+            $id
+        ]);
+
+
+        /*
+        ==============================
+        ENDEREÇO PACIENTE
+        ==============================
+        */
+
+        // Prepara a atualização do endereço do paciente.
+        $sql = $pdo->prepare("
+            UPDATE endereco SET
+                rua=?,
+                numero=?,
+                cep=?,
+                cidade=?,
+                complemento=?
+            WHERE id=?
+        ");
+
+
+        // Envia os novos dados do endereço para o banco.
+        //
+        // O ID utilizado é o endereço atualmente relacionado
+        // ao paciente.
+        $sql->execute([
+            $_POST['rua'],
+            $_POST['numero'],
+            $_POST['cep'],
+            $_POST['cidade'],
+            $_POST['complemento'],
+            $paciente['endereco_id']
+        ]);
+
+
+        /*
+        ==============================
+        RESPONSÁVEL
+        ==============================
+        */
+
+        // Verifica se existe um responsável relacionado
+        // ao paciente.
+        if (!empty($paciente['responsavel_id'])) {
+
+
+            // Prepara a atualização dos dados do responsável.
+            $sql = $pdo->prepare("
+                UPDATE responsavel SET
+                    nome=?,
+                    cpf=?,
+                    telefone=?,
+                    grau_de_parentesco=?,
+                    data_de_nascimento=?
+                WHERE id=?
+            ");
+
+
+            // Executa a atualização dos dados do responsável.
+            $sql->execute([
+                $_POST['responsavel_nome'],
+                $_POST['responsavel_cpf'],
+                $_POST['responsavel_telefone'],
+                $_POST['grau_parentesco'],
+                $_POST['responsavel_data'],
+                $paciente['responsavel_id']
+            ]);
+
+
+            // Prepara a atualização do endereço do responsável.
+            //
+            // O endereço é localizado através do endereco_id
+            // que pertence ao responsável.
+            $sql = $pdo->prepare("
+                UPDATE endereco SET
+                    rua=?,
+                    numero=?,
+                    cep=?,
+                    cidade=?,
+                    complemento=?
+                WHERE id=(
+                    SELECT endereco_id
+                    FROM responsavel
+                    WHERE id=?
+                )
+            ");
+
+
+            // Executa a atualização do endereço do responsável.
+            $sql->execute([
+                $_POST['r_rua'],
+                $_POST['r_numero'],
+                $_POST['r_cep'],
+                $_POST['r_cidade'],
+                $_POST['r_complemento'],
+                $paciente['responsavel_id']
+            ]);
+        }
+
+
+        // Confirma definitivamente todas as alterações realizadas
+        // durante a transação.
+        $pdo->commit();
+
+
+        // Depois de salvar, retorna para a lista de pacientes.
+        header("Location: pacientes.php");
+
+        // Interrompe a execução para evitar que o restante da página
+        // seja processado.
+        exit;
+
+
+    } catch (Exception $e) {
+
+        // Caso algum erro aconteça, desfaz as alterações realizadas
+        // durante a transação.
+        $pdo->rollBack();
+
+        // Exibe a mensagem do erro para facilitar a identificação
+        // do problema durante o desenvolvimento.
+        die("Erro ao atualizar: " . $e->getMessage());
+    }
 }
-
-
-
-$pdo->commit();
-
-
-
-header("Location: pacientes.php");
-exit;
-
-
-
-}catch(Exception $e){
-
-
-$pdo->rollBack();
-
-die("Erro ao atualizar: ".$e->getMessage());
-
-
-}
-
-
-}
-
 
 ?>
+
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Define a codificação dos caracteres da página. -->
+    <meta charset="UTF-8">
 
-<title>Editar Paciente</title>
+    <!-- Faz a página se adaptar a celulares e tablets. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Define o título exibido na aba do navegador. -->
+    <title>Editar Paciente</title>
 
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<style>
+    <!-- Carrega o Bootstrap 5.3.3 para utilizar seus componentes e classes. -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-:root{
+    <!-- Carrega os ícones do Bootstrap Icons. -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
 
-    --azul-principal:#1976D2;
-    --azul-medio:#2196F3;
-    --azul-claro:#64B5F6;
-    --azul-profundo:#1565C0;
-    --azul-hospital:#0288D1;
 
-}
+    <style>
 
-body{
+        /*
+        ==================================================
+        CORES PRINCIPAIS DO SISTEMA
+        ==================================================
+        */
 
-    background:linear-gradient(
-        135deg,
-        #e3f2fd,
-        #bbdefb
-    );
+        /* Define variáveis de cores para facilitar a reutilização no CSS. */
+        :root {
+            --azul-principal: #1976D2;
+            --azul-medio: #2196F3;
+            --azul-claro: #64B5F6;
+            --azul-profundo: #1565C0;
+            --azul-hospital: #0288D1;
+        }
 
-    font-family:'Segoe UI',sans-serif;
 
-    min-height:100vh;
+        /*
+        ==================================================
+        ESTILO GERAL DA PÁGINA
+        ==================================================
+        */
 
-}
+        /* Define o fundo da página e a fonte utilizada. */
+        body {
+            background: linear-gradient(
+                135deg,
+                #e3f2fd,
+                #bbdefb
+            );
 
-.card-principal{
+            font-family: 'Segoe UI', sans-serif;
 
-    background:white;
+            min-height: 100vh;
+        }
 
-    border:none;
 
-    border-radius:25px;
+        /*
+        ==================================================
+        CARD PRINCIPAL
+        ==================================================
+        */
 
-    box-shadow:0 15px 40px rgba(33,150,243,.15);
+        /* Estiliza o container principal do formulário. */
+        .card-principal {
+            background: white;
+            border: none;
+            border-radius: 25px;
 
-    overflow:hidden;
+            /* Cria uma sombra suave ao redor do card. */
+            box-shadow: 0 15px 40px rgba(33, 150, 243, .15);
 
-}
+            /* Impede que elementos ultrapassem os cantos arredondados. */
+            overflow: hidden;
+        }
 
-.card{
 
-    border:none;
+        /*
+        ==================================================
+        CARDS INTERNOS
+        ==================================================
+        */
 
-    border-radius:18px;
+        /* Define o visual dos cards de paciente, endereço e responsável. */
+        .card {
+            border: none;
+            border-radius: 18px;
 
-    overflow:hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, .06);
 
-    box-shadow:0 8px 25px rgba(0,0,0,.06);
+            /* Faz a animação do card ser suave. */
+            transition: .25s;
 
-    transition:.25s;
+            overflow: hidden;
+        }
 
-}
 
-.card:hover{
+        /* Quando o mouse passa sobre um card, ele sobe levemente. */
+        .card:hover {
+            transform: translateY(-3px);
+        }
 
-    transform:translateY(-3px);
 
-}
+        /*
+        ==================================================
+        CABEÇALHOS DOS CARDS
+        ==================================================
+        */
 
-.card-header{
+        /* Configuração geral dos cabeçalhos. */
+        .card-header {
+            color: white;
+            padding: 18px 22px;
+            font-weight: 700;
+        }
 
-    color:white;
 
-    padding:18px 22px;
+        /* Cabeçalho principal da página. */
+        .header-principal {
+            background: linear-gradient(
+                135deg,
+                #1976D2,
+                #2196F3
+            );
+        }
 
-    font-weight:700;
 
-}
+        /* Cabeçalho da seção de dados do paciente. */
+        .header-paciente {
+            background: #2196F3;
+        }
 
-.header-principal{
 
-    background:linear-gradient(
-        135deg,
-        #1976D2,
-        #2196F3
-    );
+        /* Cabeçalho do endereço do paciente. */
+        .header-endereco {
+            background: #64B5F6;
+        }
 
-}
 
-.header-paciente{
+        /* Cabeçalho dos dados do responsável. */
+        .header-responsavel {
+            background: #0288D1;
+        }
 
-    background:#2196F3;
 
-}
+        /* Cabeçalho do endereço do responsável. */
+        .header-endereco-responsavel {
+            background: #1565C0;
+        }
 
-.header-endereco{
 
-    background:#64B5F6;
+        /* Remove a margem do título principal dos cards. */
+        .card-header h3 {
+            margin: 0;
+            font-weight: 700;
+        }
 
-}
 
-.header-responsavel{
+        /* Define o espaçamento dos títulos menores. */
+        .card-header h5 {
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
 
-    background:#0288D1;
 
-}
+        /* Deixa textos pequenos dos cabeçalhos levemente transparentes. */
+        .card-header small {
+            opacity: .9;
+        }
 
-.header-endereco-responsavel{
 
-    background:#1565C0;
+        /*
+        ==================================================
+        CAMPOS DO FORMULÁRIO
+        ==================================================
+        */
 
-}
+        /* Estiliza campos de texto e listas de seleção. */
+        .form-control,
+        .form-select {
+            border-radius: 12px;
+            border: 1px solid #cfd8dc;
+            padding: 11px;
+        }
 
-.card-header h3{
 
-    margin:0;
+        /* Estilo aplicado quando o campo recebe foco. */
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #1976D2;
 
-    font-weight:700;
+            box-shadow:
+                0 0 0 .2rem rgba(25, 118, 210, .15);
+        }
 
-}
 
-.card-header h5{
+        /* Estiliza os textos dos labels. */
+        label {
+            font-weight: 600;
+            color: #455A64;
+            margin-bottom: 6px;
+        }
 
-    margin-bottom:5px;
 
-    font-weight:700;
+        /*
+        ==================================================
+        BOTÃO PRINCIPAL
+        ==================================================
+        */
 
-}
+        /* Estilo do botão "Salvar Alterações". */
+        .btn-sistema {
+            background: #1976D2;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 22px;
+            font-weight: 600;
+        }
 
-.card-header small{
 
-    opacity:.9;
+        /* Altera a cor do botão quando o mouse passa sobre ele. */
+        .btn-sistema:hover {
+            background: #1565C0;
+            color: white;
+        }
 
-}
 
-.form-control,
-.form-select{
+        /*
+        ==================================================
+        BOTÃO VOLTAR
+        ==================================================
+        */
 
-    border-radius:12px;
+        /* Arredonda e aumenta o espaçamento do botão cancelar. */
+        .btn-voltar {
+            border-radius: 12px;
+            padding: 10px 22px;
+        }
 
-    border:1px solid #cfd8dc;
-
-    padding:11px;
-
-}
-
-.form-control:focus,
-.form-select:focus{
-
-    border-color:#1976D2;
-
-    box-shadow:0 0 0 .2rem rgba(25,118,210,.15);
-
-}
-
-label{
-
-    font-weight:600;
-
-    color:#455A64;
-
-    margin-bottom:6px;
-
-}
-
-.btn-sistema{
-
-    background:#1976D2;
-
-    color:white;
-
-    border:none;
-
-    border-radius:12px;
-
-    padding:10px 22px;
-
-    font-weight:600;
-
-}
-
-.btn-sistema:hover{
-
-    background:#1565C0;
-
-    color:white;
-
-}
-
-.btn-voltar{
-
-    border-radius:12px;
-
-    padding:10px 22px;
-
-}
-
-</style>
+    </style>
 
 </head>
 
+
 <body>
 
-<div class="container py-5">
+    <!-- Container que centraliza o conteúdo da página. -->
+    <div class="container py-5">
 
-<div class="card-principal">
+        <!-- Card principal que envolve todo o formulário. -->
+        <div class="card-principal">
 
-<div class="card-header header-principal">
 
-<div class="d-flex align-items-center">
+            <!-- Cabeçalho principal da página. -->
+            <div class="card-header header-principal">
 
-<div class="me-3">
+                <!-- Organiza o ícone e o título lado a lado. -->
+                <div class="d-flex align-items-center">
 
-<i class="bi bi-pencil-square fs-1"></i>
+                    <!-- Ícone de edição. -->
+                    <div class="me-3">
+                        <i class="bi bi-pencil-square fs-1"></i>
+                    </div>
 
-</div>
 
-<div>
+                    <!-- Título e descrição da página. -->
+                    <div>
 
-<h3>
+                        <h3>
+                            Editar Paciente
+                        </h3>
 
-Editar Paciente
+                        <p class="mb-0 opacity-75">
+                            Atualize as informações do paciente cadastrado
+                        </p>
 
-</h3>
+                    </div>
 
-<p class="mb-0 opacity-75">
-
-Atualize as informações do paciente cadastrado
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="card-body p-4">
-
-<form method="POST">
-<!-- ================================================= -->
-<!-- DADOS DO PACIENTE -->
-<!-- ================================================= -->
-
-<div class="card mb-4">
-
-    <div class="card-header header-paciente">
-
-        <i class="bi bi-person-fill"></i>
-
-        Dados do Paciente
-
-    </div>
-
-    <div class="card-body">
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-
-                    Nome
-
-                </label>
-
-                <input
-                    type="text"
-                    name="nome"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['nome']) ?>"
-                    required>
+                </div>
 
             </div>
 
-            <div class="col-md-3 mb-3">
 
-                <label class="form-label">
+            <!-- Corpo principal contendo o formulário. -->
+            <div class="card-body p-4">
 
-                    CPF
+                <!-- Formulário responsável por enviar as alterações via POST. -->
+                <form method="POST">
 
-                </label>
 
-                <input
-                    type="text"
-                    id="cpf"
-                    name="cpf"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['cpf']) ?>"
-                    required>
+                    <!-- ================================================= -->
+                    <!-- DADOS DO PACIENTE -->
+                    <!-- ================================================= -->
 
-            </div>
+                    <div class="card mb-4">
 
-            <div class="col-md-3 mb-3">
+                        <!-- Cabeçalho da seção do paciente. -->
+                        <div class="card-header header-paciente">
 
-                <label class="form-label">
+                            <i class="bi bi-person-fill"></i>
 
-                    Data de Nascimento
+                            Dados do Paciente
 
-                </label>
+                        </div>
 
-                <input
-                    type="date"
-                    id="data_de_nascimento"
-                    name="data_de_nascimento"
-                    class="form-control"
-                    value="<?= $paciente['data_de_nascimento'] ?>"
-                    required>
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- Campo Nome. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Nome
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="nome"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['nome']) ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- Campo CPF. -->
+                                <div class="col-md-3 mb-3">
+
+                                    <label class="form-label">
+                                        CPF
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        id="cpf"
+                                        name="cpf"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['cpf']) ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- Campo Data de Nascimento. -->
+                                <div class="col-md-3 mb-3">
+
+                                    <label class="form-label">
+                                        Data de Nascimento
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        id="data_de_nascimento"
+                                        name="data_de_nascimento"
+                                        class="form-control"
+                                        value="<?= $paciente['data_de_nascimento'] ?>"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="row">
+
+                                <!-- Campo telefone do paciente. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Telefone
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        id="telefone"
+                                        name="telefone"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['telefone']) ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- Campo Cartão do Cidadão / Cartão do SUS. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+
+                                        <i class="bi bi-card-text"></i>
+
+                                        Cartão do Cidadão / Cartão do SUS
+
+                                        <span class="text-muted fw-normal">
+                                            (opcional)
+                                        </span>
+
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        id="cartao_cidadao"
+                                        name="cartao_cidadao"
+                                        class="form-control"
+                                        placeholder="Digite apenas números"
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        value="<?= htmlspecialchars($paciente['cartao_cidadao'] ?? '') ?>"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- ENDEREÇO DO PACIENTE -->
+                    <!-- ================================================= -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header header-endereco">
+
+                            <i class="bi bi-geo-alt-fill"></i>
+
+                            Endereço do Paciente
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- Rua do paciente. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Rua
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="rua"
+                                        id="rua"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['rua']) ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- Número do endereço. -->
+                                <div class="col-md-2 mb-3">
+
+                                    <label class="form-label">
+                                        Número
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="numero"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['numero']) ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- CEP do paciente. -->
+                                <div class="col-md-4 mb-3">
+
+                                    <label class="form-label">
+                                        CEP
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="cep"
+                                        id="cep"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['cep']) ?>"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="row">
+
+                                <!-- Cidade do paciente. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Cidade
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="cidade"
+                                        id="cidade"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['cidade']) ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- Complemento do endereço. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Complemento
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="complemento"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['complemento']) ?>"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- DADOS DO RESPONSÁVEL -->
+                    <!-- ================================================= -->
+
+                    <div class="card mb-4" id="bloco_responsavel">
+
+                        <div class="card-header header-responsavel">
+
+                            <i class="bi bi-people-fill"></i>
+
+                            Dados do Responsável
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- Nome do responsável. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Nome
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="responsavel_nome"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['responsavel_nome'] ?? '') ?>"
+                                    >
+
+                                </div>
+
+
+                                <!-- CPF do responsável. -->
+                                <div class="col-md-3 mb-3">
+
+                                    <label class="form-label">
+                                        CPF
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="responsavel_cpf"
+                                        id="responsavel_cpf"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['responsavel_cpf'] ?? '') ?>"
+                                    >
+
+                                </div>
+
+
+                                <!-- Telefone do responsável. -->
+                                <div class="col-md-3 mb-3">
+
+                                    <label class="form-label">
+                                        Telefone
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="responsavel_telefone"
+                                        id="responsavel_telefone"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['responsavel_telefone'] ?? '') ?>"
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="row">
+
+                                <!-- Grau de parentesco do responsável. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Grau de Parentesco
+                                    </label>
+
+                                    <!-- As opções serão preenchidas pelo JavaScript
+                                         de acordo com a idade do paciente. -->
+                                    <select
+                                        name="grau_parentesco"
+                                        id="grau_parentesco"
+                                        class="form-select"
+                                    >
+
+                                        <option value="">
+                                            Selecione...
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- Data de nascimento do responsável. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Data de Nascimento
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        name="responsavel_data"
+                                        class="form-control"
+                                        value="<?= $paciente['responsavel_data'] ?>"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- ENDEREÇO DO RESPONSÁVEL -->
+                    <!-- ================================================= -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header header-endereco-responsavel">
+
+                            <i class="bi bi-geo-alt-fill"></i>
+
+                            Endereço do Responsável
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- Rua do responsável. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Rua
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="r_rua"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['r_rua'] ?? '') ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- Número do endereço do responsável. -->
+                                <div class="col-md-2 mb-3">
+
+                                    <label class="form-label">
+                                        Número
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="r_numero"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['r_numero'] ?? '') ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- CEP do responsável. -->
+                                <div class="col-md-4 mb-3">
+
+                                    <label class="form-label">
+                                        CEP
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        id="r_cep"
+                                        name="r_cep"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['r_cep'] ?? '') ?>"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="row">
+
+                                <!-- Cidade do responsável. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Cidade
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="r_cidade"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['r_cidade'] ?? '') ?>"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <!-- Complemento do endereço do responsável. -->
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label">
+                                        Complemento
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="r_complemento"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars($paciente['r_complemento'] ?? '') ?>"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- BOTÕES -->
+                    <!-- ================================================= -->
+
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+
+                        <!-- Botão para cancelar a edição e retornar à lista. -->
+                        <a
+                            href="pacientes.php"
+                            class="btn btn-secondary btn-voltar"
+                        >
+
+                            <i class="bi bi-arrow-left"></i>
+
+                            Cancelar
+
+                        </a>
+
+
+                        <!-- Botão que envia o formulário para o servidor. -->
+                        <button
+                            type="submit"
+                            class="btn btn-sistema"
+                        >
+
+                            <i class="bi bi-check-circle"></i>
+
+                            Salvar Alterações
+
+                        </button>
+
+                    </div>
+
+
+                </form>
 
             </div>
 
         </div>
 
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-
-                    Telefone
-
-                </label>
-
-                <input
-                    type="text"
-                    id="telefone"
-                    name="telefone"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['telefone']) ?>"
-                    required>
-
-            </div>
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-
-                    <i class="bi bi-card-text"></i>
-                    Cartão do Cidadão / Cartão do SUS
-
-                    <span class="text-muted fw-normal">
-                        (opcional)
-                    </span>
-
-                </label>
-
-                <input
-                    type="text"
-                    id="cartao_cidadao"
-                    name="cartao_cidadao"
-                    class="form-control"
-                    placeholder="Digite apenas números"
-                    maxlength="20"
-                    inputmode="numeric"
-                    value="<?= htmlspecialchars($paciente['cartao_cidadao'] ?? '') ?>">
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-<!-- ================================================= -->
-<!-- ENDEREÇO DO PACIENTE -->
-<!-- ================================================= -->
-
-<div class="card mb-4">
-
-    <div class="card-header header-endereco">
-
-        <i class="bi bi-geo-alt-fill"></i>
-
-        Endereço do Paciente
-
-    </div>
-
-    <div class="card-body">
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-                    Rua
-                </label>
-
-                <input
-                    type="text"
-                    name="rua"
-                    id="rua"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['rua']) ?>"
-                    required>
-
-            </div>
-
-            <div class="col-md-2 mb-3">
-
-                <label class="form-label">
-                    Número
-                </label>
-
-                <input
-                    type="text"
-                    name="numero"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['numero']) ?>"
-                    required>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-                    CEP
-                </label>
-
-                <input
-                    type="text"
-                    name="cep"
-                    id="cep"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['cep']) ?>"
-                    required>
-
-            </div>
-
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-                    Cidade
-                </label>
-
-                <input
-                    type="text"
-                    name="cidade"
-                    id="cidade"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['cidade']) ?>"
-                    required>
-
-            </div>
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-                    Complemento
-                </label>
-
-                <input
-                    type="text"
-                    name="complemento"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['complemento']) ?>">
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-<!-- ================================================= -->
-<!-- DADOS DO RESPONSÁVEL -->
-<!-- ================================================= -->
-
-<div class="card mb-4" id="bloco_responsavel">
-
-    <div class="card-header header-responsavel">
-
-        <i class="bi bi-people-fill"></i>
-
-        Dados do Responsável
-
-    </div>
-
-    <div class="card-body">
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-                    Nome
-                </label>
-
-                <input
-                    type="text"
-                    name="responsavel_nome"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['responsavel_nome'] ?? '') ?>">
-
-            </div>
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-                    CPF
-                </label>
-
-                <input
-                    type="text"
-                    name="responsavel_cpf"
-                    id="responsavel_cpf"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['responsavel_cpf'] ?? '') ?>">
-
-            </div>
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-                    Telefone
-                </label>
-
-                <input
-                    type="text"
-                    name="responsavel_telefone"
-                    id="responsavel_telefone"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['responsavel_telefone'] ?? '') ?>">
-
-            </div>
-
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-                    Grau de Parentesco
-                </label>
-
-                <select
-                    name="grau_parentesco"
-                    id="grau_parentesco"
-                    class="form-select">
-
-                    <option value="">Selecione...</option>
-
-                </select>
-
-            </div>
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-                    Data de Nascimento
-                </label>
-
-                <input
-                    type="date"
-                    name="responsavel_data"
-                    class="form-control"
-                    value="<?= $paciente['responsavel_data'] ?>">
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-<!-- ================================================= -->
-<!-- ENDEREÇO DO RESPONSÁVEL -->
-<!-- ================================================= -->
-
-<div class="card mb-4">
-
-    <div class="card-header header-endereco-responsavel">
-
-        <i class="bi bi-geo-alt-fill"></i>
-
-        Endereço do Responsável
-
     </div>
 
 
-    <div class="card-body">
+    <script>
 
+        /*
+        =====================================================
+        MÁSCARA CPF PACIENTE
+        =====================================================
+        */
 
-        <div class="row">
+        // Localiza o campo de CPF do paciente.
+        document.getElementById('cpf').addEventListener('input', function() {
 
+            // Obtém o valor digitado pelo usuário.
+            let v = this.value;
 
-            <div class="col-md-6 mb-3">
+            // Remove tudo que não for número.
+            v = v.replace(/\D/g, "");
 
-                <label class="form-label">
+            // Adiciona o primeiro ponto depois dos três primeiros números.
+            v = v.replace(/(\d{3})(\d)/, "$1.$2");
 
-                    Rua
+            // Adiciona o segundo ponto depois dos próximos três números.
+            v = v.replace(/(\d{3})(\d)/, "$1.$2");
 
-                </label>
+            // Adiciona o hífen antes dos dois últimos números.
+            v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 
+            // Atualiza o campo com o CPF formatado.
+            this.value = v;
 
-                <input
-                    type="text"
-                    name="r_rua"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['r_rua'] ?? '') ?>"
-                    required>
+        });
 
 
-            </div>
+        /*
+        =====================================================
+        GRAU DE PARENTESCO DE ACORDO COM A IDADE DO PACIENTE
+        =====================================================
+        */
 
+        // Obtém o campo da data de nascimento do paciente.
+        const dataNascimento =
+            document.getElementById('data_de_nascimento');
 
+        // Obtém o campo de seleção do grau de parentesco.
+        const parentesco =
+            document.getElementById('grau_parentesco');
 
-            <div class="col-md-2 mb-3">
+        // Recupera do PHP o grau de parentesco que já estava cadastrado.
+        //
+        // json_encode transforma o valor PHP em um valor seguro
+        // para utilização dentro do JavaScript.
+        const grauAtual =
+            <?= json_encode($paciente['grau_de_parentesco'] ?? '') ?>;
 
 
-                <label class="form-label">
+        /*
+        =====================================================
+        FUNÇÃO PARA CALCULAR A IDADE
+        =====================================================
+        */
 
-                    Número
+        function calcularIdade(data) {
 
-                </label>
+            // Se não existir uma data, não é possível calcular a idade.
+            if (!data) {
+                return null;
+            }
 
+            // Obtém a data atual.
+            const hoje = new Date();
 
-                <input
-                    type="text"
-                    name="r_numero"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['r_numero'] ?? '') ?>"
-                    required>
+            // Cria um objeto Date utilizando a data de nascimento.
+            const nascimento =
+                new Date(data + 'T00:00:00');
 
+            // Calcula inicialmente a diferença entre os anos.
+            let idade =
+                hoje.getFullYear() - nascimento.getFullYear();
 
-            </div>
+            // Obtém o mês atual.
+            const mesAtual =
+                hoje.getMonth();
 
+            // Obtém o mês de nascimento.
+            const mesNascimento =
+                nascimento.getMonth();
 
+            // Obtém o dia atual.
+            const diaAtual =
+                hoje.getDate();
 
+            // Obtém o dia do nascimento.
+            const diaNascimento =
+                nascimento.getDate();
 
-            <div class="col-md-4 mb-3">
 
+            // Verifica se o aniversário ainda não aconteceu
+            // no ano atual.
+            if (
+                mesAtual < mesNascimento ||
+                (
+                    mesAtual === mesNascimento &&
+                    diaAtual < diaNascimento
+                )
+            ) {
 
-                <label class="form-label">
+                // Se o aniversário ainda não ocorreu,
+                // diminui um ano da idade calculada.
+                idade--;
 
-                    CEP
+            }
 
-                </label>
 
+            // Retorna a idade final do paciente.
+            return idade;
+        }
 
-                <input
-                    type="text"
-                    id="r_cep"
-                    name="r_cep"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['r_cep'] ?? '') ?>"
-                    required>
 
+        /*
+        =====================================================
+        CARREGAR OPÇÕES DE PARENTESCO
+        =====================================================
+        */
 
-            </div>
+        function carregarParentesco() {
 
-        </div>
+            // Calcula a idade atual do paciente.
+            const idade =
+                calcularIdade(dataNascimento.value);
 
+            // Verifica se existe uma opção previamente selecionada.
+            //
+            // Se o campo já tiver um valor, ele é utilizado.
+            // Caso contrário, utiliza o valor vindo do banco.
+            const valorSelecionado =
+                parentesco.value || grauAtual;
 
 
+            // Limpa todas as opções atuais do select.
+            parentesco.innerHTML = '';
 
-        <div class="row">
 
+            // Cria novamente a opção inicial.
+            const opcaoInicial =
+                document.createElement('option');
 
-            <div class="col-md-6 mb-3">
+            // Define o valor vazio para a opção inicial.
+            opcaoInicial.value = '';
 
+            // Define o texto exibido.
+            opcaoInicial.textContent = 'Selecione...';
 
-                <label class="form-label">
+            // Adiciona a opção ao select.
+            parentesco.appendChild(opcaoInicial);
 
-                    Cidade
 
-                </label>
+            // Se não existir data de nascimento,
+            // não cria as demais opções.
+            if (idade === null) {
+                return;
+            }
 
 
-                <input
-                    type="text"
-                    name="r_cidade"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['r_cidade'] ?? '') ?>"
-                    required>
+            // Cria a variável que armazenará
+            // as opções permitidas.
+            let opcoes;
 
 
-            </div>
+            /*
+            -----------------------------------------------------
+            PACIENTE MENOR DE 18 ANOS
+            -----------------------------------------------------
+            */
 
+            if (idade < 18) {
 
+                // Para menores de idade, são disponibilizadas
+                // somente as opções de pai, mãe ou tutor legal.
+                opcoes = [
+                    'Pai',
+                    'Mãe',
+                    'Tutor Legal'
+                ];
 
+            }
 
-            <div class="col-md-6 mb-3">
 
+            /*
+            -----------------------------------------------------
+            PACIENTE COM 18 ANOS OU MAIS
+            -----------------------------------------------------
+            */
 
-                <label class="form-label">
+            else {
 
-                    Complemento
+                // Para maiores de idade, são disponibilizadas
+                // outras possibilidades de parentesco.
+                opcoes = [
+                    'Pai',
+                    'Mãe',
+                    'Avô',
+                    'Avó',
+                    'Tio',
+                    'Tia',
+                    'Irmão',
+                    'Irmã',
+                    'Tutor Legal',
+                    'Outro'
+                ];
 
-                </label>
+            }
 
 
-                <input
-                    type="text"
-                    name="r_complemento"
-                    class="form-control"
-                    value="<?= htmlspecialchars($paciente['r_complemento'] ?? '') ?>">
+            // Percorre cada opção disponível.
+            opcoes.forEach(function(grau) {
 
+                // Cria um novo elemento <option>.
+                const option =
+                    document.createElement('option');
 
-            </div>
+                // Define o valor da opção.
+                option.value = grau;
 
+                // Define o texto que será exibido.
+                option.textContent = grau;
 
+                // Adiciona a opção ao campo de seleção.
+                parentesco.appendChild(option);
 
-        </div>
+            });
 
 
+            // Mantém o grau de parentesco que já estava cadastrado,
+            // desde que ele continue sendo permitido para a idade atual.
+            if (opcoes.includes(valorSelecionado)) {
 
-    </div>
+                // Seleciona o valor anterior.
+                parentesco.value = valorSelecionado;
 
+            } else {
 
-</div>
-<!-- ================================================= -->
-<!-- BOTÕES -->
-<!-- ================================================= -->
+                // Caso não seja permitido, deixa o campo vazio.
+                parentesco.value = '';
 
-<div class="d-flex justify-content-end gap-3 mt-4">
+            }
 
+        }
 
-    <a 
-        href="pacientes.php"
-        class="btn btn-secondary btn-voltar">
 
-        <i class="bi bi-arrow-left"></i>
+        // Quando a data de nascimento for alterada,
+        // atualiza as opções de parentesco.
+        dataNascimento.addEventListener(
+            'change',
+            carregarParentesco
+        );
 
-        Cancelar
 
-    </a>
+        // Ao carregar a página, executa a função automaticamente
+        // para montar as opções corretas.
+        window.addEventListener(
+            'load',
+            carregarParentesco
+        );
 
 
+        /*
+        =====================================================
+        MÁSCARA CARTÃO DO CIDADÃO / CARTÃO DO SUS
+        =====================================================
+        */
 
-    <button
-        type="submit"
-        class="btn btn-sistema">
+        // Localiza o campo do Cartão do Cidadão / Cartão do SUS.
+        const cartaoCidadao =
+            document.getElementById('cartao_cidadao');
 
-        <i class="bi bi-check-circle"></i>
 
-        Salvar Alterações
+        // Verifica se o campo realmente existe na página.
+        if (cartaoCidadao) {
 
-    </button>
+            // Executa sempre que o usuário digitar no campo.
+            cartaoCidadao.addEventListener(
+                'input',
+                function() {
 
+                    // Remove qualquer caractere que não seja número
+                    // e limita o conteúdo a 20 caracteres.
+                    this.value = this.value
+                        .replace(/\D/g, '')
+                        .slice(0, 20);
 
-</div>
+                }
+            );
 
+        }
 
-</form>
-
-</div>
-
-</div>
-
-</div>
+    </script>
 
 </body>
 
 </html>
-<script>
-
-
-// ===============================
-// MÁSCARA CPF PACIENTE
-// ===============================
-
-document.getElementById('cpf').addEventListener('input', function(){
-
-    let v = this.value;
-
-    v = v.replace(/\D/g,"");
-
-    v = v.replace(/(\d{3})(\d)/,"$1.$2");
-
-    v = v.replace(/(\d{3})(\d)/,"$1.$2");
-
-    v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
-
-    this.value = v;
-
-});
-
-
-// =====================================================
-// GRAU DE PARENTESCO DE ACORDO COM A IDADE DO PACIENTE
-// =====================================================
-
-const dataNascimento = document.getElementById('data_de_nascimento');
-const parentesco = document.getElementById('grau_parentesco');
-const grauAtual = <?= json_encode($paciente['grau_de_parentesco'] ?? '') ?>;
-
-function calcularIdade(data) {
-
-    if (!data) {
-        return null;
-    }
-
-    const hoje = new Date();
-    const nascimento = new Date(data + 'T00:00:00');
-
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-
-    const mesAtual = hoje.getMonth();
-    const mesNascimento = nascimento.getMonth();
-    const diaAtual = hoje.getDate();
-    const diaNascimento = nascimento.getDate();
-
-    if (
-        mesAtual < mesNascimento ||
-        (mesAtual === mesNascimento && diaAtual < diaNascimento)
-    ) {
-        idade--;
-    }
-
-    return idade;
-}
-
-function carregarParentesco() {
-
-    const idade = calcularIdade(dataNascimento.value);
-    const valorSelecionado = parentesco.value || grauAtual;
-
-    parentesco.innerHTML = '';
-
-    const opcaoInicial = document.createElement('option');
-    opcaoInicial.value = '';
-    opcaoInicial.textContent = 'Selecione...';
-    parentesco.appendChild(opcaoInicial);
-
-    if (idade === null) {
-        return;
-    }
-
-    let opcoes;
-
-    if (idade < 18) {
-
-        opcoes = [
-            'Pai',
-            'Mãe',
-            'Tutor Legal'
-        ];
-
-    } else {
-
-        opcoes = [
-            'Pai',
-            'Mãe',
-            'Avô',
-            'Avó',
-            'Tio',
-            'Tia',
-            'Irmão',
-            'Irmã',
-            'Tutor Legal',
-            'Outro'
-        ];
-    }
-
-    opcoes.forEach(function(grau) {
-
-        const option = document.createElement('option');
-        option.value = grau;
-        option.textContent = grau;
-        parentesco.appendChild(option);
-
-    });
-
-    // Mantém o grau já cadastrado somente se ele for permitido para a idade atual.
-    if (opcoes.includes(valorSelecionado)) {
-        parentesco.value = valorSelecionado;
-    } else {
-        parentesco.value = '';
-    }
-}
-
-// Atualiza as opções quando a data de nascimento é alterada.
-dataNascimento.addEventListener('change', carregarParentesco);
-
-// Carrega as opções automaticamente ao abrir a edição.
-window.addEventListener('load', carregarParentesco);
-
-
-// =====================================================
-// MÁSCARA CARTÃO DO CIDADÃO / CARTÃO DO SUS
-// =====================================================
-
-const cartaoCidadao = document.getElementById('cartao_cidadao');
-
-if (cartaoCidadao) {
-
-    cartaoCidadao.addEventListener('input', function() {
-
-        this.value = this.value
-            .replace(/\D/g, '')
-            .slice(0, 20);
-
-    });
-}
-
-</script>

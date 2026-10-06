@@ -1,6 +1,9 @@
 <?php
 
+// Inclui o arquivo responsável pela autenticação e controle de acesso do sistema.
 require_once __DIR__ . '/../includes/auth.php';
+
+// Inclui o arquivo responsável pela conexão com o banco de dados.
 require_once __DIR__ . '/../config/database.php';
 
 
@@ -10,11 +13,13 @@ require_once __DIR__ . '/../config/database.php';
 |--------------------------------------------------------------------------
 */
 
+// Executa uma consulta SQL para contar todos os pacientes cadastrados.
 $stmt = $pdo->query("
     SELECT COUNT(*) AS total
     FROM pacientes
 ");
 
+// Converte o resultado da consulta para inteiro e armazena na variável.
 $totalPacientes = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
 
@@ -24,11 +29,13 @@ $totalPacientes = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 |--------------------------------------------------------------------------
 */
 
+// Executa uma consulta para contar todas as internações registradas.
 $stmt = $pdo->query("
     SELECT COUNT(*) AS total
     FROM internacoes
 ");
 
+// Armazena a quantidade total de internações como número inteiro.
 $totalInternacoes = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
 
@@ -38,12 +45,14 @@ $totalInternacoes = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 |--------------------------------------------------------------------------
 */
 
+// Conta somente as internações que ainda não possuem status "Alta".
 $stmt = $pdo->query("
     SELECT COUNT(*) AS total
     FROM internacoes
     WHERE status <> 'Alta'
 ");
 
+// Armazena a quantidade de pacientes atualmente internados.
 $totalInternados = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
 
@@ -53,11 +62,13 @@ $totalInternados = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 |--------------------------------------------------------------------------
 */
 
+// Conta todos os prontuários cadastrados no sistema.
 $stmt = $pdo->query("
     SELECT COUNT(*) AS total
     FROM prontuario
 ");
 
+// Armazena a quantidade total de prontuários.
 $totalProntuarios = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
 
@@ -67,6 +78,7 @@ $totalProntuarios = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 |--------------------------------------------------------------------------
 */
 
+// Busca os principais dados dos pacientes para exibição no relatório.
 $stmt = $pdo->query("
     SELECT
         id,
@@ -78,6 +90,7 @@ $stmt = $pdo->query("
     ORDER BY nome ASC
 ");
 
+// Recupera todos os pacientes em formato de array associativo.
 $pacientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
@@ -87,6 +100,7 @@ $pacientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 |--------------------------------------------------------------------------
 */
 
+// Busca os dados dos prontuários juntamente com os nomes do paciente e do médico.
 $stmt = $pdo->query("
     SELECT
         p.id,
@@ -100,7 +114,6 @@ $stmt = $pdo->query("
         med.nome AS medico_nome
 
     FROM prontuario p
-
     INNER JOIN pacientes pac
         ON pac.id = p.paciente_id
 
@@ -110,6 +123,7 @@ $stmt = $pdo->query("
     ORDER BY p.data_hora DESC
 ");
 
+// Recupera todos os prontuários encontrados.
 $prontuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
@@ -119,6 +133,7 @@ $prontuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 |--------------------------------------------------------------------------
 */
 
+// Busca o histórico completo das internações.
 $stmt = $pdo->query("
     SELECT
         i.id,
@@ -138,6 +153,7 @@ $stmt = $pdo->query("
     INNER JOIN pacientes pac
         ON pac.id = i.paciente_id
 
+    
     INNER JOIN medico med
         ON med.id = i.medico_id
 
@@ -147,6 +163,7 @@ $stmt = $pdo->query("
     ORDER BY i.data_entrada DESC
 ");
 
+// Recupera todas as internações encontradas.
 $historicoInternacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
@@ -156,6 +173,7 @@ $historicoInternacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 |--------------------------------------------------------------------------
 */
 
+// Busca somente os pacientes que continuam internados.
 $stmt = $pdo->query("
     SELECT
         i.id,
@@ -181,6 +199,7 @@ $stmt = $pdo->query("
     ORDER BY i.data_entrada ASC
 ");
 
+// Recupera os pacientes atualmente internados.
 $pacientesInternados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
@@ -190,6 +209,7 @@ $pacientesInternados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 |--------------------------------------------------------------------------
 */
 
+// Busca os diagnósticos que aparecem com maior frequência nos prontuários.
 $stmt = $pdo->query("
     SELECT
         diagnostico,
@@ -207,6 +227,7 @@ $stmt = $pdo->query("
     ORDER BY quantidade DESC
 ");
 
+// Recupera os diagnósticos recorrentes.
 $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
@@ -216,6 +237,7 @@ $doencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 |--------------------------------------------------------------------------
 */
 
+// Busca um resumo das movimentações realizadas no estoque.
 $stmt = $pdo->query("
     SELECT
 
@@ -264,20 +286,26 @@ $stmt = $pdo->query("
     FROM movimentacoes
 ");
 
+// Recupera o resultado do resumo em formato de array associativo.
 $resumoMovimentacoes = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Converte o total de movimentações para inteiro.
 $totalMovimentacoes =
     (int) $resumoMovimentacoes['total_movimentacoes'];
 
+// Converte o total de entradas para inteiro.
 $totalEntradas =
     (int) $resumoMovimentacoes['total_entradas'];
 
+// Converte o total de saídas para inteiro.
 $totalSaidas =
     (int) $resumoMovimentacoes['total_saidas'];
 
+// Converte o total de ajustes para inteiro.
 $totalAjustes =
     (int) $resumoMovimentacoes['total_ajustes'];
 
+// Converte o total de perdas para inteiro.
 $totalPerdas =
     (int) $resumoMovimentacoes['total_perdas'];
 
@@ -288,18 +316,22 @@ $totalPerdas =
 
 <head>
 
+    <!-- Define a codificação de caracteres utilizada pela página. -->
     <meta charset="UTF-8">
 
+    <!-- Faz a página se adaptar a diferentes tamanhos de tela. -->
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
 
+    <!-- Define o título exibido na aba do navegador. -->
     <title>Relatórios | Controle Hospitalar</title>
 
 
     <!-- BOOTSTRAP -->
 
+    <!-- Carrega o CSS do Bootstrap para utilizar componentes e estilos prontos. -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -308,6 +340,7 @@ $totalPerdas =
 
     <!-- BOOTSTRAP ICONS -->
 
+    <!-- Carrega a biblioteca de ícones do Bootstrap. -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
@@ -316,6 +349,13 @@ $totalPerdas =
 
     <style>
 
+        /*
+        ======================================================
+        VARIÁVEIS DE CORES
+        ======================================================
+        */
+
+        /* Define variáveis CSS para facilitar a reutilização das cores. */
         :root {
 
             --azul-principal: #2F80ED;
@@ -334,19 +374,36 @@ $totalPerdas =
         }
 
 
+        /*
+        ======================================================
+        CONFIGURAÇÃO GERAL DOS ELEMENTOS
+        ======================================================
+        */
+
+        /* Faz o tamanho dos elementos considerar bordas e preenchimentos. */
         * {
             box-sizing: border-box;
         }
 
 
+        /*
+        ======================================================
+        CORPO DA PÁGINA
+        ======================================================
+        */
+
         body {
 
+            /* Remove a margem padrão do navegador. */
             margin: 0;
 
+            /* Garante que a página ocupe pelo menos toda a altura da tela. */
             min-height: 100vh;
 
+            /* Define espaçamento superior e inferior. */
             padding: 30px 0 60px;
 
+            /* Cria o fundo com gradientes suaves. */
             background:
 
                 radial-gradient(
@@ -368,13 +425,16 @@ $totalPerdas =
                     #EEF5FF
                 );
 
+            /* Define a fonte principal da página. */
             font-family:
                 'Segoe UI',
                 Arial,
                 sans-serif;
 
+            /* Define a cor padrão dos textos. */
             color: var(--texto);
 
+            /* Define o tamanho padrão da fonte. */
             font-size: 16px;
 
         }
@@ -384,12 +444,16 @@ $totalPerdas =
            CONTAINER
         ====================================================== */
 
+        /* Define o container principal dos relatórios. */
         .pagina {
 
+            /* Ocupa quase toda a largura da tela. */
             width: calc(100% - 40px);
 
+            /* Limita a largura máxima do conteúdo. */
             max-width: 1500px;
 
+            /* Centraliza o conteúdo horizontalmente. */
             margin: 0 auto;
 
         }
@@ -399,12 +463,16 @@ $totalPerdas =
            CABEÇALHO PRINCIPAL
         ====================================================== */
 
+        /* Estiliza o cabeçalho azul da página. */
         .hero {
 
+            /* Permite posicionar elementos decorativos dentro do cabeçalho. */
             position: relative;
 
+            /* Esconde elementos que ultrapassarem os limites do cabeçalho. */
             overflow: hidden;
 
+            /* Cria o gradiente azul do cabeçalho. */
             background:
                 linear-gradient(
                     135deg,
@@ -413,14 +481,19 @@ $totalPerdas =
                     #56CCF2
                 );
 
+            /* Define a cor dos textos como branca. */
             color: white;
 
+            /* Arredonda os cantos. */
             border-radius: 30px;
 
+            /* Define o espaço interno. */
             padding: 38px 42px;
 
+            /* Define o espaço abaixo do cabeçalho. */
             margin-bottom: 30px;
 
+            /* Cria uma sombra ao redor do cabeçalho. */
             box-shadow:
                 0 20px 50px
                 rgba(47,128,237,.22);
@@ -428,6 +501,7 @@ $totalPerdas =
         }
 
 
+        /* Cria o primeiro elemento decorativo circular do cabeçalho. */
         .hero::before {
 
             content: "";
@@ -448,6 +522,7 @@ $totalPerdas =
         }
 
 
+        /* Cria o segundo elemento decorativo circular do cabeçalho. */
         .hero::after {
 
             content: "";
@@ -468,10 +543,12 @@ $totalPerdas =
         }
 
 
+        /* Organiza o conteúdo do cabeçalho horizontalmente. */
         .hero-conteudo {
 
             position: relative;
 
+            /* Mantém o conteúdo acima dos elementos decorativos. */
             z-index: 2;
 
             display: flex;
@@ -485,6 +562,7 @@ $totalPerdas =
         }
 
 
+        /* Organiza o ícone e o título do cabeçalho. */
         .hero-esquerda {
 
             display: flex;
@@ -496,6 +574,7 @@ $totalPerdas =
         }
 
 
+        /* Cria a caixa do ícone principal. */
         .hero-icone {
 
             width: 76px;
@@ -523,6 +602,7 @@ $totalPerdas =
         }
 
 
+        /* Define o estilo do título principal. */
         .hero h1 {
 
             margin: 0;
@@ -536,6 +616,7 @@ $totalPerdas =
         }
 
 
+        /* Define o estilo da descrição do cabeçalho. */
         .hero p {
 
             margin: 8px 0 0;
@@ -548,6 +629,7 @@ $totalPerdas =
         }
 
 
+        /* Estiliza o botão "Voltar ao painel". */
         .btn-hero {
 
             display: inline-flex;
@@ -584,6 +666,7 @@ $totalPerdas =
         }
 
 
+        /* Altera o botão quando o mouse passa sobre ele. */
         .btn-hero:hover {
 
             background:
@@ -601,6 +684,7 @@ $totalPerdas =
            CARDS / BOTÕES
         ====================================================== */
 
+        /* Organiza os quatro indicadores principais em uma grade. */
         .indicadores {
 
             display: grid;
@@ -615,6 +699,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo geral dos cards de indicadores. */
         .indicador {
 
             position: relative;
@@ -655,6 +740,7 @@ $totalPerdas =
         }
 
 
+        /* Efeito visual quando o mouse passa sobre o indicador. */
         .indicador:hover {
 
             transform:
@@ -667,6 +753,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo aplicado ao indicador atualmente selecionado. */
         .indicador.active {
 
             border-color:
@@ -682,6 +769,7 @@ $totalPerdas =
         }
 
 
+        /* Cria a faixa azul no topo do card ativo. */
         .indicador.active::before {
 
             content: "";
@@ -704,6 +792,7 @@ $totalPerdas =
         }
 
 
+        /* Cria um círculo decorativo no canto inferior dos cards. */
         .indicador::after {
 
             content: "";
@@ -723,26 +812,31 @@ $totalPerdas =
         }
 
 
+        /* Cor do círculo decorativo do card de pacientes. */
         .indicador-pacientes::after {
             background: #DDEBFF;
         }
 
 
+        /* Cor do círculo decorativo do card de internações. */
         .indicador-internacoes::after {
             background: #DDF8EA;
         }
 
 
+        /* Cor do círculo decorativo do card de internados. */
         .indicador-internados::after {
             background: #FFF0C8;
         }
 
 
+        /* Cor do círculo decorativo do card de prontuários. */
         .indicador-prontuarios::after {
             background: #FFE1E6;
         }
 
 
+        /* Organiza a parte superior dos indicadores. */
         .indicador-topo {
 
             position: relative;
@@ -758,6 +852,7 @@ $totalPerdas =
         }
 
 
+        /* Define o tamanho e posicionamento dos ícones dos indicadores. */
         .indicador-icone {
 
             width: 58px;
@@ -776,6 +871,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do ícone azul. */
         .icone-azul {
 
             background: #E7F0FF;
@@ -786,6 +882,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do ícone verde. */
         .icone-verde {
 
             background: #E7F8F0;
@@ -796,6 +893,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do ícone amarelo. */
         .icone-amarelo {
 
             background: #FFF5D7;
@@ -806,6 +904,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do ícone vermelho. */
         .icone-vermelho {
 
             background: #FFECEF;
@@ -816,6 +915,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo das etiquetas dos indicadores. */
         .indicador-tag {
 
             background: #F8FAFC;
@@ -833,6 +933,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do número exibido no indicador. */
         .indicador-numero {
 
             position: relative;
@@ -850,6 +951,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo da descrição abaixo do número. */
         .indicador-label {
 
             position: relative;
@@ -868,6 +970,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do rodapé dos indicadores. */
         .indicador-rodape {
 
             position: relative;
@@ -901,6 +1004,7 @@ $totalPerdas =
            PAINÉIS
         ====================================================== */
 
+        /* Esconde os painéis que não estão selecionados. */
         .painel-relatorio {
 
             display: none;
@@ -908,6 +1012,7 @@ $totalPerdas =
         }
 
 
+        /* Exibe o painel que recebeu a classe "ativo". */
         .painel-relatorio.ativo {
 
             display: block;
@@ -918,6 +1023,7 @@ $totalPerdas =
         }
 
 
+        /* Define a animação de aparecimento dos painéis. */
         @keyframes aparecer {
 
             from {
@@ -945,6 +1051,7 @@ $totalPerdas =
            SEÇÕES
         ====================================================== */
 
+        /* Estilo geral das caixas de relatório. */
         .secao-relatorio {
 
             background: white;
@@ -965,6 +1072,7 @@ $totalPerdas =
         }
 
 
+        /* Cabeçalho interno de cada seção. */
         .secao-cabecalho {
 
             display: flex;
@@ -990,6 +1098,7 @@ $totalPerdas =
         }
 
 
+        /* Organiza o ícone e o título da seção. */
         .secao-identidade {
 
             display: flex;
@@ -1001,6 +1110,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do ícone da seção. */
         .secao-icone {
 
             width: 55px;
@@ -1025,6 +1135,7 @@ $totalPerdas =
         }
 
 
+        /* Versão verde do ícone da seção. */
         .secao-icone-verde {
 
             background: #E7F8F0;
@@ -1034,6 +1145,7 @@ $totalPerdas =
         }
 
 
+        /* Versão amarela do ícone da seção. */
         .secao-icone-amarelo {
 
             background: #FFF5D7;
@@ -1043,6 +1155,7 @@ $totalPerdas =
         }
 
 
+        /* Versão vermelha do ícone da seção. */
         .secao-icone-vermelho {
 
             background: #FFECEF;
@@ -1052,6 +1165,7 @@ $totalPerdas =
         }
 
 
+        /* Define o estilo do título de cada seção. */
         .secao-titulo {
 
             margin: 0;
@@ -1066,6 +1180,7 @@ $totalPerdas =
         }
 
 
+        /* Define o estilo da descrição das seções. */
         .secao-descricao {
 
             margin: 5px 0 0;
@@ -1078,6 +1193,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do contador exibido no canto da seção. */
         .secao-contador {
 
             display: inline-flex;
@@ -1109,6 +1225,7 @@ $totalPerdas =
            TABELA
         ====================================================== */
 
+        /* Permite rolagem horizontal da tabela em telas menores. */
         .tabela-container {
 
             width: 100%;
@@ -1118,6 +1235,7 @@ $totalPerdas =
         }
 
 
+        /* Configura a tabela dos relatórios. */
         .tabela {
 
             width: 100%;
@@ -1132,6 +1250,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo dos títulos das colunas. */
         .tabela thead th {
 
             background:
@@ -1164,6 +1283,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo das células do corpo da tabela. */
         .tabela tbody td {
 
             padding:
@@ -1184,6 +1304,7 @@ $totalPerdas =
         }
 
 
+        /* Remove a borda inferior da última linha. */
         .tabela tbody tr:last-child td {
 
             border-bottom:
@@ -1192,6 +1313,7 @@ $totalPerdas =
         }
 
 
+        /* Cria um destaque ao passar o mouse sobre uma linha. */
         .tabela tbody tr:hover {
 
             background:
@@ -1204,6 +1326,7 @@ $totalPerdas =
            PACIENTES
         ====================================================== */
 
+        /* Organiza o nome e o avatar do paciente. */
         .paciente-nome {
 
             display: flex;
@@ -1224,6 +1347,7 @@ $totalPerdas =
         }
 
 
+        /* Define o avatar usado para representar o paciente. */
         .avatar {
 
             width: 43px;
@@ -1251,6 +1375,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do CPF. */
         .cpf {
 
             font-size:
@@ -1268,6 +1393,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do telefone. */
         .telefone {
 
             font-size:
@@ -1282,6 +1408,7 @@ $totalPerdas =
         }
 
 
+        /* Organiza os campos de data com ícone. */
         .data {
 
             display:
@@ -1309,6 +1436,7 @@ $totalPerdas =
            BADGES
         ====================================================== */
 
+        /* Estilo geral das etiquetas de informação. */
         .badge {
 
             display:
@@ -1335,6 +1463,7 @@ $totalPerdas =
         }
 
 
+        /* Badge para informações normais. */
         .badge-normal {
 
             background:
@@ -1346,6 +1475,7 @@ $totalPerdas =
         }
 
 
+        /* Badge utilizada quando o paciente recebeu alta. */
         .badge-alta {
 
             background:
@@ -1357,6 +1487,7 @@ $totalPerdas =
         }
 
 
+        /* Badge utilizada para pacientes internados. */
         .badge-internado {
 
             background:
@@ -1368,6 +1499,7 @@ $totalPerdas =
         }
 
 
+        /* Badge utilizada para diagnósticos. */
         .badge-diagnostico {
 
             background:
@@ -1383,6 +1515,7 @@ $totalPerdas =
            DIAGNÓSTICOS
         ====================================================== */
 
+        /* Organiza os cards de diagnósticos em uma grade. */
         .diagnosticos-grid {
 
             display:
@@ -1400,6 +1533,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo individual de cada diagnóstico. */
         .diagnostico-card {
 
             display:
@@ -1436,6 +1570,7 @@ $totalPerdas =
         }
 
 
+        /* Efeito visual ao passar o mouse sobre um diagnóstico. */
         .diagnostico-card:hover {
 
             transform:
@@ -1448,6 +1583,7 @@ $totalPerdas =
         }
 
 
+        /* Nome do diagnóstico. */
         .diagnostico-nome {
 
             font-size:
@@ -1462,6 +1598,7 @@ $totalPerdas =
         }
 
 
+        /* Texto secundário do diagnóstico. */
         .diagnostico-sub {
 
             margin-top:
@@ -1476,6 +1613,7 @@ $totalPerdas =
         }
 
 
+        /* Número que mostra quantas vezes o diagnóstico foi registrado. */
         .diagnostico-numero {
 
             min-width:
@@ -1515,6 +1653,7 @@ $totalPerdas =
            MOVIMENTAÇÕES
         ====================================================== */
 
+        /* Define o espaçamento interno da área de estoque. */
         .estoque-corpo {
 
             padding:
@@ -1523,6 +1662,7 @@ $totalPerdas =
         }
 
 
+        /* Organiza os quatro cards do estoque. */
         .estoque-grid {
 
             display:
@@ -1537,6 +1677,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo geral dos cards de movimentação. */
         .estoque-card {
 
             border:
@@ -1554,6 +1695,7 @@ $totalPerdas =
         }
 
 
+        /* Efeito ao passar o mouse sobre um card. */
         .estoque-card:hover {
 
             transform:
@@ -1566,6 +1708,7 @@ $totalPerdas =
         }
 
 
+        /* Define o tamanho e aparência dos ícones do estoque. */
         .estoque-icone {
 
             width:
@@ -1595,6 +1738,7 @@ $totalPerdas =
         }
 
 
+        /* Define o tamanho do número do estoque. */
         .estoque-numero {
 
             font-size:
@@ -1606,6 +1750,7 @@ $totalPerdas =
         }
 
 
+        /* Define o texto abaixo do número. */
         .estoque-label {
 
             margin-top:
@@ -1620,6 +1765,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do card de total de movimentações. */
         .estoque-total {
 
             background:
@@ -1631,6 +1777,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do ícone do total. */
         .estoque-total .estoque-icone {
 
             background:
@@ -1642,6 +1789,7 @@ $totalPerdas =
         }
 
 
+        /* Cor do número total. */
         .estoque-total .estoque-numero {
 
             color:
@@ -1650,6 +1798,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do card de entradas. */
         .estoque-entrada {
 
             background:
@@ -1661,6 +1810,7 @@ $totalPerdas =
         }
 
 
+        /* Ícone das entradas. */
         .estoque-entrada .estoque-icone {
 
             background:
@@ -1672,6 +1822,7 @@ $totalPerdas =
         }
 
 
+        /* Número das entradas. */
         .estoque-entrada .estoque-numero {
 
             color:
@@ -1680,6 +1831,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do card de saídas. */
         .estoque-saida {
 
             background:
@@ -1691,6 +1843,7 @@ $totalPerdas =
         }
 
 
+        /* Ícone das saídas. */
         .estoque-saida .estoque-icone {
 
             background:
@@ -1702,6 +1855,7 @@ $totalPerdas =
         }
 
 
+        /* Número das saídas. */
         .estoque-saida .estoque-numero {
 
             color:
@@ -1710,6 +1864,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do card de ajustes e perdas. */
         .estoque-ajuste {
 
             background:
@@ -1721,6 +1876,7 @@ $totalPerdas =
         }
 
 
+        /* Ícone dos ajustes e perdas. */
         .estoque-ajuste .estoque-icone {
 
             background:
@@ -1732,6 +1888,7 @@ $totalPerdas =
         }
 
 
+        /* Número dos ajustes e perdas. */
         .estoque-ajuste .estoque-numero {
 
             color:
@@ -1740,6 +1897,7 @@ $totalPerdas =
         }
 
 
+        /* Posiciona o botão do relatório completo à direita. */
         .estoque-link {
 
             display:
@@ -1754,6 +1912,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do botão que abre o relatório completo de movimentações. */
         .btn-relatorio {
 
             display:
@@ -1792,6 +1951,7 @@ $totalPerdas =
         }
 
 
+        /* Efeito ao passar o mouse sobre o botão. */
         .btn-relatorio:hover {
 
             background:
@@ -1810,6 +1970,7 @@ $totalPerdas =
            BOTÃO VISUALIZAR
         ====================================================== */
 
+        /* Estilo do botão que abre o prontuário. */
         .btn-visualizar {
 
             display:
@@ -1848,6 +2009,7 @@ $totalPerdas =
         }
 
 
+        /* Altera o botão ao passar o mouse. */
         .btn-visualizar:hover {
 
             background:
@@ -1863,6 +2025,7 @@ $totalPerdas =
            ESTADO VAZIO
         ====================================================== */
 
+        /* Estilo exibido quando não existem registros. */
         .estado-vazio {
 
             text-align:
@@ -1877,6 +2040,7 @@ $totalPerdas =
         }
 
 
+        /* Ícone exibido no estado vazio. */
         .estado-vazio-icone {
 
             width:
@@ -1912,6 +2076,7 @@ $totalPerdas =
         }
 
 
+        /* Título da mensagem de estado vazio. */
         .estado-vazio h5 {
 
             font-size:
@@ -1929,6 +2094,7 @@ $totalPerdas =
         }
 
 
+        /* Texto da mensagem de estado vazio. */
         .estado-vazio p {
 
             margin:
@@ -1944,6 +2110,7 @@ $totalPerdas =
            MODAL
         ====================================================== */
 
+        /* Estilo geral do modal de prontuário. */
         .modal-content {
 
             border:
@@ -1962,6 +2129,7 @@ $totalPerdas =
         }
 
 
+        /* Cabeçalho do modal. */
         .modal-header {
 
             padding:
@@ -1976,6 +2144,7 @@ $totalPerdas =
         }
 
 
+        /* Organiza o ícone e o título do modal. */
         .modal-titulo-area {
 
             display:
@@ -1990,6 +2159,7 @@ $totalPerdas =
         }
 
 
+        /* Ícone principal do modal. */
         .modal-icone {
 
             width:
@@ -2022,6 +2192,7 @@ $totalPerdas =
         }
 
 
+        /* Título do modal. */
         .modal-title {
 
             margin:
@@ -2039,6 +2210,7 @@ $totalPerdas =
         }
 
 
+        /* Subtítulo do modal. */
         .modal-subtitle {
 
             margin:
@@ -2053,6 +2225,7 @@ $totalPerdas =
         }
 
 
+        /* Espaçamento interno do corpo do modal. */
         .modal-body {
 
             padding:
@@ -2061,6 +2234,7 @@ $totalPerdas =
         }
 
 
+        /* Caixa com as informações básicas do paciente. */
         .modal-paciente {
 
             padding:
@@ -2081,6 +2255,7 @@ $totalPerdas =
         }
 
 
+        /* Organiza o avatar e os dados do paciente. */
         .modal-paciente-topo {
 
             display:
@@ -2095,6 +2270,7 @@ $totalPerdas =
         }
 
 
+        /* Avatar do paciente dentro do modal. */
         .modal-avatar {
 
             width:
@@ -2127,6 +2303,7 @@ $totalPerdas =
         }
 
 
+        /* Nome do paciente no modal. */
         .modal-paciente-nome {
 
             font-size:
@@ -2141,6 +2318,7 @@ $totalPerdas =
         }
 
 
+        /* Informações secundárias do paciente. */
         .modal-paciente-info {
 
             margin-top:
@@ -2155,6 +2333,7 @@ $totalPerdas =
         }
 
 
+        /* Espaçamento entre os campos do modal. */
         .campo-modal {
 
             margin-bottom:
@@ -2163,6 +2342,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo dos rótulos dos campos. */
         .campo-modal-label {
 
             display:
@@ -2189,6 +2369,7 @@ $totalPerdas =
         }
 
 
+        /* Estilo do conteúdo dos campos. */
         .campo-modal-valor {
 
             padding:
@@ -2215,6 +2396,7 @@ $totalPerdas =
         }
 
 
+        /* Rodapé do modal. */
         .modal-footer {
 
             padding:
@@ -2229,6 +2411,7 @@ $totalPerdas =
         }
 
 
+        /* Botão para fechar o modal. */
         .btn-modal-fechar {
 
             border:
@@ -2259,8 +2442,10 @@ $totalPerdas =
            RESPONSIVIDADE
         ====================================================== */
 
+        /* Ajustes para telas menores que 1200px. */
         @media (max-width: 1200px) {
 
+            /* Os indicadores passam de quatro para duas colunas. */
             .indicadores {
 
                 grid-template-columns:
@@ -2268,6 +2453,7 @@ $totalPerdas =
 
             }
 
+            /* Os diagnósticos passam para duas colunas. */
             .diagnosticos-grid {
 
                 grid-template-columns:
@@ -2275,6 +2461,7 @@ $totalPerdas =
 
             }
 
+            /* Os cards do estoque passam para duas colunas. */
             .estoque-grid {
 
                 grid-template-columns:
@@ -2285,6 +2472,7 @@ $totalPerdas =
         }
 
 
+        /* Ajustes para telas menores que 768px. */
         @media (max-width: 768px) {
 
             body {
@@ -2295,6 +2483,7 @@ $totalPerdas =
             }
 
 
+            /* Reduz a largura lateral da página. */
             .pagina {
 
                 width:
@@ -2303,6 +2492,7 @@ $totalPerdas =
             }
 
 
+            /* Reduz o tamanho do cabeçalho em dispositivos menores. */
             .hero {
 
                 padding:
@@ -2314,6 +2504,7 @@ $totalPerdas =
             }
 
 
+            /* Coloca o conteúdo do cabeçalho em coluna. */
             .hero-conteudo {
 
                 flex-direction:
@@ -2349,6 +2540,7 @@ $totalPerdas =
             }
 
 
+            /* Faz o botão ocupar toda a largura. */
             .btn-hero {
 
                 width:
@@ -2357,6 +2549,7 @@ $totalPerdas =
             }
 
 
+            /* Mostra um indicador por linha. */
             .indicadores {
 
                 grid-template-columns:
@@ -2373,6 +2566,7 @@ $totalPerdas =
             }
 
 
+            /* Organiza o cabeçalho das seções verticalmente. */
             .secao-cabecalho {
 
                 align-items:
@@ -2403,6 +2597,7 @@ $totalPerdas =
             }
 
 
+            /* Mostra os diagnósticos em uma única coluna. */
             .diagnosticos-grid {
 
                 grid-template-columns:
@@ -2414,6 +2609,7 @@ $totalPerdas =
             }
 
 
+            /* Mostra um card de estoque por linha. */
             .estoque-grid {
 
                 grid-template-columns:
@@ -2430,6 +2626,7 @@ $totalPerdas =
             }
 
 
+            /* Define largura mínima para permitir rolagem horizontal da tabela. */
             .tabela {
 
                 min-width:
@@ -2440,6 +2637,7 @@ $totalPerdas =
         }
 
 
+        /* Ajustes para telas muito pequenas. */
         @media (max-width: 576px) {
 
             .hero-esquerda {
@@ -2467,271 +2665,290 @@ $totalPerdas =
 
         }
 
-/* ======================================================
-   BARRA DE PESQUISA DOS RELATÓRIOS
-====================================================== */
 
-.area-pesquisa-relatorio {
+        /* ======================================================
+           BARRA DE PESQUISA DOS RELATÓRIOS
+        ====================================================== */
 
-    background: #ffffff;
+        /* Área externa da barra de pesquisa. */
+        .area-pesquisa-relatorio {
 
-    border: 1px solid #E3EAF2;
+            background: #ffffff;
 
-    border-radius: 20px;
+            border: 1px solid #E3EAF2;
 
-    padding: 16px;
+            border-radius: 20px;
 
-    margin-bottom: 30px;
+            padding: 16px;
 
-    box-shadow:
-        0 8px 25px
-        rgba(31,62,94,.05);
+            margin-bottom: 30px;
 
-}
+            box-shadow:
+                0 8px 25px
+                rgba(31,62,94,.05);
 
+        }
 
-.pesquisa-relatorio {
 
-    position: relative;
+        /* Define a posição de referência da caixa de pesquisa. */
+        .pesquisa-relatorio {
 
-}
+            position: relative;
 
+        }
 
-.pesquisa-relatorio .icone-pesquisa {
 
-    position: absolute;
+        /* Posiciona o ícone de pesquisa dentro do campo. */
+        .pesquisa-relatorio .icone-pesquisa {
 
-    left: 17px;
+            position: absolute;
 
-    top: 50%;
+            left: 17px;
 
-    transform: translateY(-50%);
+            top: 50%;
 
-    color: #7A8AA0;
+            transform: translateY(-50%);
 
-    font-size: 20px;
+            color: #7A8AA0;
 
-    pointer-events: none;
+            font-size: 20px;
 
-}
+            /* Impede que o ícone atrapalhe o clique no campo. */
+            pointer-events: none;
 
+        }
 
-#campoPesquisaRelatorio {
 
-    min-height: 52px;
+        /* Estilo do campo de pesquisa. */
+        #campoPesquisaRelatorio {
 
-    padding-left: 50px;
+            min-height: 52px;
 
-    padding-right: 50px;
+            padding-left: 50px;
 
-    border: 1px solid #D5DEE9;
+            padding-right: 50px;
 
-    border-radius: 14px;
+            border: 1px solid #D5DEE9;
 
-    font-size: 16px;
+            border-radius: 14px;
 
-    color: #182B49;
+            font-size: 16px;
 
-}
+            color: #182B49;
 
+        }
 
-#campoPesquisaRelatorio::placeholder {
 
-    color: #98A2B3;
+        /* Cor do texto de exemplo do campo. */
+        #campoPesquisaRelatorio::placeholder {
 
-}
+            color: #98A2B3;
 
+        }
 
-#campoPesquisaRelatorio:focus {
 
-    border-color:
-        var(--azul-principal);
+        /* Estilo do campo quando recebe foco. */
+        #campoPesquisaRelatorio:focus {
 
-    box-shadow:
-        0 0 0 3px
-        rgba(47,128,237,.12);
+            border-color:
+                var(--azul-principal);
 
-}
+            box-shadow:
+                0 0 0 3px
+                rgba(47,128,237,.12);
 
+        }
 
-.btn-limpar-pesquisa {
 
-    position: absolute;
+        /* Botão utilizado para limpar a pesquisa. */
+        .btn-limpar-pesquisa {
 
-    right: 12px;
+            position: absolute;
 
-    top: 50%;
+            right: 12px;
 
-    transform: translateY(-50%);
+            top: 50%;
 
-    width: 34px;
+            transform: translateY(-50%);
 
-    height: 34px;
+            width: 34px;
 
-    border: none;
+            height: 34px;
 
-    border-radius: 10px;
+            border: none;
 
-    background: #F2F4F7;
+            border-radius: 10px;
 
-    color: #667085;
+            background: #F2F4F7;
 
-    display: none;
+            color: #667085;
 
-    align-items: center;
+            display: none;
 
-    justify-content: center;
+            align-items: center;
 
-    cursor: pointer;
+            justify-content: center;
 
-    transition: .2s;
+            cursor: pointer;
 
-}
+            transition: .2s;
 
+        }
 
-.btn-limpar-pesquisa:hover {
 
-    background: #E4E7EC;
+        /* Altera o botão de limpar quando o mouse passa sobre ele. */
+        .btn-limpar-pesquisa:hover {
 
-    color: #344054;
+            background: #E4E7EC;
 
-}
+            color: #344054;
 
+        }
 
-.info-pesquisa {
 
-    display: flex;
+        /* Área que mostra informações da pesquisa. */
+        .info-pesquisa {
 
-    align-items: center;
+            display: flex;
 
-    justify-content: space-between;
+            align-items: center;
 
-    gap: 10px;
+            justify-content: space-between;
 
-    margin-top: 10px;
+            gap: 10px;
 
-    padding: 0 4px;
+            margin-top: 10px;
 
-}
+            padding: 0 4px;
 
+        }
 
-.info-pesquisa-texto {
 
-    color: #667085;
+        /* Texto explicativo da pesquisa. */
+        .info-pesquisa-texto {
 
-    font-size: 13px;
+            color: #667085;
 
-}
+            font-size: 13px;
 
+        }
 
-.info-pesquisa-resultado {
 
-    color: var(--azul-principal);
+        /* Resultado numérico da pesquisa. */
+        .info-pesquisa-resultado {
 
-    font-size: 13px;
+            color: var(--azul-principal);
 
-    font-weight: 700;
+            font-size: 13px;
 
-}
+            font-weight: 700;
 
+        }
 
-.linha-pesquisa-oculta {
 
-    display: none !important;
+        /* Classes utilizadas para esconder elementos durante a pesquisa. */
+        .linha-pesquisa-oculta {
 
-}
+            display: none !important;
 
+        }
 
-.item-pesquisa-oculto {
 
-    display: none !important;
+        .item-pesquisa-oculto {
 
-}
+            display: none !important;
 
+        }
 
-.mensagem-sem-resultado-pesquisa {
 
-    display: none;
+        /* Mensagem exibida quando a pesquisa não encontra resultados. */
+        .mensagem-sem-resultado-pesquisa {
 
-    text-align: center;
+            display: none;
 
-    padding: 45px 20px;
+            text-align: center;
 
-    color: #667085;
+            padding: 45px 20px;
 
-}
+            color: #667085;
 
+        }
 
-.mensagem-sem-resultado-pesquisa .icone {
 
-    width: 65px;
+        /* Ícone da mensagem sem resultado. */
+        .mensagem-sem-resultado-pesquisa .icone {
 
-    height: 65px;
+            width: 65px;
 
-    border-radius: 18px;
+            height: 65px;
 
-    background: #F2F4F7;
+            border-radius: 18px;
 
-    color: #98A2B3;
+            background: #F2F4F7;
 
-    display: flex;
+            color: #98A2B3;
 
-    align-items: center;
+            display: flex;
 
-    justify-content: center;
+            align-items: center;
 
-    margin: 0 auto 15px;
+            justify-content: center;
 
-    font-size: 28px;
+            margin: 0 auto 15px;
 
-}
+            font-size: 28px;
 
+        }
 
-.mensagem-sem-resultado-pesquisa h5 {
 
-    margin: 0 0 5px;
+        /* Título da mensagem sem resultado. */
+        .mensagem-sem-resultado-pesquisa h5 {
 
-    color: #344054;
+            margin: 0 0 5px;
 
-    font-size: 18px;
+            color: #344054;
 
-    font-weight: 700;
+            font-size: 18px;
 
-}
+            font-weight: 700;
 
+        }
 
-.mensagem-sem-resultado-pesquisa p {
 
-    margin: 0;
+        /* Texto da mensagem sem resultado. */
+        .mensagem-sem-resultado-pesquisa p {
 
-    font-size: 14px;
+            margin: 0;
 
-}
+            font-size: 14px;
 
+        }
 
-@media (max-width: 576px) {
 
-    .area-pesquisa-relatorio {
+        /* Responsividade específica da barra de pesquisa. */
+        @media (max-width: 576px) {
 
-        padding: 12px;
+            .area-pesquisa-relatorio {
 
-    }
+                padding: 12px;
 
-    #campoPesquisaRelatorio {
+            }
 
-        font-size: 15px;
+            #campoPesquisaRelatorio {
 
-    }
+                font-size: 15px;
 
-    .info-pesquisa {
+            }
 
-        align-items: flex-start;
+            .info-pesquisa {
 
-        flex-direction: column;
+                align-items: flex-start;
 
-    }
+                flex-direction: column;
 
-}
+            }
+
+        }
 
     </style>
 
@@ -2741,6 +2958,7 @@ $totalPerdas =
 <body>
 
 
+<!-- Container principal da página. -->
 <div class="pagina">
 
 
@@ -2754,12 +2972,14 @@ $totalPerdas =
 
             <div class="hero-esquerda">
 
+                <!-- Ícone principal dos relatórios. -->
                 <div class="hero-icone">
 
                     <i class="bi bi-bar-chart-line-fill"></i>
 
                 </div>
 
+                <!-- Título e descrição da página. -->
                 <div>
 
                     <h1>
@@ -2776,6 +2996,7 @@ $totalPerdas =
             </div>
 
 
+            <!-- Botão para retornar ao painel administrativo. -->
             <a
                 href="dashboard.php"
                 class="btn-hero"
@@ -2801,6 +3022,7 @@ $totalPerdas =
 
         <!-- PACIENTES -->
 
+        <!-- Card que seleciona o relatório de pacientes. -->
         <button
             type="button"
             class="indicador indicador-pacientes botao-relatorio active"
@@ -2822,6 +3044,7 @@ $totalPerdas =
             </div>
 
 
+            <!-- Exibe a quantidade de pacientes cadastrados. -->
             <div class="indicador-numero">
 
                 <?= $totalPacientes ?>
@@ -2851,6 +3074,7 @@ $totalPerdas =
 
         <!-- INTERNAÇÕES -->
 
+        <!-- Card que abre o histórico de internações. -->
         <button
             type="button"
             class="indicador indicador-internacoes botao-relatorio"
@@ -2872,6 +3096,7 @@ $totalPerdas =
             </div>
 
 
+            <!-- Exibe o total de internações. -->
             <div class="indicador-numero">
 
                 <?= $totalInternacoes ?>
@@ -2901,6 +3126,7 @@ $totalPerdas =
 
         <!-- INTERNADOS -->
 
+        <!-- Card que mostra os pacientes que ainda estão internados. -->
         <button
             type="button"
             class="indicador indicador-internados botao-relatorio"
@@ -2922,6 +3148,7 @@ $totalPerdas =
             </div>
 
 
+            <!-- Exibe o número atual de pacientes internados. -->
             <div class="indicador-numero">
 
                 <?= $totalInternados ?>
@@ -2951,6 +3178,7 @@ $totalPerdas =
 
         <!-- PRONTUÁRIOS -->
 
+        <!-- Card que abre o painel de prontuários. -->
         <button
             type="button"
             class="indicador indicador-prontuarios botao-relatorio"
@@ -2972,6 +3200,7 @@ $totalPerdas =
             </div>
 
 
+            <!-- Exibe a quantidade de prontuários registrados. -->
             <div class="indicador-numero">
 
                 <?= $totalProntuarios ?>
@@ -3006,12 +3235,15 @@ $totalPerdas =
          BARRA DE PESQUISA
     ====================================================== -->
 
+    <!-- Área responsável pela pesquisa nos relatórios. -->
     <div class="area-pesquisa-relatorio">
 
         <div class="pesquisa-relatorio">
 
+            <!-- Ícone de pesquisa. -->
             <i class="bi bi-search icone-pesquisa"></i>
 
+            <!-- Campo utilizado para pesquisar informações do painel ativo. -->
             <input
                 type="text"
                 id="campoPesquisaRelatorio"
@@ -3020,6 +3252,7 @@ $totalPerdas =
                 autocomplete="off"
             >
 
+            <!-- Botão que limpa o texto digitado. -->
             <button
                 type="button"
                 class="btn-limpar-pesquisa"
@@ -3034,6 +3267,7 @@ $totalPerdas =
         </div>
 
 
+        <!-- Mostra informações sobre o funcionamento da pesquisa. -->
         <div class="info-pesquisa">
 
             <span class="info-pesquisa-texto">
@@ -3042,6 +3276,7 @@ $totalPerdas =
 
             </span>
 
+            <!-- Aqui o JavaScript informa quantos resultados foram encontrados. -->
             <span
                 class="info-pesquisa-resultado"
                 id="resultadoPesquisa"
@@ -3056,6 +3291,7 @@ $totalPerdas =
          PAINEL PACIENTES
     ====================================================== -->
 
+    <!-- Painel que apresenta a lista de pacientes cadastrados. -->
     <div
         id="painel-pacientes"
         class="painel-relatorio ativo"
@@ -3064,6 +3300,7 @@ $totalPerdas =
         <section class="secao-relatorio">
 
 
+            <!-- Cabeçalho da seção de pacientes. -->
             <div class="secao-cabecalho">
 
                 <div class="secao-identidade">
@@ -3093,6 +3330,7 @@ $totalPerdas =
                 </div>
 
 
+                <!-- Exibe a quantidade de pacientes encontrados. -->
                 <div class="secao-contador">
 
                     <i class="bi bi-people"></i>
@@ -3104,10 +3342,12 @@ $totalPerdas =
             </div>
 
 
+            <!-- Container que permite rolagem horizontal da tabela. -->
             <div class="tabela-container">
 
                 <table class="tabela">
 
+                    <!-- Cabeçalho da tabela. -->
                     <thead>
 
                         <tr>
@@ -3138,6 +3378,7 @@ $totalPerdas =
 
                     <?php if (count($pacientes) > 0): ?>
 
+                        <!-- Percorre todos os pacientes encontrados. -->
                         <?php foreach ($pacientes as $paciente): ?>
 
                             <tr>
@@ -3146,12 +3387,14 @@ $totalPerdas =
 
                                     <div class="paciente-nome">
 
+                                        <!-- Avatar visual do paciente. -->
                                         <div class="avatar">
 
                                             <i class="bi bi-person"></i>
 
                                         </div>
 
+                                        <!-- Exibe o nome protegido contra HTML. -->
                                         <?= htmlspecialchars(
                                             $paciente['nome']
                                         ) ?>
@@ -3163,6 +3406,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Exibe o CPF ou "Não informado". -->
                                     <span class="cpf">
 
                                         <?= htmlspecialchars(
@@ -3177,6 +3421,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Verifica se a data de nascimento foi cadastrada. -->
                                     <?php if (
                                         !empty(
                                             $paciente['data_de_nascimento']
@@ -3187,6 +3432,7 @@ $totalPerdas =
 
                                             <i class="bi bi-calendar3"></i>
 
+                                            <!-- Converte a data para o formato brasileiro. -->
                                             <?= date(
                                                 'd/m/Y',
                                                 strtotime(
@@ -3211,6 +3457,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Exibe o telefone ou informa que não foi cadastrado. -->
                                     <span class="telefone">
 
                                         <?= htmlspecialchars(
@@ -3228,6 +3475,7 @@ $totalPerdas =
 
                     <?php else: ?>
 
+                        <!-- Mensagem exibida quando não existem pacientes. -->
                         <tr>
 
                             <td colspan="4">
@@ -3272,6 +3520,7 @@ $totalPerdas =
          PAINEL INTERNAÇÕES
     ====================================================== -->
 
+    <!-- Painel que mostra o histórico das internações. -->
     <div
         id="painel-internacoes"
         class="painel-relatorio"
@@ -3309,6 +3558,7 @@ $totalPerdas =
                 </div>
 
 
+                <!-- Exibe a quantidade de internações. -->
                 <div class="secao-contador">
 
                     <i class="bi bi-hospital"></i>
@@ -3366,6 +3616,7 @@ $totalPerdas =
 
                     <?php if (count($historicoInternacoes) > 0): ?>
 
+                        <!-- Percorre todas as internações. -->
                         <?php foreach (
                             $historicoInternacoes
                             as $internacao
@@ -3394,6 +3645,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Mostra a data de entrada da internação. -->
                                     <span class="data">
 
                                         <i class="bi bi-box-arrow-in-right"></i>
@@ -3412,6 +3664,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Verifica se a internação possui data de saída. -->
                                     <?php if (
                                         !empty(
                                             $internacao['data_saida']
@@ -3444,6 +3697,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Exibe o quarto. -->
                                     <strong>
 
                                         <?= htmlspecialchars(
@@ -3457,6 +3711,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Exibe o leito utilizando uma badge. -->
                                     <span class="badge badge-normal">
 
                                         <i class="bi bi-bed"></i>
@@ -3472,6 +3727,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Exibe o motivo da internação. -->
                                     <?= htmlspecialchars(
                                         $internacao['motivos']
                                     ) ?>
@@ -3481,6 +3737,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Verifica se o paciente recebeu alta. -->
                                     <?php if (
                                         $internacao['status']
                                         === 'Alta'
@@ -3496,6 +3753,7 @@ $totalPerdas =
 
                                     <?php else: ?>
 
+                                        <!-- Exibe o status atual da internação. -->
                                         <span class="badge badge-internado">
 
                                             <i class="bi bi-activity"></i>
@@ -3516,6 +3774,7 @@ $totalPerdas =
 
                     <?php else: ?>
 
+                        <!-- Mensagem exibida quando não há internações. -->
                         <tr>
 
                             <td colspan="7">
@@ -3560,6 +3819,7 @@ $totalPerdas =
          PAINEL PACIENTES INTERNADOS
     ====================================================== -->
 
+    <!-- Painel que mostra somente as internações ainda ativas. -->
     <div
         id="painel-internados"
         class="painel-relatorio"
@@ -3597,6 +3857,7 @@ $totalPerdas =
                 </div>
 
 
+                <!-- Mostra a quantidade de pacientes internados. -->
                 <div class="secao-contador">
 
                     <i class="bi bi-person-lines-fill"></i>
@@ -3654,6 +3915,7 @@ $totalPerdas =
 
                     <?php if (count($pacientesInternados) > 0): ?>
 
+                        <!-- Percorre todos os pacientes internados. -->
                         <?php foreach (
                             $pacientesInternados
                             as $internado
@@ -3682,6 +3944,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Mostra a data de entrada. -->
                                     <span class="data">
 
                                         <i class="bi bi-calendar3"></i>
@@ -3713,6 +3976,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Mostra o número do leito. -->
                                     <span class="badge badge-normal">
 
                                         <i class="bi bi-bed"></i>
@@ -3728,6 +3992,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Mostra o motivo da internação. -->
                                     <?= htmlspecialchars(
                                         $internado['motivos']
                                     ) ?>
@@ -3737,6 +4002,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Mostra o médico responsável. -->
                                     <?= htmlspecialchars(
                                         $internado['medico_nome']
                                     ) ?>
@@ -3746,6 +4012,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Mostra o status atual da internação. -->
                                     <span class="badge badge-internado">
 
                                         <i class="bi bi-hospital"></i>
@@ -3764,6 +4031,7 @@ $totalPerdas =
 
                     <?php else: ?>
 
+                        <!-- Mensagem exibida quando não há pacientes internados. -->
                         <tr>
 
                             <td colspan="7">
@@ -3808,6 +4076,7 @@ $totalPerdas =
          PAINEL PRONTUÁRIOS
     ====================================================== -->
 
+    <!-- Painel que reúne os prontuários e os diagnósticos recorrentes. -->
     <div
         id="painel-prontuarios"
         class="painel-relatorio"
@@ -3848,6 +4117,7 @@ $totalPerdas =
                 </div>
 
 
+                <!-- Exibe a quantidade de prontuários. -->
                 <div class="secao-contador">
 
                     <i class="bi bi-files"></i>
@@ -3897,6 +4167,7 @@ $totalPerdas =
 
                     <?php if (count($prontuarios) > 0): ?>
 
+                        <!-- Percorre todos os prontuários. -->
                         <?php foreach (
                             $prontuarios
                             as $prontuario
@@ -3925,6 +4196,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Exibe a data e hora do prontuário. -->
                                     <span class="data">
 
                                         <i class="bi bi-calendar3"></i>
@@ -3943,6 +4215,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Verifica se existe um diagnóstico. -->
                                     <?php if (
                                         !empty(
                                             $prontuario['diagnostico']
@@ -3974,6 +4247,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Exibe o médico responsável pelo prontuário. -->
                                     <?= htmlspecialchars(
                                         $prontuario['medico_nome']
                                     ) ?>
@@ -3983,6 +4257,7 @@ $totalPerdas =
 
                                 <td>
 
+                                    <!-- Botão que abre o modal do prontuário. -->
                                     <button
                                         type="button"
                                         class="btn btn-visualizar"
@@ -4004,6 +4279,7 @@ $totalPerdas =
 
                     <?php else: ?>
 
+                        <!-- Mensagem exibida quando não há prontuários. -->
                         <tr>
 
                             <td colspan="5">
@@ -4044,6 +4320,7 @@ $totalPerdas =
 
         <!-- DIAGNÓSTICOS -->
 
+        <!-- Seção responsável pelos diagnósticos recorrentes. -->
         <section class="secao-relatorio">
 
 
@@ -4076,6 +4353,7 @@ $totalPerdas =
                 </div>
 
 
+                <!-- Mostra a quantidade de diagnósticos recorrentes. -->
                 <div class="secao-contador">
 
                     <i class="bi bi-bar-chart"></i>
@@ -4087,16 +4365,19 @@ $totalPerdas =
             </div>
 
 
+            <!-- Verifica se existem diagnósticos recorrentes. -->
             <?php if (count($doencas) > 0): ?>
 
                 <div class="diagnosticos-grid">
 
+                    <!-- Percorre cada diagnóstico encontrado. -->
                     <?php foreach ($doencas as $doenca): ?>
 
                         <div class="diagnostico-card">
 
                             <div>
 
+                                <!-- Exibe o nome do diagnóstico. -->
                                 <div class="diagnostico-nome">
 
                                     <?= htmlspecialchars(
@@ -4114,6 +4395,7 @@ $totalPerdas =
                             </div>
 
 
+                            <!-- Exibe quantas vezes o diagnóstico apareceu. -->
                             <div class="diagnostico-numero">
 
                                 <?= $doenca['quantidade'] ?>
@@ -4128,6 +4410,7 @@ $totalPerdas =
 
             <?php else: ?>
 
+                <!-- Mensagem exibida quando nenhum diagnóstico atingiu o mínimo de registros. -->
                 <div class="estado-vazio">
 
                     <div class="estado-vazio-icone">
@@ -4159,6 +4442,7 @@ $totalPerdas =
          SEMPRE VISÍVEL
     ====================================================== -->
 
+    <!-- Seção que apresenta o resumo das movimentações do estoque. -->
     <section class="secao-relatorio">
 
 
@@ -4191,6 +4475,7 @@ $totalPerdas =
             </div>
 
 
+            <!-- Mostra o total de movimentações. -->
             <div class="secao-contador">
 
                 <i class="bi bi-arrow-left-right"></i>
@@ -4311,6 +4596,7 @@ $totalPerdas =
             </div>
 
 
+            <!-- Link para abrir o relatório detalhado das movimentações. -->
             <div class="estoque-link">
 
                 <a
@@ -4341,6 +4627,7 @@ $totalPerdas =
      MODAIS DOS PRONTUÁRIOS
 ====================================================== -->
 
+<!-- Cria um modal para cada prontuário encontrado. -->
 <?php foreach ($prontuarios as $prontuario): ?>
 
     <div
@@ -4388,6 +4675,7 @@ $totalPerdas =
                     </div>
 
 
+                    <!-- Botão padrão do Bootstrap para fechar o modal. -->
                     <button
                         type="button"
                         class="btn-close"
@@ -4403,6 +4691,7 @@ $totalPerdas =
                 <div class="modal-body">
 
 
+                    <!-- Informações principais do paciente. -->
                     <div class="modal-paciente">
 
                         <div class="modal-paciente-topo">
@@ -4416,6 +4705,7 @@ $totalPerdas =
 
                             <div>
 
+                                <!-- Nome do paciente. -->
                                 <div class="modal-paciente-nome">
 
                                     <?= htmlspecialchars(
@@ -4425,6 +4715,7 @@ $totalPerdas =
                                 </div>
 
 
+                                <!-- Médico responsável pelo prontuário. -->
                                 <div class="modal-paciente-info">
 
                                     <i class="bi bi-person-badge me-1"></i>
@@ -4444,6 +4735,7 @@ $totalPerdas =
                     </div>
 
 
+                    <!-- Divide os campos do prontuário em linhas e colunas. -->
                     <div class="row">
 
 
@@ -4463,6 +4755,7 @@ $totalPerdas =
 
                                     <i class="bi bi-calendar3 me-1"></i>
 
+                                    <!-- Formata a data e hora para o padrão brasileiro. -->
                                     <?= date(
                                         'd/m/Y H:i',
                                         strtotime(
@@ -4491,6 +4784,7 @@ $totalPerdas =
 
                                 <div class="campo-modal-valor">
 
+                                    <!-- Exibe o diagnóstico ou "Não informado". -->
                                     <?= !empty(
                                         $prontuario['diagnostico']
                                     )
@@ -4525,6 +4819,7 @@ $totalPerdas =
 
                                 <div class="campo-modal-valor">
 
+                                    <!-- Exibe o histórico ou informa que não foi preenchido. -->
                                     <?= !empty(
                                         $prontuario['historico']
                                     )
@@ -4559,6 +4854,7 @@ $totalPerdas =
 
                                 <div class="campo-modal-valor">
 
+                                    <!-- Exibe as prescrições ou informa que não foram preenchidas. -->
                                     <?= !empty(
                                         $prontuario['prescricoes']
                                     )
@@ -4593,6 +4889,7 @@ $totalPerdas =
 
                                 <div class="campo-modal-valor">
 
+                                    <!-- Exibe as observações ou informa que não existem. -->
                                     <?= !empty(
                                         $prontuario['observacoes']
                                     )
@@ -4622,6 +4919,7 @@ $totalPerdas =
 
                 <div class="modal-footer">
 
+                    <!-- Botão para fechar o modal. -->
                     <button
                         type="button"
                         class="btn-modal-fechar"
@@ -4648,6 +4946,7 @@ $totalPerdas =
 
 <!-- BOOTSTRAP JS -->
 
+<!-- Carrega o JavaScript do Bootstrap para funcionamento dos modais e componentes. -->
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 ></script>
@@ -4661,29 +4960,35 @@ $totalPerdas =
 |--------------------------------------------------------------------------
 */
 
+// Aguarda o carregamento completo do HTML antes de executar o JavaScript.
 document.addEventListener(
     'DOMContentLoaded',
     function () {
 
+        // Seleciona todos os botões responsáveis por trocar os relatórios.
         const botoes =
             document.querySelectorAll(
                 '.botao-relatorio'
             );
 
 
+        // Seleciona todos os painéis de relatório.
         const paineis =
             document.querySelectorAll(
                 '.painel-relatorio'
             );
 
 
+        // Percorre cada botão encontrado.
         botoes.forEach(
             function (botao) {
 
+                // Adiciona o evento de clique ao botão.
                 botao.addEventListener(
                     'click',
                     function () {
 
+                        // Descobre qual painel deve ser exibido.
                         const destino =
                             this.getAttribute(
                                 'data-secao'
@@ -4696,9 +5001,11 @@ document.addEventListener(
                         |--------------------------------------------------------------------------
                         */
 
+                        // Percorre todos os painéis existentes.
                         paineis.forEach(
                             function (painel) {
 
+                                // Remove a classe que deixa o painel visível.
                                 painel.classList.remove(
                                     'ativo'
                                 );
@@ -4713,9 +5020,11 @@ document.addEventListener(
                         |--------------------------------------------------------------------------
                         */
 
+                        // Percorre todos os botões.
                         botoes.forEach(
                             function (item) {
 
+                                // Remove a classe "active" de todos eles.
                                 item.classList.remove(
                                     'active'
                                 );
@@ -4730,14 +5039,17 @@ document.addEventListener(
                         |--------------------------------------------------------------------------
                         */
 
+                        // Localiza o painel correspondente ao botão clicado.
                         const painelSelecionado =
                             document.getElementById(
                                 destino
                             );
 
 
+                        // Verifica se o painel realmente existe.
                         if (painelSelecionado) {
 
+                            // Adiciona a classe que torna o painel visível.
                             painelSelecionado.classList.add(
                                 'ativo'
                             );
@@ -4746,9 +5058,11 @@ document.addEventListener(
                             | ROLA ATÉ O RELATÓRIO
                             */
 
+                            // Aguarda um pequeno intervalo antes de rolar até o painel.
                             setTimeout(
                                 function () {
 
+                                    // Faz uma rolagem suave até o relatório selecionado.
                                     painelSelecionado.scrollIntoView({
                                         behavior: 'smooth',
                                         block: 'start'
@@ -4767,6 +5081,7 @@ document.addEventListener(
                         |--------------------------------------------------------------------------
                         */
 
+                        // Marca visualmente o botão selecionado.
                         this.classList.add(
                             'active'
                         );
@@ -4791,120 +5106,185 @@ document.addEventListener(
 |--------------------------------------------------------------------------
 */
 
+// Aguarda o carregamento do documento.
 document.addEventListener(
     'DOMContentLoaded',
     function () {
 
+        // Localiza o campo de pesquisa.
         const campoPesquisa =
             document.getElementById(
                 'campoPesquisaRelatorio'
             );
 
+        // Localiza o botão para limpar a pesquisa.
         const btnLimpar =
             document.getElementById(
                 'btnLimparPesquisa'
             );
 
+        // Localiza o elemento que mostra a quantidade de resultados.
         const resultadoPesquisa =
             document.getElementById(
                 'resultadoPesquisa'
             );
 
+
+        // Verifica se todos os elementos necessários foram encontrados.
         if (
             !campoPesquisa ||
             !btnLimpar ||
             !resultadoPesquisa
         ) {
+            // Encerra a execução caso algum elemento não exista.
             return;
         }
 
+
+        // Função responsável por realizar a pesquisa.
         function executarPesquisa() {
 
+            // Obtém o texto digitado, remove espaços extras e transforma em minúsculas.
             const termo =
                 campoPesquisa.value
                     .trim()
                     .toLowerCase();
 
+
+            // Localiza o painel de relatório atualmente ativo.
             const painelAtivo =
                 document.querySelector(
                     '.painel-relatorio.ativo'
                 );
 
+
+            // Se nenhum painel estiver ativo, encerra a função.
             if (!painelAtivo) {
                 return;
             }
 
+
+            // Verifica se existe algum texto sendo pesquisado.
             if (termo !== '') {
+
+                // Exibe o botão para limpar a pesquisa.
                 btnLimpar.style.display = 'flex';
+
             } else {
+
+                // Esconde o botão quando o campo está vazio.
                 btnLimpar.style.display = 'none';
+
             }
 
+
+            // Contador de resultados encontrados.
             let encontrados = 0;
 
+
+            // Localiza todas as linhas das tabelas do painel ativo.
             const linhas =
                 painelAtivo.querySelectorAll(
                     'table tbody tr'
                 );
 
+
+            // Percorre cada linha encontrada.
             linhas.forEach(
                 function (linha) {
 
+                    // Verifica se a linha contém o estado vazio.
                     const estadoVazio =
                         linha.querySelector(
                             '.estado-vazio'
                         );
 
+
+                    // Não aplica a pesquisa na mensagem de estado vazio.
                     if (estadoVazio) {
                         return;
                     }
 
+
+                    // Obtém todo o texto existente na linha.
                     const texto =
                         linha.textContent
                             .toLowerCase();
 
+
+                    // Verifica se o texto contém o termo pesquisado.
                     if (
                         termo === '' ||
                         texto.includes(termo)
                     ) {
+
+                        // Mantém a linha visível.
                         linha.style.display = '';
+
+                        // Aumenta o contador de resultados.
                         encontrados++;
+
                     } else {
+
+                        // Esconde a linha que não corresponde à pesquisa.
                         linha.style.display = 'none';
+
                     }
                 }
             );
 
+
+            // Localiza os cards de diagnósticos dentro do painel ativo.
             const diagnosticos =
                 painelAtivo.querySelectorAll(
                     '.diagnostico-card'
                 );
 
+
+            // Percorre cada card de diagnóstico.
             diagnosticos.forEach(
                 function (card) {
 
+                    // Obtém o texto existente no card.
                     const texto =
                         card.textContent
                             .toLowerCase();
 
+
+                    // Verifica se o card corresponde ao termo pesquisado.
                     if (
                         termo === '' ||
                         texto.includes(termo)
                     ) {
+
+                        // Mantém o card visível.
                         card.style.display = '';
+
+                        // Conta o card como resultado encontrado.
                         encontrados++;
+
                     } else {
+
+                        // Esconde o card que não corresponde à pesquisa.
                         card.style.display = 'none';
+
                     }
                 }
             );
 
+
+            // Quando não existe termo de pesquisa, limpa a mensagem de resultados.
             if (termo === '') {
+
                 resultadoPesquisa.textContent = '';
+
             } else {
+
+                // Exibe a quantidade de resultados encontrados.
                 resultadoPesquisa.textContent =
                     encontrados +
                     (
+                        // Ajusta o texto para singular ou plural.
                         encontrados === 1
                             ? ' resultado encontrado'
                             : ' resultados encontrados'
@@ -4912,29 +5292,40 @@ document.addEventListener(
             }
         }
 
+
+        // Executa a pesquisa sempre que o usuário digita no campo.
         campoPesquisa.addEventListener(
             'input',
             executarPesquisa
         );
 
+
+        // Adiciona o evento de clique ao botão de limpar.
         btnLimpar.addEventListener(
             'click',
             function () {
 
+                // Limpa o conteúdo do campo.
                 campoPesquisa.value = '';
 
+                // Executa novamente a pesquisa sem nenhum termo.
                 executarPesquisa();
 
+                // Devolve o foco para o campo de pesquisa.
                 campoPesquisa.focus();
 
             }
         );
 
+
+        // Seleciona os botões responsáveis pela troca dos relatórios.
         const botoesRelatorio =
             document.querySelectorAll(
                 '.botao-relatorio'
             );
 
+
+        // Adiciona um evento a cada botão de relatório.
         botoesRelatorio.forEach(
             function (botao) {
 
@@ -4942,10 +5333,13 @@ document.addEventListener(
                     'click',
                     function () {
 
+                        // Limpa a pesquisa quando o usuário muda de relatório.
                         campoPesquisa.value = '';
 
+                        // Esconde o botão de limpar.
                         btnLimpar.style.display = 'none';
 
+                        // Remove a mensagem de quantidade de resultados.
                         resultadoPesquisa.textContent = '';
 
                     }
@@ -4961,3 +5355,4 @@ document.addEventListener(
 </body>
 
 </html>
+

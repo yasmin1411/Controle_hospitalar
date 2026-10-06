@@ -1,10 +1,16 @@
 <?php
 
+// Carrega o arquivo responsável pela autenticação do usuário.
 require_once '../includes/auth.php';
+
+// Carrega a conexão com o banco de dados.
 require_once '../config/database.php';
 
+
+// Cria uma variável para armazenar uma mensagem geral de erro.
 $erro = '';
 
+// Cria um array para armazenar os campos que apresentarem erro.
 $erros = [];
 
 
@@ -16,6 +22,7 @@ $erros = [];
 
 try {
 
+    // Busca todos os pacientes cadastrados no sistema.
     $pacientes = $pdo->query("
         SELECT
             id,
@@ -25,6 +32,10 @@ try {
     ")->fetchAll(PDO::FETCH_ASSOC);
 
 
+    // Busca os médicos que estão com status "Ativo".
+    //
+    // O CRM também é carregado para ser apresentado
+    // junto ao nome do médico no formulário.
     $medicos = $pdo->query("
         SELECT
             id,
@@ -36,6 +47,10 @@ try {
     ")->fetchAll(PDO::FETCH_ASSOC);
 
 
+    // Busca os enfermeiros que estão com status "Ativo".
+    //
+    // O COREN também é carregado para ser apresentado
+    // junto ao nome do enfermeiro no formulário.
     $enfermeiros = $pdo->query("
         SELECT
             id,
@@ -49,11 +64,12 @@ try {
 
 } catch (PDOException $e) {
 
+    // Caso aconteça algum erro durante a busca dos dados,
+    // interrompe a execução e mostra a mensagem de erro.
     die(
         "Erro ao carregar dados: " .
         $e->getMessage()
     );
-
 }
 
 
@@ -63,46 +79,73 @@ try {
 |--------------------------------------------------------------------------
 */
 
+// Recupera o ID do paciente enviado pelo formulário.
+// Caso não exista, utiliza uma string vazia.
 $paciente_id =
     $_POST['paciente_id'] ?? '';
 
+
+// Recupera o ID do médico responsável.
 $medico_id =
     $_POST['medico_id'] ?? '';
 
+
+// Recupera o ID do enfermeiro responsável.
 $enfermeiro_id =
     $_POST['enfermeiro_id'] ?? '';
 
+
+// Recupera a data de entrada da internação.
 $data_entrada =
     $_POST['data_entrada'] ?? '';
 
+
+// Recupera o número do quarto.
+// trim() remove espaços extras no início e no final.
 $quarto =
     trim($_POST['quarto'] ?? '');
 
+
+// Recupera o número ou identificação do leito.
 $leito =
     trim($_POST['leito'] ?? '');
 
+
+// Recupera o motivo da internação.
 $motivos =
     trim($_POST['motivos'] ?? '');
 
+
+// Recupera as observações da internação.
 $observacoes =
     trim($_POST['observacoes'] ?? '');
 
+
+// Recupera o quadro clínico informado.
 $quadro_clinico =
     trim($_POST['quadro_clinico'] ?? '');
 
 
 /*
 |--------------------------------------------------------------------------
-| FUNÇÃO DO *
+| FUNÇÃO DO CAMPO COM ERRO
 |--------------------------------------------------------------------------
 */
 
+// Cria uma função que verifica se determinado campo
+// possui algum erro de validação.
 function campoComErro($campo, $erros)
 {
+
+    // Verifica se o nome do campo existe dentro do array de erros.
     if (isset($erros[$campo])) {
+
+        // Se houver erro, retorna um pequeno elemento HTML
+        // que pode ser utilizado para indicar visualmente o problema.
         return '<span class="campo-erro">*</span>';
     }
 
+    // Caso não exista erro, não exibe nada.
     return '';
 }
 
@@ -113,6 +156,7 @@ function campoComErro($campo, $erros)
 |--------------------------------------------------------------------------
 */
 
+// Verifica se o formulário foi enviado utilizando o método POST.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
@@ -122,37 +166,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
+    // Verifica se um paciente foi selecionado.
     if ($paciente_id === '') {
+
+        // Registra que o campo paciente possui erro.
         $erros['paciente_id'] = true;
     }
 
 
+    // Verifica se um médico foi selecionado.
     if ($medico_id === '') {
+
+        // Registra que o campo médico possui erro.
         $erros['medico_id'] = true;
     }
 
 
+    // Verifica se um enfermeiro foi selecionado.
     if ($enfermeiro_id === '') {
+
+        // Registra que o campo enfermeiro possui erro.
         $erros['enfermeiro_id'] = true;
     }
 
 
+    // Verifica se a data de entrada foi preenchida.
     if ($data_entrada === '') {
+
+        // Registra que o campo data de entrada possui erro.
         $erros['data_entrada'] = true;
     }
 
 
+    // Verifica se o quarto foi informado.
     if ($quarto === '') {
+
+        // Registra que o campo quarto possui erro.
         $erros['quarto'] = true;
     }
 
 
+    // Verifica se o leito foi informado.
     if ($leito === '') {
+
+        // Registra que o campo leito possui erro.
         $erros['leito'] = true;
     }
 
 
+    // Verifica se o quadro clínico foi selecionado.
     if ($quadro_clinico === '') {
+
+        // Registra que o campo quadro clínico possui erro.
         $erros['quadro_clinico'] = true;
     }
 
@@ -163,6 +228,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
+    // Verifica se o array de erros está vazio.
+    //
+    // Se estiver vazio, significa que todos os campos obrigatórios
+    // foram preenchidos corretamente.
     if (empty($erros)) {
 
         try {
@@ -173,6 +242,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             |--------------------------------------------------------------------------
             */
 
+            // Adiciona "00:00:00" à data recebida pelo formulário.
+            //
+            // O campo type="date" envia apenas:
+            // 2026-09-28
+            //
+            // O banco receberá:
+            // 2026-09-28 00:00:00
             $dataEntradaBanco =
                 $data_entrada . ' 00:00:00';
 
@@ -183,6 +259,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             |--------------------------------------------------------------------------
             */
 
+            // Prepara o comando SQL responsável por cadastrar
+            // a nova internação na tabela "internacoes".
             $sql = $pdo->prepare("
                 INSERT INTO internacoes
                 (
@@ -215,26 +293,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
 
 
+            // Executa o INSERT substituindo os "?" pelos valores
+            // preenchidos no formulário.
             $sql->execute([
-
                 $paciente_id,
-
                 $medico_id,
-
                 $enfermeiro_id,
-
                 $dataEntradaBanco,
-
                 $quarto,
-
                 $leito,
-
                 $motivos,
-
                 $observacoes,
-
                 $quadro_clinico
-
             ]);
 
 
@@ -244,28 +314,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             |--------------------------------------------------------------------------
             */
 
+            // Depois que o cadastro é realizado com sucesso,
+            // redireciona para a página de listagem das internações.
+            //
+            // "sucesso=1" é enviado na URL para que a página
+            // possa identificar que o cadastro foi concluído.
             header(
                 "Location: internacoes.php?sucesso=1"
             );
 
+            // Encerra a execução do código após o redirecionamento.
             exit;
 
 
         } catch (PDOException $e) {
 
+            // Caso ocorra algum erro no banco de dados,
+            // armazena a mensagem em uma variável para ser exibida.
             $erro =
                 "Erro ao cadastrar internação: " .
                 $e->getMessage();
-
         }
 
     } else {
 
+        // Caso existam campos obrigatórios não preenchidos,
+        // apresenta uma mensagem geral para o usuário.
         $erro =
             "Verifique os campos marcados com *.";
-
     }
-
 }
 
 ?>
@@ -275,1064 +352,1102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
 
-<meta charset="UTF-8">
+    <!-- Define a codificação de caracteres da página. -->
+    <meta charset="UTF-8">
+
+    <!-- Faz a página se adaptar a diferentes tamanhos de tela. -->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <!-- Define o título exibido na aba do navegador. -->
+    <title>
+        Nova Internação | Sistema Hospitalar
+    </title>
+
+    <!-- Importa o CSS do Bootstrap 5.3.3. -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Importa os ícones do Bootstrap Icons. -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        /*
+        |--------------------------------------------------------------------------
+        | VARIÁVEIS DE CORES
+        |--------------------------------------------------------------------------
+        */
+
+        /* Define as principais cores utilizadas na página. */
+        :root {
+            --azul-principal: #2F80ED;
+            --azul-claro: #56CCF2;
+            --azul-suave: #eef5ff;
+            --borda: #dbe7ff;
+            --texto: #2c3e50;
+            --cinza: #6c757d;
+        }
+
+
+        /* Faz o cálculo de largura dos elementos incluir bordas e padding. */
+        * {
+            box-sizing: border-box;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CORPO DA PÁGINA
+        |--------------------------------------------------------------------------
+        */
+
+        /* Define o estilo geral da página. */
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            /* Cria um fundo em degradê azul claro. */
+            background:
+                linear-gradient(
+                    135deg,
+                    #eef5ff,
+                    #dbeeff
+                );
+
+            /* Define a fonte principal. */
+            font-family: 'Segoe UI', sans-serif;
+
+            /* Define a cor padrão dos textos. */
+            color: var(--texto);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CONTAINER PRINCIPAL
+        |--------------------------------------------------------------------------
+        */
+
+        /* Limita a largura do conteúdo e centraliza na página. */
+        .pagina {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 35px 20px 50px;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CABEÇALHO
+        |--------------------------------------------------------------------------
+        */
+
+        /* Cria o cartão azul do cabeçalho. */
+        .cabecalho {
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--azul-principal),
+                    var(--azul-claro)
+                );
+
+            border-radius: 25px;
+            padding: 28px 32px;
+            color: white;
+
+            /* Adiciona sombra ao cabeçalho. */
+            box-shadow:
+                0 12px 30px rgba(47, 128, 237, 0.20);
+
+            margin-bottom: 25px;
+        }
+
+
+        /* Organiza o ícone e os textos lado a lado. */
+        .cabecalho-conteudo {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+
+        /* Cria o espaço reservado para o ícone do cabeçalho. */
+        .icone-cabecalho {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.18);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 30px;
+        }
+
+
+        /* Estiliza o título principal do cabeçalho. */
+        .cabecalho h1 {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+
+        /* Estiliza o texto abaixo do título. */
+        .cabecalho p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            opacity: 0.92;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CARD PRINCIPAL
+        |--------------------------------------------------------------------------
+        */
+
+        /* Cria o cartão branco que contém o formulário. */
+        .card-principal {
+            background: #ffffff;
+            border-radius: 25px;
+            padding: 28px;
+
+            box-shadow:
+                0 10px 30px rgba(44, 62, 80, 0.08);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TÍTULO DO FORMULÁRIO
+        |--------------------------------------------------------------------------
+        */
+
+        /* Organiza o título e a indicação de campo obrigatório. */
+        .titulo-formulario {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+
+            border-bottom: 1px solid #edf2fa;
+        }
+
+
+        /* Estiliza o título "Dados da Internação". */
+        .titulo-formulario h2 {
+            margin: 0;
+            color: var(--azul-principal);
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+
+        /* Estiliza a descrição abaixo do título. */
+        .titulo-formulario p {
+            margin: 5px 0 0;
+            color: var(--cinza);
+            font-size: 14px;
+        }
+
+
+        /* Destaca o símbolo de campo obrigatório. */
+        .obrigatorio {
+            color: #dc3545;
+            font-weight: 900;
+        }
+
+
+        /* Estiliza o asterisco apresentado nos campos com erro. */
+        .campo-erro {
+            color: #dc3545;
+            font-size: 20px;
+            font-weight: 900;
+            margin-left: 4px;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEÇÕES DO FORMULÁRIO
+        |--------------------------------------------------------------------------
+        */
+
+        /* Cria o cartão individual de cada seção do formulário. */
+        .secao {
+            border: 1px solid #e7eef9;
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 22px;
+            background: #ffffff;
+        }
+
+
+        /* Organiza o ícone e o título de cada seção. */
+        .secao-cabecalho {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
 
-<title>
-Nova Internação | Sistema Hospitalar
-</title>
+        /* Define o espaço e a aparência do ícone da seção. */
+        .icone-secao {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
 
-<link
-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-rel="stylesheet"
->
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-<link
-href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-rel="stylesheet"
->
+            background: #e8f3ff;
+            color: var(--azul-principal);
 
+            font-size: 19px;
+        }
 
-<style>
 
-:root {
+        /* Estiliza o título de cada seção. */
+        .secao-cabecalho h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
 
-    --azul-principal: #2F80ED;
+        /* Estiliza a descrição de cada seção. */
+        .secao-cabecalho p {
+            margin: 3px 0 0;
+            font-size: 13px;
+            color: var(--cinza);
+        }
+
 
-    --azul-claro: #56CCF2;
+        /*
+        |--------------------------------------------------------------------------
+        | CAMPOS DO FORMULÁRIO
+        |--------------------------------------------------------------------------
+        */
 
-    --azul-suave: #eef5ff;
+        /* Estiliza os textos dos labels. */
+        .form-label {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 7px;
+        }
 
-    --borda: #dbe7ff;
 
-    --texto: #2c3e50;
+        /* Estiliza inputs e selects. */
+        .form-control,
+        .form-select {
+            min-height: 46px;
+            border-radius: 12px;
+            border: 1px solid var(--borda);
+            padding: 10px 13px;
+        }
+
 
-    --cinza: #6c757d;
+        /* Define o destaque visual quando o campo recebe foco. */
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--azul-principal);
 
-}
+            box-shadow:
+                0 0 0 0.20rem rgba(47, 128, 237, 0.12);
+        }
 
 
-* {
-    box-sizing: border-box;
-}
+        /* Define a altura mínima das áreas de texto. */
+        textarea.form-control {
+            min-height: 115px;
 
+            /* Permite aumentar/diminuir verticalmente a área. */
+            resize: vertical;
+        }
 
-body {
 
-    margin: 0;
+        /*
+        |--------------------------------------------------------------------------
+        | CAMPOS COM ÍCONE
+        |--------------------------------------------------------------------------
+        */
 
-    min-height: 100vh;
+        /* Define o elemento como referência para posicionar o ícone. */
+        .campo-com-icone {
+            position: relative;
+        }
 
-    background:
-        linear-gradient(
-            135deg,
-            #eef5ff,
-            #dbeeff
-        );
 
-    font-family: 'Segoe UI', sans-serif;
+        /* Posiciona o ícone dentro do campo. */
+        .campo-com-icone .icone-campo {
+            position: absolute;
 
-    color: var(--texto);
+            left: 14px;
+            top: 50%;
 
-}
+            transform: translateY(-50%);
 
+            color: var(--azul-principal);
 
-.pagina {
+            /* Impede que o ícone bloqueie o clique no campo. */
+            pointer-events: none;
+        }
 
-    max-width: 1180px;
 
-    margin: 0 auto;
+        /* Cria espaço à esquerda para o ícone. */
+        .campo-com-icone .form-control {
+            padding-left: 42px;
+        }
 
-    padding: 35px 20px 50px;
 
-}
+        /*
+        |--------------------------------------------------------------------------
+        | QUADRO CLÍNICO
+        |--------------------------------------------------------------------------
+        */
 
+        /* Destaca visualmente a área do quadro clínico. */
+        .quadro-clinico {
+            background: #f8fbff;
+            border: 1px solid #dceaff;
+            border-radius: 15px;
+            padding: 18px;
+        }
 
-.cabecalho {
 
-    background:
-        linear-gradient(
-            135deg,
-            var(--azul-principal),
-            var(--azul-claro)
-        );
+        /* Estiliza o texto de ajuda abaixo do campo. */
+        .ajuda {
+            margin-top: 7px;
+            color: #7b8794;
+            font-size: 12px;
+        }
 
-    border-radius: 25px;
 
-    padding: 28px 32px;
+        /*
+        |--------------------------------------------------------------------------
+        | BOTÕES
+        |--------------------------------------------------------------------------
+        */
 
-    color: white;
+        /* Organiza os botões de ação no final do formulário. */
+        .acoes {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
 
-    box-shadow:
-        0 12px 30px rgba(47, 128, 237, 0.20);
+            gap: 15px;
+            padding-top: 8px;
+        }
 
-    margin-bottom: 25px;
 
-}
+        /* Estilo geral dos botões. */
+        .btn {
+            min-height: 45px;
+            border-radius: 12px;
+            padding: 10px 20px;
 
+            font-weight: 600;
 
-.cabecalho-conteudo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
 
-    display: flex;
+            gap: 8px;
+        }
 
-    align-items: center;
 
-    gap: 18px;
+        /* Estiliza o botão de salvar. */
+        .btn-azul {
+            background: var(--azul-principal);
+            color: white;
+            border: none;
+        }
 
-}
 
+        /* Altera a cor do botão azul quando o mouse passa sobre ele. */
+        .btn-azul:hover {
+            background: #1c6ad6;
+            color: white;
+        }
 
-.icone-cabecalho {
 
-    width: 62px;
+        /* Estiliza o botão de cancelar. */
+        .btn-cancelar {
+            background: #f4f6f9;
+            color: #5f6b7a;
+            border: 1px solid #e2e7ee;
+        }
 
-    height: 62px;
 
-    border-radius: 18px;
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSIVIDADE
+        |--------------------------------------------------------------------------
+        */
 
-    background: rgba(255,255,255,0.18);
+        /* Aplica estas regras em telas menores, como celulares e tablets. */
+        @media (max-width: 768px) {
 
-    display: flex;
+            /* Reduz o espaçamento externo da página. */
+            .pagina {
+                padding: 20px 12px 35px;
+            }
 
-    align-items: center;
+            /* Reduz o espaçamento interno do cartão. */
+            .card-principal {
+                padding: 18px;
+            }
 
-    justify-content: center;
+            /* Coloca os botões um abaixo do outro. */
+            .acoes {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
 
-    font-size: 30px;
+            /* Faz cada botão ocupar toda a largura disponível. */
+            .acoes .btn {
+                width: 100%;
+            }
+        }
 
-}
-
-
-.cabecalho h1 {
-
-    margin: 0;
-
-    font-size: 30px;
-
-    font-weight: 700;
-
-}
-
-
-.cabecalho p {
-
-    margin: 5px 0 0;
-
-    font-size: 14px;
-
-    opacity: 0.92;
-
-}
-
-
-.card-principal {
-
-    background: #ffffff;
-
-    border-radius: 25px;
-
-    padding: 28px;
-
-    box-shadow:
-        0 10px 30px rgba(44, 62, 80, 0.08);
-
-}
-
-
-.titulo-formulario {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 15px;
-
-    margin-bottom: 25px;
-
-    padding-bottom: 20px;
-
-    border-bottom: 1px solid #edf2fa;
-
-}
-
-
-.titulo-formulario h2 {
-
-    margin: 0;
-
-    color: var(--azul-principal);
-
-    font-size: 22px;
-
-    font-weight: 700;
-
-}
-
-
-.titulo-formulario p {
-
-    margin: 5px 0 0;
-
-    color: var(--cinza);
-
-    font-size: 14px;
-
-}
-
-
-.obrigatorio {
-
-    color: #dc3545;
-
-    font-weight: 900;
-
-}
-
-
-.campo-erro {
-
-    color: #dc3545;
-
-    font-size: 20px;
-
-    font-weight: 900;
-
-    margin-left: 4px;
-
-}
-
-
-.secao {
-
-    border: 1px solid #e7eef9;
-
-    border-radius: 18px;
-
-    padding: 22px;
-
-    margin-bottom: 22px;
-
-    background: #ffffff;
-
-}
-
-
-.secao-cabecalho {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    margin-bottom: 20px;
-
-}
-
-
-.icone-secao {
-
-    width: 42px;
-
-    height: 42px;
-
-    border-radius: 12px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    background: #e8f3ff;
-
-    color: var(--azul-principal);
-
-    font-size: 19px;
-
-}
-
-
-.secao-cabecalho h3 {
-
-    margin: 0;
-
-    font-size: 18px;
-
-    font-weight: 700;
-
-}
-
-
-.secao-cabecalho p {
-
-    margin: 3px 0 0;
-
-    font-size: 13px;
-
-    color: var(--cinza);
-
-}
-
-
-.form-label {
-
-    font-weight: 600;
-
-    color: #34495e;
-
-    margin-bottom: 7px;
-
-}
-
-
-.form-control,
-.form-select {
-
-    min-height: 46px;
-
-    border-radius: 12px;
-
-    border: 1px solid var(--borda);
-
-    padding: 10px 13px;
-
-}
-
-
-.form-control:focus,
-.form-select:focus {
-
-    border-color: var(--azul-principal);
-
-    box-shadow:
-        0 0 0 0.20rem rgba(47, 128, 237, 0.12);
-
-}
-
-
-textarea.form-control {
-
-    min-height: 115px;
-
-    resize: vertical;
-
-}
-
-
-.campo-com-icone {
-
-    position: relative;
-
-}
-
-
-.campo-com-icone .icone-campo {
-
-    position: absolute;
-
-    left: 14px;
-
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    color: var(--azul-principal);
-
-    pointer-events: none;
-
-}
-
-
-.campo-com-icone .form-control {
-
-    padding-left: 42px;
-
-}
-
-
-.quadro-clinico {
-
-    background: #f8fbff;
-
-    border: 1px solid #dceaff;
-
-    border-radius: 15px;
-
-    padding: 18px;
-
-}
-
-
-.ajuda {
-
-    margin-top: 7px;
-
-    color: #7b8794;
-
-    font-size: 12px;
-
-}
-
-
-.acoes {
-
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    gap: 15px;
-
-    padding-top: 8px;
-
-}
-
-
-.btn {
-
-    min-height: 45px;
-
-    border-radius: 12px;
-
-    padding: 10px 20px;
-
-    font-weight: 600;
-
-    display: inline-flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 8px;
-
-}
-
-
-.btn-azul {
-
-    background: var(--azul-principal);
-
-    color: white;
-
-    border: none;
-
-}
-
-
-.btn-azul:hover {
-
-    background: #1c6ad6;
-
-    color: white;
-
-}
-
-
-.btn-cancelar {
-
-    background: #f4f6f9;
-
-    color: #5f6b7a;
-
-    border: 1px solid #e2e7ee;
-
-}
-
-
-@media (max-width: 768px) {
-
-    .pagina {
-        padding: 20px 12px 35px;
-    }
-
-    .card-principal {
-        padding: 18px;
-    }
-
-    .acoes {
-        flex-direction: column-reverse;
-        align-items: stretch;
-    }
-
-    .acoes .btn {
-        width: 100%;
-    }
-
-}
-
-</style>
+    </style>
 
 </head>
 
 
 <body>
 
-<div class="pagina">
+    <!-- Container principal de todo o conteúdo da página. -->
+    <div class="pagina">
 
 
-<div class="cabecalho">
+        <!-- Cabeçalho da página. -->
+        <div class="cabecalho">
 
-<div class="cabecalho-conteudo">
+            <div class="cabecalho-conteudo">
 
-<div class="icone-cabecalho">
+                <!-- Ícone de hospital. -->
+                <div class="icone-cabecalho">
+                    <i class="bi bi-hospital"></i>
+                </div>
 
-<i class="bi bi-hospital"></i>
 
-</div>
+                <!-- Título e descrição do cabeçalho. -->
+                <div>
 
-<div>
+                    <h1>
+                        Nova Internação
+                    </h1>
 
-<h1>
-Nova Internação
-</h1>
+                    <p>
+                        Cadastre e organize as informações da nova internação hospitalar.
+                    </p>
 
-<p>
-Cadastre e organize as informações da nova internação hospitalar.
-</p>
+                </div>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-</div>
 
+        <!-- Cartão principal contendo o formulário. -->
+        <div class="card-principal">
 
-<div class="card-principal">
 
+            <!-- Título da área do formulário. -->
+            <div class="titulo-formulario">
 
-<div class="titulo-formulario">
+                <div>
 
-<div>
+                    <h2>
+                        <i class="bi bi-clipboard2-plus me-2"></i>
+                        Dados da Internação
+                    </h2>
 
-<h2>
+                    <p>
+                        Preencha os dados abaixo para registrar uma nova internação.
+                    </p>
 
-<i class="bi bi-clipboard2-plus me-2"></i>
+                </div>
 
-Dados da Internação
 
-</h2>
+                <!-- Indicação de que o asterisco representa campo obrigatório. -->
+                <div class="text-end">
 
-<p>
-Preencha os dados abaixo para registrar uma nova internação.
-</p>
+                    <small class="text-muted">
 
-</div>
+                        <span class="obrigatorio">*</span>
 
+                        Campo obrigatório
 
-<div class="text-end">
+                    </small>
 
-<small class="text-muted">
+                </div>
 
-<span class="obrigatorio">*</span>
+            </div>
 
-Campo obrigatório
 
-</small>
+            <!-- Formulário responsável pelo cadastro da internação. -->
+            <form method="POST">
 
-</div>
 
-</div>
+                <!--
+                |--------------------------------------------------------------------------
+                | PACIENTE
+                |--------------------------------------------------------------------------
+                -->
 
+                <!-- Seção para selecionar o paciente. -->
+                <div class="secao">
 
-<form method="POST">
+                    <div class="secao-cabecalho">
 
+                        <!-- Ícone da seção. -->
+                        <div class="icone-secao">
+                            <i class="bi bi-person-heart"></i>
+                        </div>
 
-<!-- PACIENTE -->
 
-<div class="secao">
+                        <!-- Título e descrição da seção. -->
+                        <div>
 
-<div class="secao-cabecalho">
+                            <h3>
+                                Paciente
+                            </h3>
 
-<div class="icone-secao">
-<i class="bi bi-person-heart"></i>
-</div>
+                            <p>
+                                Selecione o paciente que será internado.
+                            </p>
 
-<div>
+                        </div>
 
-<h3>
-Paciente
-</h3>
+                    </div>
 
-<p>
-Selecione o paciente que será internado.
-</p>
 
-</div>
+                    <div class="row g-4">
 
-</div>
+                        <div class="col-12">
 
+                            <!-- Label do campo paciente. -->
+                            <label class="form-label">
 
-<div class="row g-4">
+                                Paciente
 
-<div class="col-12">
+                                <!-- Exibe o asterisco caso exista erro nesse campo. -->
+                                <?= campoComErro('paciente_id', $erros) ?>
 
-<label class="form-label">
+                            </label>
 
-Paciente
 
-<?= campoComErro('paciente_id', $erros) ?>
+                            <!-- Lista de pacientes disponíveis. -->
+                            <select
+                                name="paciente_id"
+                                class="form-select"
+                            >
 
-</label>
+                                <!-- Opção padrão. -->
+                                <option value="">
+                                    Selecione o paciente
+                                </option>
 
 
-<select
-name="paciente_id"
-class="form-select"
->
+                                <!-- Percorre todos os pacientes encontrados no banco. -->
+                                <?php foreach ($pacientes as $p): ?>
 
-<option value="">
-Selecione o paciente
-</option>
+                                    <option
+                                        value="<?= $p['id'] ?>"
+                                        <?= ($paciente_id == $p['id']) ? 'selected' : '' ?>
+                                    >
 
+                                        <!--
+                                        htmlspecialchars protege a saída HTML
+                                        contra caracteres especiais.
+                                        -->
+                                        <?= htmlspecialchars($p['nome']) ?>
 
-<?php foreach ($pacientes as $p): ?>
+                                    </option>
 
-<option
-value="<?= $p['id'] ?>"
-<?= ($paciente_id == $p['id']) ? 'selected' : '' ?>
->
+                                <?php endforeach; ?>
 
-<?= htmlspecialchars($p['nome']) ?>
+                            </select>
 
-</option>
+                        </div>
 
-<?php endforeach; ?>
+                    </div>
 
-</select>
+                </div>
 
-</div>
 
-</div>
+                <!--
+                |--------------------------------------------------------------------------
+                | EQUIPE RESPONSÁVEL
+                |--------------------------------------------------------------------------
+                -->
 
-</div>
+                <!-- Seção dos profissionais responsáveis. -->
+                <div class="secao">
 
+                    <div class="secao-cabecalho">
 
-<!-- EQUIPE -->
+                        <div class="icone-secao">
+                            <i class="bi bi-people"></i>
+                        </div>
 
-<div class="secao">
+                        <div>
 
-<div class="secao-cabecalho">
+                            <h3>
+                                Equipe Responsável
+                            </h3>
 
-<div class="icone-secao">
-<i class="bi bi-people"></i>
-</div>
+                            <p>
+                                Defina os profissionais responsáveis pelo atendimento.
+                            </p>
 
-<div>
+                        </div>
 
-<h3>
-Equipe Responsável
-</h3>
+                    </div>
 
-<p>
-Defina os profissionais responsáveis pelo atendimento.
-</p>
 
-</div>
+                    <div class="row g-4">
 
-</div>
 
+                        <!-- Campo para selecionar o médico. -->
+                        <div class="col-lg-6">
 
-<div class="row g-4">
+                            <label class="form-label">
 
+                                Médico responsável
 
-<div class="col-lg-6">
+                                <?= campoComErro('medico_id', $erros) ?>
 
-<label class="form-label">
+                            </label>
 
-Médico responsável
 
-<?= campoComErro('medico_id', $erros) ?>
+                            <select
+                                name="medico_id"
+                                class="form-select"
+                            >
 
-</label>
+                                <option value="">
+                                    Selecione o médico
+                                </option>
 
 
-<select
-name="medico_id"
-class="form-select"
->
+                                <!-- Percorre a lista de médicos ativos. -->
+                                <?php foreach ($medicos as $m): ?>
 
-<option value="">
-Selecione o médico
-</option>
+                                    <option
+                                        value="<?= $m['id'] ?>"
+                                        <?= ($medico_id == $m['id']) ? 'selected' : '' ?>
+                                    >
 
+                                        <!-- Exibe nome e CRM do médico. -->
+                                        <?= htmlspecialchars($m['nome']) ?>
 
-<?php foreach ($medicos as $m): ?>
+                                        - CRM:
 
-<option
-value="<?= $m['id'] ?>"
-<?= ($medico_id == $m['id']) ? 'selected' : '' ?>
->
+                                        <?= htmlspecialchars($m['crm']) ?>
 
-<?= htmlspecialchars($m['nome']) ?>
+                                    </option>
 
-- CRM:
+                                <?php endforeach; ?>
 
-<?= htmlspecialchars($m['crm']) ?>
+                            </select>
 
-</option>
+                        </div>
 
-<?php endforeach; ?>
 
-</select>
+                        <!-- Campo para selecionar o enfermeiro. -->
+                        <div class="col-lg-6">
 
-</div>
+                            <label class="form-label">
 
+                                Enfermeiro responsável
 
-<div class="col-lg-6">
+                                <?= campoComErro('enfermeiro_id', $erros) ?>
 
-<label class="form-label">
+                            </label>
 
-Enfermeiro responsável
 
-<?= campoComErro('enfermeiro_id', $erros) ?>
+                            <select
+                                name="enfermeiro_id"
+                                class="form-select"
+                            >
 
-</label>
+                                <option value="">
+                                    Selecione o enfermeiro
+                                </option>
 
 
-<select
-name="enfermeiro_id"
-class="form-select"
->
+                                <!-- Percorre a lista de enfermeiros ativos. -->
+                                <?php foreach ($enfermeiros as $e): ?>
 
-<option value="">
-Selecione o enfermeiro
-</option>
+                                    <option
+                                        value="<?= $e['id'] ?>"
+                                        <?= ($enfermeiro_id == $e['id']) ? 'selected' : '' ?>
+                                    >
 
+                                        <!-- Exibe nome e COREN do enfermeiro. -->
+                                        <?= htmlspecialchars($e['nome']) ?>
 
-<?php foreach ($enfermeiros as $e): ?>
+                                        - COREN:
 
-<option
-value="<?= $e['id'] ?>"
-<?= ($enfermeiro_id == $e['id']) ? 'selected' : '' ?>
->
+                                        <?= htmlspecialchars($e['coren']) ?>
 
-<?= htmlspecialchars($e['nome']) ?>
+                                    </option>
 
-- COREN:
+                                <?php endforeach; ?>
 
-<?= htmlspecialchars($e['coren']) ?>
+                            </select>
 
-</option>
+                        </div>
 
-<?php endforeach; ?>
+                    </div>
 
-</select>
+                </div>
 
-</div>
 
-</div>
+                <!--
+                |--------------------------------------------------------------------------
+                | ACOMODAÇÃO
+                |--------------------------------------------------------------------------
+                -->
 
-</div>
+                <!-- Seção com informações sobre localização do paciente. -->
+                <div class="secao">
 
+                    <div class="secao-cabecalho">
 
-<!-- ACOMODAÇÃO -->
+                        <div class="icone-secao">
+                            <i class="bi bi-hospital"></i>
+                        </div>
 
-<div class="secao">
+                        <div>
 
-<div class="secao-cabecalho">
+                            <h3>
+                                Acomodação
+                            </h3>
 
-<div class="icone-secao">
-<i class="bi bi-hospital"></i>
-</div>
+                            <p>
+                                Informe a localização do paciente dentro da unidade.
+                            </p>
 
-<div>
+                        </div>
 
-<h3>
-Acomodação
-</h3>
+                    </div>
 
-<p>
-Informe a localização do paciente dentro da unidade.
-</p>
 
-</div>
+                    <div class="row g-4">
 
-</div>
 
+                        <!-- Campo da data de entrada. -->
+                        <div class="col-lg-4">
 
-<div class="row g-4">
+                            <label class="form-label">
 
+                                Data de entrada
 
-<div class="col-lg-4">
+                                <?= campoComErro('data_entrada', $erros) ?>
 
-<label class="form-label">
+                            </label>
 
-Data de entrada
 
-<?= campoComErro('data_entrada', $erros) ?>
+                            <div class="campo-com-icone">
 
-</label>
+                                <!-- Ícone de calendário. -->
+                                <i class="bi bi-calendar3 icone-campo"></i>
 
 
-<div class="campo-com-icone">
+                                <input
+                                    type="date"
+                                    name="data_entrada"
+                                    class="form-control"
+                                    value="<?= htmlspecialchars($data_entrada) ?>"
+                                >
 
-<i class="bi bi-calendar3 icone-campo"></i>
+                            </div>
 
-<input
-type="date"
-name="data_entrada"
-class="form-control"
-value="<?= htmlspecialchars($data_entrada) ?>"
->
+                        </div>
 
-</div>
 
-</div>
+                        <!-- Campo do quarto. -->
+                        <div class="col-lg-4">
 
+                            <label class="form-label">
 
-<div class="col-lg-4">
+                                Quarto
 
-<label class="form-label">
+                                <?= campoComErro('quarto', $erros) ?>
 
-Quarto
+                            </label>
 
-<?= campoComErro('quarto', $erros) ?>
 
-</label>
+                            <div class="campo-com-icone">
 
+                                <!-- Ícone de porta. -->
+                                <i class="bi bi-door-open icone-campo"></i>
 
-<div class="campo-com-icone">
 
-<i class="bi bi-door-open icone-campo"></i>
+                                <input
+                                    type="text"
+                                    name="quarto"
+                                    class="form-control"
+                                    placeholder="Ex.: 204"
+                                    autocomplete="off"
+                                    value="<?= htmlspecialchars($quarto) ?>"
+                                >
 
-<input
-type="text"
-name="quarto"
-class="form-control"
-placeholder="Ex.: 204"
-autocomplete="off"
-value="<?= htmlspecialchars($quarto) ?>"
->
+                            </div>
 
-</div>
+                        </div>
 
-</div>
 
+                        <!-- Campo do leito. -->
+                        <div class="col-lg-4">
 
-<div class="col-lg-4">
+                            <label class="form-label">
 
-<label class="form-label">
+                                Leito
 
-Leito
+                                <?= campoComErro('leito', $erros) ?>
 
-<?= campoComErro('leito', $erros) ?>
+                            </label>
 
-</label>
 
+                            <div class="campo-com-icone">
 
-<div class="campo-com-icone">
+                                <!-- Ícone de leito. -->
+                                <i class="bi bi-bed icone-campo"></i>
 
-<i class="bi bi-bed icone-campo"></i>
 
-<input
-type="text"
-name="leito"
-class="form-control"
-placeholder="Ex.: 02"
-autocomplete="off"
-value="<?= htmlspecialchars($leito) ?>"
->
+                                <input
+                                    type="text"
+                                    name="leito"
+                                    class="form-control"
+                                    placeholder="Ex.: 02"
+                                    autocomplete="off"
+                                    value="<?= htmlspecialchars($leito) ?>"
+                                >
 
-</div>
+                            </div>
 
-</div>
+                        </div>
 
-</div>
+                    </div>
 
-</div>
+                </div>
 
 
-<!-- INFORMAÇÕES CLÍNICAS -->
+                <!--
+                |--------------------------------------------------------------------------
+                | INFORMAÇÕES CLÍNICAS
+                |--------------------------------------------------------------------------
+                -->
 
-<div class="secao">
+                <!-- Seção destinada às informações clínicas. -->
+                <div class="secao">
 
-<div class="secao-cabecalho">
+                    <div class="secao-cabecalho">
 
-<div class="icone-secao">
+                        <div class="icone-secao">
+                            <i class="bi bi-heart-pulse"></i>
+                        </div>
 
-<i class="bi bi-heart-pulse"></i>
+                        <div>
 
-</div>
+                            <h3>
+                                Informações Clínicas
+                            </h3>
 
-<div>
+                            <p>
+                                Registre informações importantes sobre o estado do paciente.
+                            </p>
 
-<h3>
-Informações Clínicas
-</h3>
+                        </div>
 
-<p>
-Registre informações importantes sobre o estado do paciente.
-</p>
+                    </div>
 
-</div>
 
-</div>
+                    <div class="row g-4">
 
 
-<div class="row g-4">
+                        <!-- Campo para informar o motivo da internação. -->
+                        <div class="col-lg-6">
 
+                            <label class="form-label">
+                                Motivo da internação
+                            </label>
 
-<div class="col-lg-6">
 
-<label class="form-label">
+                            <textarea
+                                name="motivos"
+                                class="form-control"
+                                placeholder="Descreva o motivo ou a principal razão da internação..."
+                            ><?= htmlspecialchars($motivos) ?></textarea>
 
-Motivo da internação
+                        </div>
 
-</label>
 
+                        <!-- Campo para observações adicionais. -->
+                        <div class="col-lg-6">
 
-<textarea
-name="motivos"
-class="form-control"
-placeholder="Descreva o motivo ou a principal razão da internação..."
-><?= htmlspecialchars($motivos) ?></textarea>
+                            <label class="form-label">
+                                Observações
+                            </label>
 
-</div>
 
+                            <textarea
+                                name="observacoes"
+                                class="form-control"
+                                placeholder="Adicione informações ou observações importantes..."
+                            ><?= htmlspecialchars($observacoes) ?></textarea>
 
-<div class="col-lg-6">
+                        </div>
 
-<label class="form-label">
 
-Observações
+                        <!-- Campo de quadro clínico. -->
+                        <div class="col-12">
 
-</label>
+                            <div class="quadro-clinico">
 
+                                <label class="form-label">
 
-<textarea
-name="observacoes"
-class="form-control"
-placeholder="Adicione informações ou observações importantes..."
-><?= htmlspecialchars($observacoes) ?></textarea>
+                                    <i class="bi bi-activity me-1"></i>
 
-</div>
+                                    Quadro clínico
 
+                                    <?= campoComErro('quadro_clinico', $erros) ?>
 
-<div class="col-12">
+                                </label>
 
-<div class="quadro-clinico">
 
-<label class="form-label">
+                                <!-- Select com as opções de quadro clínico. -->
+                                <select
+                                    name="quadro_clinico"
+                                    class="form-select"
+                                >
 
-<i class="bi bi-activity me-1"></i>
+                                    <option value="">
+                                        Selecione o quadro clínico
+                                    </option>
 
-Quadro clínico
 
-<?= campoComErro('quadro_clinico', $erros) ?>
+                                    <?php
 
-</label>
+                                    // Lista de opções disponíveis para o quadro clínico.
+                                    $quadros = [
+                                        'Estável',
+                                        'Grave',
+                                        'Gravíssimo',
+                                        'Crítico',
+                                        'Em Recuperação',
+                                        'Pós-operatório',
+                                        'Em Observação',
+                                        'Sedado',
+                                        'Intubado',
+                                        'Consciente',
+                                        'Inconsciente',
+                                        'Com Ventilação Mecânica'
+                                    ];
 
+                                    ?>
 
-<select
-name="quadro_clinico"
-class="form-select"
->
 
-<option value="">
-Selecione o quadro clínico
-</option>
+                                    <!-- Percorre todas as opções do quadro clínico. -->
+                                    <?php foreach ($quadros as $quadro): ?>
 
+                                        <option
+                                            value="<?= htmlspecialchars($quadro) ?>"
+                                            <?= ($quadro_clinico === $quadro) ? 'selected' : '' ?>
+                                        >
 
-<?php
+                                            <!-- Exibe o nome da opção. -->
+                                            <?= htmlspecialchars($quadro) ?>
 
-$quadros = [
+                                        </option>
 
-    'Estável',
-    'Grave',
-    'Gravíssimo',
-    'Crítico',
-    'Em Recuperação',
-    'Pós-operatório',
-    'Em Observação',
-    'Sedado',
-    'Intubado',
-    'Consciente',
-    'Inconsciente',
-    'Com Ventilação Mecânica'
+                                    <?php endforeach; ?>
 
-];
+                                </select>
 
-?>
 
+                                <!-- Texto explicativo para orientar o usuário. -->
+                                <div class="ajuda">
 
-<?php foreach ($quadros as $quadro): ?>
+                                    <i class="bi bi-info-circle me-1"></i>
 
-<option
-value="<?= htmlspecialchars($quadro) ?>"
-<?= ($quadro_clinico === $quadro) ? 'selected' : '' ?>
->
+                                    Selecione a condição que melhor representa o estado atual do paciente.
 
-<?= htmlspecialchars($quadro) ?>
+                                </div>
 
-</option>
+                            </div>
 
-<?php endforeach; ?>
+                        </div>
 
-</select>
+                    </div>
 
+                </div>
 
-<div class="ajuda">
 
-<i class="bi bi-info-circle me-1"></i>
+                <!--
+                |--------------------------------------------------------------------------
+                | AÇÕES
+                |--------------------------------------------------------------------------
+                -->
 
-Selecione a condição que melhor representa o estado atual do paciente.
+                <!-- Área dos botões do formulário. -->
+                <div class="acoes">
 
-</div>
 
-</div>
+                    <!-- Botão para cancelar e voltar à lista de internações. -->
+                    <a
+                        href="internacoes.php"
+                        class="btn btn-cancelar"
+                    >
 
-</div>
+                        <i class="bi bi-arrow-left"></i>
 
-</div>
+                        Cancelar
 
-</div>
+                    </a>
 
 
-<!-- AÇÕES -->
+                    <!-- Botão responsável por enviar o formulário. -->
+                    <button
+                        type="submit"
+                        class="btn btn-azul"
+                    >
 
-<div class="acoes">
+                        <i class="bi bi-check2-circle"></i>
 
-<a
-href="internacoes.php"
-class="btn btn-cancelar"
->
+                        Salvar Internação
 
-<i class="bi bi-arrow-left"></i>
+                    </button>
 
-Cancelar
+                </div>
 
-</a>
 
+            </form>
 
-<button
-type="submit"
-class="btn btn-azul"
->
+        </div>
 
-<i class="bi bi-check2-circle"></i>
-
-Salvar Internação
-
-</button>
-
-</div>
-
-
-</form>
-
-</div>
-
-</div>
-
+    </div>
 
 </body>
 
