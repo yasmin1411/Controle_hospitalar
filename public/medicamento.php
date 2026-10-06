@@ -5,1176 +5,255 @@
 // =========================================================
 
 // Inclui o arquivo responsável pela autenticação do usuário.
-// Esse arquivo verifica se o usuário está logado no sistema.
 require_once '../includes/auth.php';
 
 // Inclui o arquivo responsável pela conexão com o banco de dados.
-// A conexão PDO fica disponível através da variável $pdo.
 require_once '../config/database.php';
-
-
 
 // =========================================================
 // PESQUISA DE MEDICAMENTOS
 // =========================================================
 
-// Recebe o valor enviado pelo campo "pesquisa" através do método GET.
-// Caso o parâmetro não exista, utiliza uma string vazia.
+// Recebe o termo de pesquisa ou utiliza uma string vazia.
 $pesquisa = $_GET['pesquisa'] ?? '';
 
-
-
-// Verifica se o campo de pesquisa foi preenchido.
+// Pesquisa por nome, fabricante, dosagem ou forma farmacêutica.
 if (!empty($pesquisa)) {
-
-    // Adiciona o caractere "%" antes e depois do termo pesquisado.
-    // Isso permite encontrar o texto mesmo que ele esteja no meio de um campo.
+    // Adiciona % para localizar o termo em qualquer parte do campo.
     $busca = "%{$pesquisa}%";
 
+    // Prepara a consulta SQL com parâmetros para a pesquisa.
+    $sql = $pdo->prepare("SELECT * FROM medicamento WHERE nome LIKE ? OR fabricante LIKE ? OR dosagem LIKE ? OR forma LIKE ? ORDER BY nome");
 
-    // Prepara a consulta SQL para pesquisar medicamentos.
-    //
-    // A pesquisa será realizada nos campos:
-    // - nome
-    // - fabricante
-    // - dosagem
-    // - forma
-    //
-    // Os resultados são organizados em ordem alfabética pelo nome.
-    $sql = $pdo->prepare("
-        SELECT *
-        FROM medicamento
-        WHERE nome LIKE ?
-        OR fabricante LIKE ?
-        OR dosagem LIKE ?
-        OR forma LIKE ?
-        ORDER BY nome
-    ");
-
-
-    // Executa a consulta passando o mesmo termo de pesquisa
-    // para os quatro campos definidos na consulta SQL.
-    $sql->execute([
-        $busca,
-        $busca,
-        $busca,
-        $busca
-    ]);
-
+    // Executa a pesquisa nos quatro campos definidos acima.
+    $sql->execute([$busca, $busca, $busca, $busca]);
 } else {
-
     // =========================================================
     // LISTAGEM COMPLETA
     // =========================================================
 
-    // Caso nenhum termo de pesquisa tenha sido informado,
-    // prepara uma consulta para buscar todos os medicamentos.
-    $sql = $pdo->prepare("
-        SELECT *
-        FROM medicamento
-        ORDER BY nome
-    ");
-
-
-    // Executa a consulta sem parâmetros.
+    // Busca todos os medicamentos em ordem alfabética.
+    $sql = $pdo->prepare("SELECT * FROM medicamento ORDER BY nome");
     $sql->execute();
 }
-
-
 
 // =========================================================
 // RECUPERAÇÃO DOS RESULTADOS
 // =========================================================
 
-// Recupera todos os medicamentos encontrados.
-// PDO::FETCH_ASSOC transforma cada registro em um array associativo,
-// permitindo acessar os campos pelo nome da coluna.
+// Recupera os medicamentos como arrays associativos.
 $medicamento = $sql->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
-
 <!DOCTYPE html>
-
 <html lang="pt-br">
-
 <head>
-
     <!-- Define a codificação de caracteres da página. -->
     <meta charset="UTF-8">
-
-    <!-- Permite que a página se adapte a dispositivos móveis. -->
+    <!-- Permite adaptação a celulares, tablets e computadores. -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Define o título da aba do navegador. -->
+    <title>Controle de Medicamentos</title>
 
-    <!-- Define o título exibido na aba do navegador. -->
-    <title>Controle de Medicamento</title>
-
-
-    <!-- =====================================================
-         IMPORTAÇÃO DO BOOTSTRAP
-         ===================================================== -->
-
-    <!-- Importa o CSS do Bootstrap 5.3.3. -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
-    <!-- Importa os ícones do Bootstrap Icons. -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
-
-
-    <!-- =====================================================
-         ESTILOS PERSONALIZADOS
-         ===================================================== -->
+    <!-- Importa Bootstrap e Bootstrap Icons. -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
+        :root{--azul:#2F80ED;--azul2:#56CCF2;--azule:#174ea6;--texto:#203247;--suave:#708198;--borda:#dce7f2;--verde:#27AE60;--vermelho:#dc3545;}
+        *{box-sizing:border-box}
 
-        /* -----------------------------------------------------
-           VARIÁVEIS DE CORES
-           ----------------------------------------------------- */
+        /* Define o fundo geral com a mesma identidade visual do dashboard. */
+        body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;color:var(--texto);background:radial-gradient(circle at 7% 12%,rgba(86,204,242,.17),transparent 24%),radial-gradient(circle at 94% 20%,rgba(47,128,237,.14),transparent 25%),linear-gradient(135deg,#f7fbff,#edf5ff 52%,#e7f2ff);}
+        .pagina{max-width:1480px;margin:auto;padding:26px 26px 50px;}
 
-        /* Define as principais cores utilizadas no sistema. */
-        :root {
-            --azul-principal: #2F80ED;
-            --azul-claro: #56CCF2;
-        }
+        /* Cria o cabeçalho superior do módulo. */
+        .hero{position:relative;overflow:hidden;margin-bottom:24px;padding:28px 32px;border-radius:26px;color:#fff;background:linear-gradient(110deg,#1767d1,#2F80ED 55%,#42b6df);box-shadow:0 20px 45px rgba(31,91,160,.16);}
+        .hero:before,.hero:after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.1);pointer-events:none}.hero:before{width:250px;height:250px;right:-90px;top:-135px;background:rgba(255,255,255,.06)}.hero:after{width:105px;height:105px;right:170px;bottom:-65px}
+        .hero-content{position:relative;z-index:1}.hero-tag{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;margin-bottom:11px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.12);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}.hero h1{margin:0;font-size:31px;font-weight:850;letter-spacing:-.6px}.hero p{margin:6px 0 0;color:rgba(255,255,255,.88);font-size:14px}
 
+        /* Mensagem de erro visual da exclusão. */
+        .alert{border:0;border-radius:16px}
 
-        /* -----------------------------------------------------
-           ESTILO GERAL DO CORPO
-           ----------------------------------------------------- */
+        /* Organiza o topo do módulo sem criar um grande card externo. */
+        .modulo-topo{display:flex;align-items:center;justify-content:space-between;gap:22px;margin-bottom:24px;padding:4px 4px 0}.titulo-area{display:flex;align-items:center;gap:14px}.titulo-icone{width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:#edf5ff;color:var(--azul);font-size:27px;box-shadow:0 9px 22px rgba(47,128,237,.08)}.titulo-label{display:block;margin-bottom:3px;color:var(--azul);font-size:10px;font-weight:850;letter-spacing:1.1px;text-transform:uppercase}.titulo{margin:0;font-size:29px;font-weight:850;letter-spacing:-.6px}.subtitulo{margin:4px 0 0;color:var(--suave);font-size:13px}.btn-voltar{display:inline-flex;align-items:center;gap:7px;padding:11px 16px;border-radius:12px;font-weight:750}
 
-        /* Define o fundo, fonte e altura mínima da página. */
-        body {
-            background: linear-gradient(
-                135deg,
-                #eef5ff,
-                #dbeeff
-            );
+        /* Mostra o total do catálogo como um indicador compacto. */
+        .resumo{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px;padding:17px 20px;border:1px solid rgba(220,231,242,.95);border-radius:19px;background:rgba(255,255,255,.78);box-shadow:0 10px 25px rgba(39,89,145,.05)}.resumo-left{display:flex;align-items:center;gap:13px}.resumo-icone{width:49px;height:49px;display:flex;align-items:center;justify-content:center;border-radius:15px;background:#edf5ff;color:var(--azul);font-size:23px}.resumo-numero{margin:0;color:var(--azul);font-size:27px;font-weight:850;line-height:1}.resumo-texto{margin:3px 0 0;color:var(--suave);font-size:12px;font-weight:650}.resumo-status{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;background:#edf9f2;border:1px solid #d7efdf;color:#20874c;font-size:11px;font-weight:800}.resumo-status:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--verde);box-shadow:0 0 0 4px rgba(39,174,96,.1)}
 
-            font-family: 'Segoe UI', sans-serif;
+        /* Destaca a área de pesquisa com uma caixa simples e profissional. */
+        .pesquisa{margin-bottom:18px;padding:18px 20px;border:1px solid var(--borda);border-radius:20px;background:rgba(255,255,255,.88);box-shadow:0 12px 28px rgba(39,89,145,.06)}.pesquisa-topo{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:10px}.pesquisa-titulo{margin:0;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:850}.pesquisa-titulo i{color:var(--azul)}.pesquisa-dica{margin:0;color:var(--suave);font-size:12px}.pesquisa-form{display:flex;gap:10px}.campo{position:relative;flex:1}.campo>i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#8294a8;pointer-events:none}.campo input{min-height:50px;padding:0 42px;border:1px solid var(--borda);border-radius:13px;font-size:14px}.campo input:focus{border-color:var(--azul);box-shadow:0 0 0 .2rem rgba(47,128,237,.1)}.limpar{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:29px;height:29px;display:flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:#f1f5f9;color:#73849a;text-decoration:none}.limpar:hover{background:#fff0f2;color:var(--vermelho)}.btn-buscar{min-width:122px;border:0;border-radius:13px;background:var(--azul);color:#fff;font-weight:800;transition:.22s}.btn-buscar:hover{background:var(--azule);color:#fff;transform:translateY(-2px);box-shadow:0 9px 18px rgba(47,128,237,.18)}
 
-            /* Faz a página ocupar pelo menos toda a altura da tela. */
-            min-height: 100vh;
-        }
+        /* Mantém contador e cadastro na mesma linha para reduzir poluição visual. */
+        .linha-acoes{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:12px}.contador{color:var(--suave);font-size:12px;font-weight:700}.novo{display:inline-flex;align-items:center;gap:8px;padding:11px 15px;border-radius:12px;background:var(--azul);color:#fff;text-decoration:none;font-size:13px;font-weight:800;transition:.22s}.novo:hover{background:var(--azule);color:#fff;transform:translateY(-2px);box-shadow:0 9px 18px rgba(47,128,237,.18)}
 
+        /* Define a tabela como o elemento visual principal da página. */
+        .tabela{overflow:hidden;border:1px solid var(--borda);border-radius:20px;background:#fff;box-shadow:0 15px 35px rgba(39,89,145,.07)}.table{margin:0}.table thead th{padding:15px 18px;border:0;background:linear-gradient(110deg,#236fda,#2F80ED);color:#fff;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.7px;white-space:nowrap}.table tbody td{padding:15px 18px;border-color:#edf2f7;vertical-align:middle;font-size:13px}.table tbody tr{transition:.18s}.table-hover tbody tr:hover{background:#f8fbff}.med{display:flex;align-items:center;gap:11px;min-width:220px}.med-icone{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#edf5ff;color:var(--azul);font-size:17px;transition:.22s}.table tbody tr:hover .med-icone{transform:scale(1.08) rotate(-4deg)}.med-nome{color:#24374d;font-weight:850}.med-sub{margin-top:2px;color:#9aa8b7;font-size:10px}.fabricante{color:#52667d;font-weight:650}.dosagem{color:#2d435b;font-weight:850}.forma{display:inline-flex;padding:8px 11px;border-radius:999px;background:#edf5ff;color:var(--azul);font-size:11px;font-weight:800}.acoes{display:flex;gap:7px}.editar,.excluir{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border:0;border-radius:10px;font-size:12px;font-weight:750;transition:.2s}.editar{background:#edf5ff;color:var(--azul)}.editar:hover{background:var(--azul);color:#fff;transform:translateY(-2px)}.excluir{background:#fff0f2;color:var(--vermelho)}.excluir:hover{background:var(--vermelho);color:#fff;transform:translateY(-2px)}
 
-        /* -----------------------------------------------------
-           CARD PRINCIPAL
-           ----------------------------------------------------- */
+        /* Estado visual para quando não existem resultados. */
+        .vazio{text-align:center;padding:55px!important}.vazio-icone{width:68px;height:68px;margin:0 auto 13px;display:flex;align-items:center;justify-content:center;border-radius:20px;background:#f1f6fb;color:#8ba0b6;font-size:27px}.vazio h4{margin:0 0 6px;font-size:16px;font-weight:800}.vazio p{margin:0 0 15px;color:var(--suave);font-size:12px}.btn-vazio{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:10px;background:#edf5ff;color:var(--azul);text-decoration:none;font-size:12px;font-weight:800}
 
-        /*
-           Define a aparência do card que contém
-           o conteúdo principal da página.
-        */
-        .card-principal {
-            background: white;
+        /* Modal de confirmação seguindo o mesmo padrão visual do sistema. */
+        .modal-content{border:0;border-radius:22px;overflow:hidden;box-shadow:0 25px 65px rgba(25,53,86,.2)}.modal-icone{width:68px;height:68px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;border-radius:20px;background:#fff4d6;color:#b07b00;font-size:28px}.dados{margin:16px 0;padding:14px 16px;border-radius:15px;background:#f7f9fc;text-align:left;font-size:13px}.dados p{margin:0 0 7px;color:#617388}.dados p:last-child{margin-bottom:0}
 
-            /* Remove a borda padrão. */
-            border: none;
-
-            /* Arredonda os cantos do card. */
-            border-radius: 25px;
-
-            /* Adiciona uma sombra suave. */
-            box-shadow: 0 15px 40px rgba(47, 128, 237, .12);
-
-            /* Define o espaço interno. */
-            padding: 35px;
-        }
-
-
-        /* -----------------------------------------------------
-           TÍTULO PRINCIPAL
-           ----------------------------------------------------- */
-
-        /* Define a cor, peso e espaçamento do título. */
-        .titulo {
-            color: var(--azul-principal);
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-
-        /* -----------------------------------------------------
-           SUBTÍTULO
-           ----------------------------------------------------- */
-
-        /* Define a aparência do texto abaixo do título. */
-        .subtitulo {
-            color: #6c757d;
-            font-size: 14px;
-        }
-
-
-        /* -----------------------------------------------------
-           CARD INFORMATIVO
-           ----------------------------------------------------- */
-
-        /* Cria o card azul apresentado no topo da página. */
-        .info-card {
-            background: linear-gradient(
-                135deg,
-                var(--azul-principal),
-                var(--azul-claro)
-            );
-
-            /* Define o texto como branco. */
-            color: white;
-
-            /* Arredonda os cantos. */
-            border-radius: 20px;
-
-            /* Adiciona espaço interno. */
-            padding: 25px;
-
-            /* Cria espaço abaixo do card. */
-            margin-bottom: 30px;
-        }
-
-
-        /* Define o peso do título dentro do card informativo. */
-        .info-card h3 {
-            font-weight: 700;
-        }
-
-
-        /* -----------------------------------------------------
-           BOTÃO AZUL
-           ----------------------------------------------------- */
-
-        /* Estiliza os botões principais do sistema. */
-        .btn-azul {
-            background: var(--azul-principal);
-            border: none;
-            color: white;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-
-
-        /* Altera a aparência do botão quando o mouse passa sobre ele. */
-        .btn-azul:hover {
-            background: #1c6ad6;
-            color: white;
-        }
-
-
-        /* -----------------------------------------------------
-           INPUTS
-           ----------------------------------------------------- */
-
-        /* Define o estilo dos campos de entrada. */
-        .form-control {
-            border-radius: 12px;
-            border: 1px solid #dbe7ff;
-        }
-
-
-        /* Define o efeito quando um campo recebe foco. */
-        .form-control:focus {
-            border-color: var(--azul-principal);
-
-            /* Adiciona uma sombra azul suave. */
-            box-shadow: 0 0 0 .2rem rgba(47, 128, 237, .15);
-        }
-
-
-        /* -----------------------------------------------------
-           TABELA
-           ----------------------------------------------------- */
-
-        /* Define a aparência geral da tabela. */
-        .table {
-            overflow: hidden;
-            border-radius: 15px;
-            background: white;
-        }
-
-
-        /* -----------------------------------------------------
-           CABEÇALHO DA TABELA
-           ----------------------------------------------------- */
-
-        /* Define a aparência das células do cabeçalho. */
-        .table thead th {
-            background: var(--azul-principal) !important;
-            color: white;
-            border: none;
-            padding: 15px;
-        }
-
-
-        /* -----------------------------------------------------
-           CÉLULAS DA TABELA
-           ----------------------------------------------------- */
-
-        /* Define o espaçamento e alinhamento das células. */
-        .table tbody td {
-            padding: 15px;
-            vertical-align: middle;
-        }
-
-
-        /* -----------------------------------------------------
-           EFEITO HOVER DA TABELA
-           ----------------------------------------------------- */
-
-        /* Altera o fundo da linha quando o mouse passa sobre ela. */
-        .table-hover tbody tr:hover {
-            background: #f5f9ff;
-            transition: .2s;
-        }
-
-
-        /* -----------------------------------------------------
-           BOTÃO EDITAR
-           ----------------------------------------------------- */
-
-        /* Define a aparência inicial do botão de edição. */
-        .btn-editar {
-            background: #e8f3ff;
-            color: #2F80ED;
-            border: none;
-            border-radius: 12px;
-            padding: 8px 14px;
-            transition: .3s;
-        }
-
-
-        /* Altera a aparência do botão editar ao passar o mouse. */
-        .btn-editar:hover {
-            background: #2F80ED;
-            color: white;
-        }
-
-
-        /* -----------------------------------------------------
-           BOTÃO EXCLUIR
-           ----------------------------------------------------- */
-
-        /* Define a aparência inicial do botão excluir. */
-        .btn-excluir {
-            background: #fff1f2;
-            color: #dc3545;
-            border: none;
-            border-radius: 12px;
-            padding: 8px 14px;
-            transition: .3s;
-        }
-
-
-        /* Altera a aparência do botão excluir ao passar o mouse. */
-        .btn-excluir:hover {
-            background: #dc3545;
-            color: white;
-        }
-
-
-        /* -----------------------------------------------------
-           BADGE DA FORMA FARMACÊUTICA
-           ----------------------------------------------------- */
-
-        /* Estiliza o pequeno indicador da forma do medicamento. */
-        .badge-forma {
-            background: #e8f3ff;
-            color: var(--azul-principal);
-            font-size: 12px;
-            padding: 8px 12px;
-            border-radius: 20px;
-        }
-
-
-        /* -----------------------------------------------------
-           CAIXA DE TOTAL
-           ----------------------------------------------------- */
-
-        /*
-           Define a aparência da caixa que mostra
-           a quantidade de medicamentos cadastrados.
-        */
-        .total-box {
-            background: white;
-            border-radius: 18px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, .06);
-            margin-bottom: 25px;
-        }
-
-
-        /* Define o estilo do número apresentado na caixa de total. */
-        .total-box h2 {
-            color: var(--azul-principal);
-            margin: 0;
-            font-weight: 700;
-        }
-
-
-        /* Define o estilo do texto apresentado abaixo do total. */
-        .total-box p {
-            margin: 0;
-            color: #6c757d;
-        }
-
+        /* Ajusta a experiência em telas menores. */
+        @media(max-width:700px){.pagina{padding:18px 14px 35px}.hero{padding:23px 20px;border-radius:22px}.hero h1{font-size:26px}.modulo-topo,.resumo,.pesquisa-topo,.linha-acoes{align-items:flex-start}.modulo-topo,.resumo,.pesquisa-topo,.linha-acoes{flex-direction:column}.btn-voltar,.novo{width:100%;justify-content:center}.pesquisa-form{flex-direction:column}.btn-buscar{min-height:50px}.resumo{width:100%}.resumo-status{align-self:flex-start}.tabela{min-width:850px}}
     </style>
-
 </head>
-
-
 <body>
+<div class="pagina">
 
-    <!-- =====================================================
-         CONTAINER PRINCIPAL
-         ===================================================== -->
+    <!-- ===================================================== CABEÇALHO ===================================================== -->
+    <!-- Apresenta a identidade visual do módulo de medicamentos. -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="hero-tag"><i class="bi bi-capsule-pill"></i> Estoque farmacêutico</span>
+            <h1><i class="bi bi-hospital me-2"></i>Sistema Hospitalar</h1>
+            <p>Gerenciamento seguro e eficiente dos medicamentos hospitalares.</p>
+        </div>
+    </section>
 
-    <!--
-        Container do Bootstrap que organiza
-        e centraliza o conteúdo da página.
-    -->
-    <div class="container py-5">
+    <!-- ===================================================== MENSAGEM DE ERRO ===================================================== -->
+    <!-- Exibe a mensagem enviada pelo arquivo medicamento_apagar.php. -->
+    <?php if (isset($_GET['erro']) && !empty($_GET['erro'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <?= htmlspecialchars($_GET['erro']) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    <?php endif; ?>
 
+    <!-- ===================================================== RESUMO ===================================================== -->
+    <!-- Exibe de forma compacta a quantidade de medicamentos cadastrados. -->
+    <section class="resumo">
+        <div class="resumo-left">
+            <div class="resumo-icone"><i class="bi bi-capsule-pill"></i></div>
+            <div><h2 class="resumo-numero"><?= count($medicamento) ?></h2><p class="resumo-texto">Medicamentos cadastrados</p></div>
+        </div>
+        <span class="resumo-status">Catálogo disponível</span>
+    </section>
 
-        <!-- =================================================
-             CARD PRINCIPAL
-             ================================================= -->
+    <!-- ===================================================== CABEÇALHO DO MÓDULO ===================================================== -->
+    <section class="modulo-topo">
+        <div class="titulo-area">
+            <div class="titulo-icone"><i class="bi bi-capsule-pill"></i></div>
+            <div>
+                <!-- Identifica a área atual do sistema. -->
+                <span class="titulo-label">Controle de estoque</span>
+                <h2 class="titulo">Medicamentos</h2>
+                <p class="subtitulo">Cadastro, consulta e gerenciamento do catálogo hospitalar.</p>
+            </div>
+        </div>
+        <!-- Link que retorna ao painel administrativo. -->
+        <a href="dashboard.php" class="btn btn-secondary btn-voltar"><i class="bi bi-arrow-left"></i>Voltar ao painel</a>
+    </section>
 
-        <!-- Card que envolve todo o conteúdo da página. -->
-        <div class="card-principal">
+    <!-- ===================================================== PESQUISA ===================================================== -->
+    <!-- Área dedicada à busca por nome, fabricante, dosagem ou forma. -->
+    <section class="pesquisa">
+        <div class="pesquisa-topo">
+            <h3 class="pesquisa-titulo"><i class="bi bi-search"></i>Pesquisar medicamentos</h3>
+            <p class="pesquisa-dica">Nome, fabricante, dosagem ou forma farmacêutica.</p>
+        </div>
 
+        <!-- Formulário que envia a pesquisa pelo método GET. -->
+        <form method="GET" class="pesquisa-form">
+            <div class="campo">
+                <i class="bi bi-search"></i>
+                <input type="text" name="pesquisa" class="form-control" placeholder="Pesquisar por nome, fabricante ou dosagem..." value="<?= htmlspecialchars($pesquisa) ?>" autocomplete="off">
+                <!-- Limpa a pesquisa atual sem alterar o backend. -->
+                <?php if ($pesquisa !== ''): ?>
+                    <a href="medicamento.php" class="limpar" title="Limpar pesquisa"><i class="bi bi-x-lg"></i></a>
+                <?php endif; ?>
+            </div>
+            <button type="submit" class="btn-buscar"><i class="bi bi-search me-1"></i>Buscar</button>
+        </form>
+    </section>
 
-            <!-- =================================================
-                 MENSAGEM DE ERRO
-                 ================================================= -->
+    <!-- ===================================================== AÇÕES ===================================================== -->
+    <!-- Exibe o total encontrado e o acesso para cadastrar um novo medicamento. -->
+    <div class="linha-acoes">
+        <div class="contador"><i class="bi bi-database me-1"></i><?= count($medicamento) ?> registro(s) encontrado(s)</div>
+        <!-- Link para a página de cadastro de medicamento. -->
+        <a href="medicamento_cadastrar.php" class="novo"><i class="bi bi-plus-lg"></i>Novo medicamento</a>
+    </div>
 
-            <!--
-                Verifica se existe uma mensagem de erro enviada
-                pelo arquivo medicamento_apagar.php.
-
-                Essa mensagem é utilizada quando o medicamento
-                possui movimentações de estoque e, por isso,
-                não pode ser excluído.
-            -->
-            <?php if (isset($_GET['erro']) && !empty($_GET['erro'])): ?>
-
-                <!--
-                    Alerta vermelho do Bootstrap informando
-                    que ocorreu um problema na exclusão.
-                -->
-                <div
-                    class="alert alert-danger alert-dismissible fade show"
-                    role="alert"
-                >
-
-                    <!-- Ícone de alerta. -->
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-
-                    <!--
-                        Exibe a mensagem enviada pelo
-                        arquivo medicamento_apagar.php.
-
-                        htmlspecialchars() protege a exibição
-                        do conteúdo recebido pela URL.
-                    -->
-                    <?= htmlspecialchars($_GET['erro']) ?>
-
-                    <!--
-                        Botão utilizado para fechar
-                        o alerta de erro.
-                    -->
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                        aria-label="Fechar"
-                    ></button>
-
-                </div>
-
+    <!-- ===================================================== TABELA ===================================================== -->
+    <!-- Tabela principal do catálogo de medicamentos. -->
+    <div class="tabela table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Medicamento</th><th>Fabricante</th><th>Dosagem</th><th>Forma</th><th width="190">Ações</th></tr></thead>
+            <tbody>
+            <?php if (count($medicamento) > 0): ?>
+                <!-- Percorre todos os medicamentos encontrados. -->
+                <?php foreach ($medicamento as $m): ?>
+                    <tr>
+                        <td><div class="med"><div class="med-icone"><i class="bi bi-capsule"></i></div><div><div class="med-nome"><?= htmlspecialchars($m['nome']) ?></div><div class="med-sub">Medicamento hospitalar</div></div></div></td>
+                        <td><span class="fabricante"><?= htmlspecialchars($m['fabricante']) ?></span></td>
+                        <td><span class="dosagem"><?= htmlspecialchars($m['dosagem']) ?></span></td>
+                        <td><span class="forma"><?= htmlspecialchars($m['forma']) ?></span></td>
+                        <td>
+                            <div class="acoes">
+                                <!-- Link que abre a página de edição passando o ID do medicamento. -->
+                                <a href="medicamento_editar.php?id=<?= $m['id'] ?>" class="btn editar" title="Editar medicamento"><i class="bi bi-pencil-square"></i>Editar</a>
+                                <!-- Abre o modal de confirmação e envia os dados pelo data-*. -->
+                                <button type="button" class="btn excluir" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-id="<?= $m['id'] ?>" data-nome="<?= htmlspecialchars($m['nome']) ?>" data-fabricante="<?= htmlspecialchars($m['fabricante']) ?>" data-dosagem="<?= htmlspecialchars($m['dosagem']) ?>" data-forma="<?= htmlspecialchars($m['forma']) ?>" title="Excluir medicamento"><i class="bi bi-trash"></i>Excluir</button>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- Estado visual quando a pesquisa não encontra medicamentos. -->
+                <tr><td colspan="5" class="vazio"><div class="vazio-icone"><i class="bi bi-search"></i></div><h4>Nenhum medicamento encontrado</h4><p>Não encontramos medicamentos correspondentes à sua pesquisa.</p><?php if ($pesquisa !== ''): ?><a href="medicamento.php" class="btn-vazio"><i class="bi bi-arrow-counterclockwise"></i>Limpar pesquisa</a><?php endif; ?></td></tr>
             <?php endif; ?>
-
-
-            <!-- =================================================
-                 CARD INFORMATIVO
-                 ================================================= -->
-
-            <!-- Card azul com informações sobre o sistema. -->
-            <div class="info-card">
-
-                <!-- Título do card informativo. -->
-                <h3>
-
-                    <!-- Ícone de hospital. -->
-                    <i class="bi bi-hospital"></i>
-
-                    Sistema Hospitalar
-
-                </h3>
-
-
-                <!-- Descrição da funcionalidade da página. -->
-                <p class="mb-0">
-
-                    Gerenciamento seguro e eficiente de medicamento hospitalares.
-
-                </p>
-
-            </div>
-
-
-            <!-- =================================================
-                 QUANTIDADE TOTAL
-                 ================================================= -->
-
-            <!--
-                Linha responsável por apresentar a quantidade
-                de medicamentos cadastrados.
-            -->
-            <div class="row mb-4">
-
-                <!-- Coluna ocupando toda a largura disponível. -->
-                <div class="col-md-12">
-
-                    <!-- Caixa que apresenta o total. -->
-                    <div class="total-box">
-
-                        <!--
-                            count() conta quantos medicamentos
-                            existem no array $medicamento.
-                        -->
-                        <h2>
-                            <?= count($medicamento) ?>
-                        </h2>
-
-
-                        <!-- Descrição do número apresentado. -->
-                        <p>
-                            Medicamento Cadastrados
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- =================================================
-                 CABEÇALHO DA PÁGINA
-                 ================================================= -->
-
-            <!--
-                Área que contém o título e o botão voltar.
-            -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-
-                <!-- Área dos títulos. -->
-                <div>
-
-                    <!-- Título principal. -->
-                    <h2 class="titulo">
-
-                        <!-- Ícone de medicamento. -->
-                        <i class="bi bi-capsule-pill"></i>
-
-                        Controle de Medicamento
-
-                    </h2>
-
-
-                    <!-- Subtítulo da página. -->
-                    <div class="subtitulo">
-
-                        Cadastro e consulta de medicamento hospitalares
-
-                    </div>
-
-                </div>
-
-
-                <!-- =================================================
-                     BOTÃO VOLTAR
-                     ================================================= -->
-
-                <!-- Link que retorna ao painel administrativo. -->
-                <a
-                    href="dashboard.php"
-                    class="btn btn-secondary"
-                >
-
-                    <!-- Ícone de seta para esquerda. -->
-                    <i class="bi bi-arrow-left"></i>
-
-                    Voltar
-
-                </a>
-
-            </div>
-
-
-            <!-- =================================================
-                 FORMULÁRIO DE PESQUISA
-                 ================================================= -->
-
-            <!-- Formulário que envia a pesquisa através do método GET. -->
-            <form method="GET" class="row g-2 mb-4">
-
-                <!-- Coluna que contém o campo de pesquisa. -->
-                <div class="col-md-10">
-
-                    <!-- Campo utilizado para pesquisar medicamentos. -->
-                    <input
-                        type="text"
-                        name="pesquisa"
-                        class="form-control form-control-lg"
-                        placeholder="Pesquisar medicamento, fabricante ou dosagem..."
-                        value="<?= htmlspecialchars($pesquisa) ?>"
-                    >
-
-                </div>
-
-
-                <!-- Coluna que contém o botão de busca. -->
-                <div class="col-md-2">
-
-                    <!-- Botão que envia o formulário de pesquisa. -->
-                    <button
-                        type="submit"
-                        class="btn btn-azul btn-lg w-100"
-                    >
-
-                        <!-- Ícone de pesquisa. -->
-                        <i class="bi bi-search"></i>
-
-                        Buscar
-
-                    </button>
-
-                </div>
-
-            </form>
-
-
-            <!-- =================================================
-                 BOTÃO NOVO MEDICAMENTO
-                 ================================================= -->
-
-            <!-- Área do botão de cadastro. -->
-            <div class="mb-4">
-
-                <!-- Link para a página de cadastro de medicamento. -->
-                <a
-                    href="medicamento_cadastrar.php"
-                    class="btn btn-azul"
-                >
-
-                    <!-- Ícone de adicionar. -->
-                    <i class="bi bi-plus-circle"></i>
-
-                    Novo Medicamento
-
-                </a>
-
-            </div>
-
-
-            <!-- =================================================
-                 TABELA DE MEDICAMENTOS
-                 ================================================= -->
-
-            <!--
-                Permite que a tabela tenha rolagem horizontal
-                em telas menores.
-            -->
-            <div class="table-responsive">
-
-                <!-- Tabela principal dos medicamentos. -->
-                <table class="table table-hover align-middle">
-
-                    <!-- Cabeçalho da tabela. -->
-                    <thead>
-
-                        <tr>
-
-                            <!-- Coluna do nome. -->
-                            <th>Nome</th>
-
-                            <!-- Coluna do fabricante. -->
-                            <th>Fabricante</th>
-
-                            <!-- Coluna da dosagem. -->
-                            <th>Dosagem</th>
-
-                            <!-- Coluna da forma farmacêutica. -->
-                            <th>Forma</th>
-
-                            <!-- Coluna das ações disponíveis. -->
-                            <th width="140">Ações</th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <!-- Corpo da tabela. -->
-                    <tbody>
-
-
-                    <!-- =================================================
-                         VERIFICAÇÃO DE RESULTADOS
-                         ================================================= -->
-
-                    <!--
-                        Verifica se pelo menos um medicamento
-                        foi encontrado.
-                    -->
-                    <?php if (count($medicamento) > 0): ?>
-
-
-                        <!-- =================================================
-                             LOOP DOS MEDICAMENTOS
-                             ================================================= -->
-
-                        <!-- Percorre todos os medicamentos encontrados. -->
-                        <?php foreach ($medicamento as $m): ?>
-
-                            <!-- Cria uma linha para cada medicamento. -->
-                            <tr>
-
-
-                                <!-- =================================================
-                                     NOME
-                                     ================================================= -->
-
-                                <td>
-
-                                    <!-- Destaca o nome do medicamento. -->
-                                    <strong>
-
-                                        <!--
-                                            htmlspecialchars() protege
-                                            a exibição do conteúdo HTML.
-                                        -->
-                                        <?= htmlspecialchars($m['nome']) ?>
-
-                                    </strong>
-
-                                </td>
-
-
-                                <!-- =================================================
-                                     FABRICANTE
-                                     ================================================= -->
-
-                                <td>
-
-                                    <!-- Exibe o fabricante do medicamento. -->
-                                    <?= htmlspecialchars($m['fabricante']) ?>
-
-                                </td>
-
-
-                                <!-- =================================================
-                                     DOSAGEM
-                                     ================================================= -->
-
-                                <td>
-
-                                    <!-- Exibe a dosagem cadastrada. -->
-                                    <?= htmlspecialchars($m['dosagem']) ?>
-
-                                </td>
-
-
-                                <!-- =================================================
-                                     FORMA FARMACÊUTICA
-                                     ================================================= -->
-
-                                <td>
-
-                                    <!--
-                                        Exibe a forma farmacêutica
-                                        dentro de um badge.
-                                    -->
-                                    <span class="badge-forma">
-
-                                        <?= htmlspecialchars($m['forma']) ?>
-
-                                    </span>
-
-                                </td>
-
-
-                                <!-- =================================================
-                                     AÇÕES
-                                     ================================================= -->
-
-                                <td>
-
-                                    <!-- Agrupa os botões de ação com espaçamento. -->
-                                    <div class="d-flex gap-2">
-
-
-                                        <!-- =================================================
-                                             BOTÃO EDITAR
-                                             ================================================= -->
-
-                                        <!--
-                                            Link que abre a página de edição
-                                            passando o ID do medicamento.
-                                        -->
-                                        <a
-                                            href="medicamento_editar.php?id=<?= $m['id'] ?>"
-                                            class="btn btn-editar btn-sm"
-                                        >
-
-                                            <!-- Ícone de edição. -->
-                                            <i class="bi bi-pencil-square"></i>
-
-                                            Editar
-
-                                        </a>
-
-
-                                        <!-- =================================================
-                                             BOTÃO EXCLUIR
-                                             ================================================= -->
-
-                                        <!--
-                                            Abre o modal de confirmação de exclusão.
-
-                                            Os atributos data-* armazenam os dados
-                                            do medicamento que serão utilizados
-                                            pelo JavaScript.
-                                        -->
-                                        <button
-                                            type="button"
-                                            class="btn btn-excluir btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalExcluir"
-                                            data-id="<?= $m['id'] ?>"
-                                            data-nome="<?= htmlspecialchars($m['nome']) ?>"
-                                            data-fabricante="<?= htmlspecialchars($m['fabricante']) ?>"
-                                            data-dosagem="<?= htmlspecialchars($m['dosagem']) ?>"
-                                            data-forma="<?= htmlspecialchars($m['forma']) ?>"
-                                        >
-
-                                            <!-- Ícone de lixeira. -->
-                                            <i class="bi bi-trash"></i>
-
-                                            Excluir
-
-                                        </button>
-
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-
-                        <!-- Finaliza o loop dos medicamentos. -->
-                        <?php endforeach; ?>
-
-
-                    <!-- =================================================
-                         NENHUM RESULTADO
-                         ================================================= -->
-
-                    <!-- Executado quando nenhum medicamento foi encontrado. -->
-                    <?php else: ?>
-
-                        <!-- Cria uma linha ocupando todas as cinco colunas. -->
-                        <tr>
-
-                            <td
-                                colspan="5"
-                                class="text-center text-muted py-4"
-                            >
-
-                                <!-- Ícone de pesquisa. -->
-                                <i class="bi bi-search"></i>
-
-                                Nenhum medicamento encontrado.
-
-                            </td>
-
-                        </tr>
-
-                    <?php endif; ?>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
+            </tbody>
+        </table>
     </div>
+</div>
 
+<!-- ===================================================== MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ===================================================== -->
+<!-- Modal exibido antes de excluir um medicamento. -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="modal-icone"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <h3 class="fw-bold text-danger mb-2">Confirmar exclusão</h3>
+                <p class="text-muted mb-3">Esta ação não poderá ser desfeita.</p>
 
-
-    <!-- =====================================================
-         MODAL DE CONFIRMAÇÃO DE EXCLUSÃO
-         ===================================================== -->
-
-    <!--
-        Modal exibido quando o usuário clica no botão "Excluir".
-        Ele solicita uma confirmação antes de excluir o medicamento.
-    -->
-    <div
-        class="modal fade"
-        id="modalExcluir"
-        tabindex="-1"
-    >
-
-        <!-- Centraliza o modal verticalmente. -->
-        <div class="modal-dialog modal-dialog-centered">
-
-            <!-- Conteúdo principal do modal. -->
-            <div class="modal-content border-0 rounded-4 shadow">
-
-                <!-- Área interna do modal. -->
-                <div class="modal-body text-center p-4">
-
-
-                    <!-- =================================================
-                         ÍCONE DE ALERTA
-                         ================================================= -->
-
-                    <!-- Círculo que contém o ícone de alerta. -->
-                    <div
-                        style="
-                            width: 90px;
-                            height: 90px;
-                            margin: auto;
-                            border-radius: 50%;
-                            background: #fff3cd;
-                            color: #856404;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 40px;
-                        "
-                    >
-
-                        <!-- Ícone de aviso. -->
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-
-                    </div>
-
-
-                    <!-- Título da confirmação. -->
-                    <h3 class="text-danger fw-bold mt-3">
-
-                        Confirmar Exclusão
-
-                    </h3>
-
-
-                    <!-- Aviso sobre a exclusão. -->
-                    <p class="text-muted">
-
-                        Esta ação não poderá ser desfeita.
-
-                    </p>
-
-
-                    <!-- =================================================
-                         INFORMAÇÕES DO MEDICAMENTO
-                         ================================================= -->
-
-                    <!--
-                        Área que apresenta os dados do medicamento
-                        que será excluído.
-                    -->
-                    <div class="bg-light rounded-4 p-3 my-3 text-start">
-
-
-                        <!-- Nome do medicamento. -->
-                        <p>
-
-                            <strong>Medicamento:</strong>
-
-                            <!--
-                                O JavaScript preencherá este elemento
-                                com o nome do medicamento selecionado.
-                            -->
-                            <span id="nomeMedicamento"></span>
-
-                        </p>
-
-
-                        <!-- Fabricante. -->
-                        <p>
-
-                            <strong>Fabricante:</strong>
-
-                            <span id="fabricanteMedicamento"></span>
-
-                        </p>
-
-
-                        <!-- Dosagem. -->
-                        <p>
-
-                            <strong>Dosagem:</strong>
-
-                            <span id="dosagemMedicamento"></span>
-
-                        </p>
-
-
-                        <!-- Forma farmacêutica. -->
-                        <p class="mb-0">
-
-                            <strong>Forma:</strong>
-
-                            <span id="formaMedicamento"></span>
-
-                        </p>
-
-                    </div>
-
-
-                    <!-- =================================================
-                         FORMULÁRIO DE EXCLUSÃO
-                         ================================================= -->
-
-                    <!--
-                        Formulário responsável por enviar a confirmação
-                        para o arquivo medicamento_apagar.php.
-                    -->
-                    <form id="formExcluir" method="POST">
-
-
-                        <!--
-                            Botão que fecha o modal
-                            sem excluir o medicamento.
-                        -->
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal"
-                        >
-
-                            Cancelar
-
-                        </button>
-
-
-                        <!-- Botão que confirma a exclusão. -->
-                        <button
-                            type="submit"
-                            class="btn btn-danger"
-                        >
-
-                            <!-- Ícone de lixeira. -->
-                            <i class="bi bi-trash"></i>
-
-                            Excluir Medicamento
-
-                        </button>
-
-                    </form>
-
+                <!-- Área que apresenta os dados do medicamento selecionado. -->
+                <div class="dados">
+                    <p><strong>Medicamento:</strong> <span id="nomeMedicamento"></span></p>
+                    <p><strong>Fabricante:</strong> <span id="fabricanteMedicamento"></span></p>
+                    <p><strong>Dosagem:</strong> <span id="dosagemMedicamento"></span></p>
+                    <p><strong>Forma:</strong> <span id="formaMedicamento"></span></p>
                 </div>
 
+                <!-- Envia a confirmação para medicamento_apagar.php. -->
+                <form id="formExcluir" method="POST" class="mt-3">
+                    <button type="button" class="btn btn-secondary rounded-3 me-2" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger rounded-3"><i class="bi bi-trash"></i> Excluir medicamento</button>
+                </form>
             </div>
-
         </div>
-
     </div>
+</div>
 
+<!-- Importa o JavaScript do Bootstrap para o funcionamento do modal. -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<script>
+// Captura o modal de exclusão.
+const modalExcluir=document.getElementById('modalExcluir');
 
-    <!-- =====================================================
-         BOOTSTRAP JAVASCRIPT
-         ===================================================== -->
-
-    <!--
-        Importa o JavaScript do Bootstrap.
-        Ele permite o funcionamento do modal e outros componentes.
-    -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-
-
-    <!-- =====================================================
-         JAVASCRIPT DO MODAL
-         ===================================================== -->
-
-    <script>
-
-        // Captura o elemento HTML correspondente ao modal de exclusão.
-        const modalExcluir = document.getElementById('modalExcluir');
-
-
-        // Adiciona um evento que é executado sempre que o modal
-        // está prestes a ser exibido.
-        modalExcluir.addEventListener('show.bs.modal', function (event) {
-
-
-            // Captura o botão que foi utilizado para abrir o modal.
-            const botao = event.relatedTarget;
-
-
-            // =====================================================
-            // CAPTURA DOS DADOS
-            // =====================================================
-
-            // Recupera o ID do medicamento armazenado no botão.
-            const id = botao.getAttribute('data-id');
-
-            // Recupera o nome do medicamento.
-            const nome = botao.getAttribute('data-nome');
-
-            // Recupera o fabricante.
-            const fabricante = botao.getAttribute('data-fabricante');
-
-            // Recupera a dosagem.
-            const dosagem = botao.getAttribute('data-dosagem');
-
-            // Recupera a forma farmacêutica.
-            const forma = botao.getAttribute('data-forma');
-
-
-            // =====================================================
-            // PREENCHIMENTO DO MODAL
-            // =====================================================
-
-            // Coloca o nome do medicamento dentro do modal.
-            document.getElementById('nomeMedicamento').innerText = nome;
-
-            // Coloca o fabricante dentro do modal.
-            document.getElementById('fabricanteMedicamento').innerText = fabricante;
-
-            // Coloca a dosagem dentro do modal.
-            document.getElementById('dosagemMedicamento').innerText = dosagem;
-
-            // Coloca a forma farmacêutica dentro do modal.
-            document.getElementById('formaMedicamento').innerText = forma;
-
-
-            // =====================================================
-            // DEFINIÇÃO DA AÇÃO DO FORMULÁRIO
-            // =====================================================
-
-            // Define dinamicamente o endereço para onde
-            // o formulário de exclusão será enviado.
-            //
-            // O ID do medicamento é acrescentado à URL.
-            document.getElementById('formExcluir').action =
-                'medicamento_apagar.php?id=' + id;
-
-        });
-
-    </script>
-
+// Preenche os dados e define a ação sempre que o modal for aberto.
+modalExcluir.addEventListener('show.bs.modal',function(event){
+    const botao=event.relatedTarget,id=botao.getAttribute('data-id'),campos=['nome','fabricante','dosagem','forma'];
+    // Copia cada informação do botão para a janela de confirmação.
+    campos.forEach(campo=>document.getElementById(campo==='nome'?'nomeMedicamento':campo+'Medicamento').innerText=botao.getAttribute('data-'+campo));
+    // Define o endereço que receberá a confirmação de exclusão.
+    document.getElementById('formExcluir').action='medicamento_apagar.php?id='+id;
+});
+</script>
 </body>
-
 </html>

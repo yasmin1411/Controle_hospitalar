@@ -1,53 +1,38 @@
 <?php
 
 // ==========================================================
-// INCLUI O ARQUIVO DE AUTENTICAÇÃO
+// AUTENTICAÇÃO E BANCO DE DADOS
 // ==========================================================
 
-// Verifica se o usuário está autenticado para acessar a página.
+// Verifica se o usuário está autenticado.
 require_once __DIR__ . '/../includes/auth.php';
 
-// ==========================================================
-// INCLUI A CONEXÃO COM O BANCO DE DADOS
-// ==========================================================
-
-// Disponibiliza a variável $pdo para realizar consultas no banco.
+// Conecta ao banco de dados.
 require_once __DIR__ . '/../config/database.php';
 
+
 // ==========================================================
-// BUSCA FORNECEDORES ATIVOS
+// BUSCAR FORNECEDORES ATIVOS
 // ==========================================================
 
-// Recebe o texto digitado na pesquisa.
-// Caso não exista pesquisa, utiliza uma string vazia.
-// trim() remove espaços desnecessários no início e no final.
+// Recebe e limpa o texto da pesquisa.
 $pesquisa = trim($_GET['pesquisa'] ?? '');
 
-// Cria um array vazio para armazenar os fornecedores encontrados.
+// Armazena os fornecedores encontrados.
 $fornecedores = [];
 
+
 // ==========================================================
-// TENTA BUSCAR OS FORNECEDORES
+// CONSULTAR FORNECEDORES
 // ==========================================================
 
 try {
 
-    // ==========================================================
-    // VERIFICA SE O USUÁRIO INFORMOU UMA PESQUISA
-    // ==========================================================
-
     if (!empty($pesquisa)) {
 
-        // Adiciona o caractere % antes e depois da pesquisa.
-        // Isso permite encontrar o texto mesmo que ele esteja
-        // apenas em uma parte do nome, CNPJ, telefone ou e-mail.
+        // Permite pesquisar parte do nome, CNPJ, telefone ou e-mail.
         $busca = "%{$pesquisa}%";
 
-        // ==========================================================
-        // CONSULTA DE FORNECEDORES COM PESQUISA
-        // ==========================================================
-
-        // Prepara a consulta SQL para buscar fornecedores ativos.
         $sql = $pdo->prepare("
 
             SELECT
@@ -64,46 +49,23 @@ try {
 
             FROM fornecedor f
 
-            -- Relaciona o fornecedor com seu endereço.
-            -- LEFT JOIN permite que o fornecedor apareça
-            -- mesmo que não possua endereço cadastrado.
             LEFT JOIN endereco e
                 ON e.id = f.endereco_id
 
             WHERE
-
-                -- Busca somente fornecedores ativos.
                 f.ativa = 1
 
                 AND (
-
-                    -- Pesquisa pelo nome.
                     f.nome LIKE ?
-
-                    OR
-
-                    -- Pesquisa pelo CNPJ.
-                    f.cnpj LIKE ?
-
-                    OR
-
-                    -- Pesquisa pelo telefone.
-                    f.telefone LIKE ?
-
-                    OR
-
-                    -- Pesquisa pelo e-mail.
-                    f.email LIKE ?
-
+                    OR f.cnpj LIKE ?
+                    OR f.telefone LIKE ?
+                    OR f.email LIKE ?
                 )
 
-            -- Organiza os resultados em ordem alfabética.
             ORDER BY f.nome
 
         ");
 
-        // Executa a consulta substituindo cada ?
-        // pelo valor armazenado em $busca.
         $sql->execute([
             $busca,
             $busca,
@@ -113,12 +75,7 @@ try {
 
     } else {
 
-        // ==========================================================
-        // BUSCA TODOS OS FORNECEDORES ATIVOS
-        // ==========================================================
-
-        // Caso nenhuma pesquisa tenha sido informada,
-        // busca todos os fornecedores ativos.
+        // Sem pesquisa, busca todos os fornecedores ativos.
         $sql = $pdo->prepare("
 
             SELECT
@@ -135,39 +92,24 @@ try {
 
             FROM fornecedor f
 
-            -- Relaciona o fornecedor ao endereço cadastrado.
             LEFT JOIN endereco e
                 ON e.id = f.endereco_id
 
-            -- Mostra somente fornecedores ativos.
             WHERE f.ativa = 1
 
-            -- Organiza os fornecedores pelo nome.
             ORDER BY f.nome
 
         ");
 
-        // Executa a consulta sem parâmetros.
         $sql->execute();
     }
 
-    // ==========================================================
-    // ARMAZENA OS RESULTADOS
-    // ==========================================================
-
-    // fetchAll() recupera todos os registros encontrados.
-    // PDO::FETCH_ASSOC retorna cada fornecedor como um array
-    // associativo, utilizando o nome das colunas como índices.
+    // Recupera os resultados.
     $fornecedores = $sql->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
 
-    // ==========================================================
-    // TRATAMENTO DE ERRO
-    // ==========================================================
-
-    // Caso aconteça algum erro na consulta ao banco,
-    // interrompe a execução e mostra a mensagem de erro.
+    // Exibe o erro caso a consulta falhe.
     die(
         "Erro ao buscar fornecedores: " .
         $e->getMessage()
@@ -181,33 +123,22 @@ try {
 
 <head>
 
-    <!-- Define a codificação de caracteres da página. -->
     <meta charset="UTF-8">
 
-    <!-- Faz a página se adaptar a celulares e tablets. -->
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1"
     >
 
-    <!-- Título exibido na aba do navegador. -->
     <title>Controle de Fornecedores</title>
 
-    <!-- =====================================================
-         BOOTSTRAP
-    ====================================================== -->
-
-    <!-- Importa o CSS do Bootstrap 5.3.3. -->
+    <!-- Bootstrap 5.3.3 -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-    <!-- =====================================================
-         BOOTSTRAP ICONS
-    ====================================================== -->
-
-    <!-- Importa a biblioteca Bootstrap Icons. -->
+    <!-- Bootstrap Icons -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
@@ -216,259 +147,343 @@ try {
     <style>
 
         /* =====================================================
-           VARIÁVEIS DE CORES
+           CORES
         ====================================================== */
 
-        /* Azul principal utilizado no sistema. */
         :root {
-            --azul-principal: #2F80ED;
-            --azul-claro: #56CCF2;
+            --azul: #2F80ED;
+            --azul2: #56CCF2;
+            --azule: #174ea6;
+            --texto: #203247;
+            --suave: #708198;
+            --borda: #dce7f2;
+            --amarelo: #d39e00;
         }
 
-        /* =====================================================
-           CONFIGURAÇÃO GERAL
-        ====================================================== */
-
-        /* Faz padding e borda serem incluídos no tamanho total
-           dos elementos. */
         * {
             box-sizing: border-box;
         }
 
-        /* Define o tamanho base da fonte do documento. */
-        html {
-            font-size: 14px;
-        }
+        /* =====================================================
+           PÁGINA
+        ====================================================== */
 
-        /* Configura o corpo da página. */
         body {
             margin: 0;
             min-height: 100vh;
-
-            /* Cria o fundo em degradê azul claro. */
-            background:
-                linear-gradient(
-                    135deg,
-                    #eef5ff,
-                    #dbeeff
-                );
-
             font-family: 'Segoe UI', sans-serif;
-            color: #2c3e50;
-            font-size: 14px;
-        }
+            color: var(--texto);
 
-        /* =====================================================
-           CONTAINER PRINCIPAL
-        ====================================================== */
-
-        /* Área que envolve todo o conteúdo principal. */
-        .container-principal {
-            max-width: 1350px;
-            margin: 0 auto;
-            padding: 30px 20px 50px;
-        }
-
-        /* Card branco que envolve o conteúdo da página. */
-        .card-principal {
-            background: #ffffff;
-            border: none;
-            border-radius: 25px;
-
-            box-shadow:
-                0 15px 40px rgba(
-                    47,
-                    128,
-                    237,
-                    0.12
-                );
-
-            padding: 30px;
-        }
-
-        /* =====================================================
-           CABEÇALHO
-        ====================================================== */
-
-        .info-card {
             background:
+                radial-gradient(
+                    circle at 7% 12%,
+                    rgba(86, 204, 242, .17),
+                    transparent 24%
+                ),
+                radial-gradient(
+                    circle at 94% 20%,
+                    rgba(47, 128, 237, .14),
+                    transparent 25%
+                ),
                 linear-gradient(
                     135deg,
-                    var(--azul-principal),
-                    var(--azul-claro)
-                );
-
-            color: white;
-            border-radius: 22px;
-            padding: 28px 30px;
-            margin-bottom: 30px;
-
-            box-shadow:
-                0 12px 30px rgba(
-                    47,
-                    128,
-                    237,
-                    0.18
+                    #f7fbff,
+                    #edf5ff 52%,
+                    #e7f2ff
                 );
         }
 
-        .info-card h2 {
-            font-weight: 700;
-            font-size: 27px;
-            margin-bottom: 5px;
-        }
-
-        .info-card p {
-            font-size: 14px;
-            opacity: .95;
+        .pagina {
+            max-width: 1250px;
+            margin: auto;
+            padding: 26px 26px 50px;
         }
 
         /* =====================================================
-           TÍTULO
+           HERO
         ====================================================== */
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 24px;
+            padding: 28px 32px;
+            border-radius: 26px;
+            color: white;
+
+            background:
+                linear-gradient(
+                    110deg,
+                    #1767d1,
+                    #2F80ED 55%,
+                    #42b6df
+                );
+
+            box-shadow:
+                0 20px 45px rgba(31, 91, 160, .16);
+        }
+
+        .hero::before,
+        .hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, .1);
+            pointer-events: none;
+        }
+
+        .hero::before {
+            width: 250px;
+            height: 250px;
+            right: -90px;
+            top: -135px;
+            background: rgba(255, 255, 255, .06);
+        }
+
+        .hero::after {
+            width: 105px;
+            height: 105px;
+            right: 170px;
+            bottom: -65px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 12px;
+            margin-bottom: 11px;
+            border: 1px solid rgba(255, 255, 255, .18);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .12);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: 31px;
+            font-weight: 850;
+            letter-spacing: -.6px;
+        }
+
+        .hero p {
+            margin: 6px 0 0;
+            color: rgba(255, 255, 255, .88);
+            font-size: 14px;
+        }
+
+        /* =====================================================
+           TOPO DA PÁGINA
+        ====================================================== */
+
+        .topo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 18px;
+            padding: 0 4px;
+        }
+
+        .titulo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .titulo-icone {
+            width: 58px;
+            height: 58px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 18px;
+            background: #edf5ff;
+            color: var(--azul);
+            font-size: 27px;
+
+            box-shadow:
+                0 9px 22px rgba(47, 128, 237, .08);
+        }
+
+        .rotulo {
+            display: block;
+            margin-bottom: 3px;
+            color: var(--azul);
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: 1.1px;
+            text-transform: uppercase;
+        }
 
         .titulo {
-            color: var(--azul-principal);
-            font-weight: 700;
-            font-size: 30px;
-            margin-bottom: 5px;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 850;
+            letter-spacing: -.6px;
         }
 
         .subtitulo {
-            color: #6c757d;
-            font-size: 14px;
+            margin: 4px 0 0;
+            color: var(--suave);
+            font-size: 13px;
+        }
+
+        .btn-voltar {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 11px 16px;
+            border-radius: 12px;
+            font-weight: 750;
         }
 
         /* =====================================================
-           CONTADOR
+           CARD PRINCIPAL
         ====================================================== */
 
-        .total-box {
-            background: white;
-            border-radius: 20px;
-            padding: 22px;
-            text-align: center;
+        .conteudo-card {
+            padding: 24px;
+            border: 1px solid var(--borda);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, .94);
 
             box-shadow:
-                0 7px 25px rgba(
-                    0,
-                    0,
-                    0,
-                    0.06
-                );
-
-            border: 1px solid #edf1f6;
-            transition: .25s;
-        }
-
-        .total-box:hover {
-            transform: translateY(-2px);
-
-            box-shadow:
-                0 12px 30px rgba(
-                    47,
-                    128,
-                    237,
-                    0.10
-                );
-        }
-
-        .total-box h2 {
-            color: var(--azul-principal);
-            font-weight: 700;
-            font-size: 26px;
-            margin: 0;
-        }
-
-        .total-box p {
-            margin: 5px 0 0;
-            color: #6c757d;
-        }
-
-        /* =====================================================
-           BOTÕES
-        ====================================================== */
-
-        .btn-azul {
-            background: var(--azul-principal);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 10px 18px;
-            transition: .25s;
-        }
-
-        .btn-azul:hover {
-            background: #1c6ad6;
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .btn-editar {
-            background: #e8f3ff;
-            color: var(--azul-principal);
-            border: none;
-            border-radius: 10px;
-            padding: 8px 14px;
-            transition: .25s;
-        }
-
-        .btn-editar:hover {
-            background: var(--azul-principal);
-            color: white;
-        }
-
-        /* =====================================================
-           BOTÃO DESATIVAR
-        ====================================================== */
-
-        .btn-desativar {
-            background: #fff8e1;
-            color: #d39e00;
-            border: none;
-            border-radius: 10px;
-            padding: 8px 14px;
-            transition: .25s;
-        }
-
-        .btn-desativar:hover {
-            background: #f0b429;
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        /* =====================================================
-           BOTÃO FORNECEDORES DESATIVADOS
-        ====================================================== */
-
-        .btn-desativados {
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 10px 18px;
+                0 16px 38px rgba(39, 89, 145, .08);
         }
 
         /* =====================================================
            PESQUISA
         ====================================================== */
 
-        .form-control {
-            border: 1px solid #dbe7ff;
-            border-radius: 12px;
-            min-height: 46px;
+        .pesquisa-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .campo-pesquisa {
+            position: relative;
+            flex: 1;
+        }
+
+        .campo-pesquisa i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8193a7;
+            pointer-events: none;
+        }
+
+        .campo-pesquisa input {
+            min-height: 48px;
+            padding-left: 43px;
+            border: 1px solid var(--borda);
+            border-radius: 13px;
+            background: #fbfdff;
+            color: var(--texto);
             font-size: 14px;
         }
 
-        .form-control:focus {
-            border-color: var(--azul-principal);
+        .campo-pesquisa input:focus {
+            border-color: var(--azul);
+            background: #fff;
+            box-shadow: 0 0 0 .2rem rgba(47, 128, 237, .1);
+        }
 
-            box-shadow:
-                0 0 0 .2rem rgba(
-                    47,
-                    128,
-                    237,
-                    .15
-                );
+        .btn-buscar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-width: 120px;
+            border: 0;
+            border-radius: 12px;
+            background: var(--azul);
+            color: white;
+            font-weight: 800;
+            transition: .22s;
+        }
+
+        .btn-buscar:hover {
+            background: var(--azule);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 9px 18px rgba(47, 128, 237, .18);
+        }
+
+        /* =====================================================
+           AÇÕES
+        ====================================================== */
+
+        .acoes-topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .total {
+            color: var(--suave);
+            font-size: 12px;
+        }
+
+        .total strong {
+            color: var(--azul);
+            font-size: 15px;
+        }
+
+        .botoes {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+        }
+
+        .btn-novo,
+        .btn-desativados {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 15px;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .22s;
+        }
+
+        .btn-novo {
+            background: var(--azul);
+            color: white;
+        }
+
+        .btn-novo:hover {
+            background: var(--azule);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-desativados {
+            border: 1px solid #f0d77a;
+            background: #fffaf0;
+            color: #b88600;
+        }
+
+        .btn-desativados:hover {
+            background: #fff1c7;
+            color: #9d7400;
         }
 
         /* =====================================================
@@ -476,81 +491,156 @@ try {
         ====================================================== */
 
         .tabela-container {
-            border-radius: 18px;
-            overflow: hidden;
-            border: 1px solid #e3e9f2;
-            background: white;
+            overflow-x: auto;
+            border: 1px solid var(--borda);
+            border-radius: 17px;
         }
 
         .tabela-container table {
+            min-width: 900px;
             margin: 0;
         }
 
         .tabela-container thead th {
-            background: var(--azul-principal);
-            color: white;
-            border: none;
-            padding: 15px 12px;
-            font-weight: 600;
+            padding: 14px 13px;
+            border: 0;
+            background: #f4f8fc;
+            color: #50657b;
+            font-size: 11px;
+            font-weight: 850;
+            letter-spacing: .4px;
+            text-transform: uppercase;
             white-space: nowrap;
         }
 
         .tabela-container tbody td {
-            padding: 14px 12px;
+            padding: 14px 13px;
+            border-color: #edf2f7;
             vertical-align: middle;
-            border-color: #edf1f6;
+            font-size: 13px;
         }
 
         .tabela-container tbody tr {
-            transition: .2s;
+            transition: .18s;
         }
 
         .tabela-container tbody tr:hover {
-            background: #f5f9ff;
+            background: #f8fbff;
         }
 
         /* =====================================================
-           CIDADE
-        ====================================================== */
-
-        .badge-cidade {
-            display: inline-flex;
-            align-items: center;
-            background: #e8f3ff;
-            color: var(--azul-principal);
-            padding: 7px 11px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        /* =====================================================
-           NOME DO FORNECEDOR
+           FORNECEDOR
         ====================================================== */
 
         .nome-fornecedor {
             display: flex;
             align-items: center;
-            gap: 9px;
-            font-weight: 600;
+            gap: 10px;
+            font-weight: 750;
         }
 
         .icone-fornecedor {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            background: #e8f3ff;
-            color: var(--azul-principal);
+            width: 36px;
+            height: 36px;
 
             display: flex;
             align-items: center;
             justify-content: center;
 
             flex-shrink: 0;
+            border-radius: 11px;
+            background: #edf5ff;
+            color: var(--azul);
+            font-size: 16px;
+        }
+
+        .badge-cidade {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px;
+            border-radius: 20px;
+            background: #edf5ff;
+            color: var(--azul);
+            font-size: 11px;
+            font-weight: 750;
         }
 
         /* =====================================================
-           MODAL DE DESATIVAÇÃO
+           BOTÕES DA TABELA
+        ====================================================== */
+
+        .btn-editar,
+        .btn-desativar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 750;
+            transition: .2s;
+        }
+
+        .btn-editar {
+            border: 1px solid #d6e7fa;
+            background: #edf5ff;
+            color: var(--azul);
+        }
+
+        .btn-editar:hover {
+            background: var(--azul);
+            color: white;
+        }
+
+        .btn-desativar {
+            border: 1px solid #f0d77a;
+            background: #fffaf0;
+            color: #b88600;
+        }
+
+        .btn-desativar:hover {
+            background: #f0b429;
+            color: white;
+        }
+
+        /* =====================================================
+           ESTADO VAZIO
+        ====================================================== */
+
+        .estado-vazio {
+            padding: 45px 20px;
+            text-align: center;
+        }
+
+        .icone-vazio {
+            width: 70px;
+            height: 70px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            background: #edf5ff;
+            color: #8bbcf5;
+            font-size: 32px;
+        }
+
+        .estado-vazio h4 {
+            margin-bottom: 7px;
+            color: var(--texto);
+            font-weight: 800;
+        }
+
+        .estado-vazio p {
+            color: var(--suave);
+            font-size: 13px;
+        }
+
+        /* =====================================================
+           MODAL
         ====================================================== */
 
         .modal-desativar .modal-dialog {
@@ -558,17 +648,10 @@ try {
         }
 
         .modal-desativar .modal-content {
+            overflow: hidden;
             border: none;
             border-radius: 24px;
-            overflow: hidden;
-
-            box-shadow:
-                0 20px 60px rgba(
-                    0,
-                    0,
-                    0,
-                    .20
-                );
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .20);
         }
 
         .modal-desativar .modal-body {
@@ -576,64 +659,48 @@ try {
             text-align: center;
         }
 
-        /* =====================================================
-           ÍCONE DO MODAL
-        ====================================================== */
-
         .icone-desativar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: #fff3cd;
-            color: #b88600;
+            width: 80px;
+            height: 80px;
 
             display: flex;
             align-items: center;
             justify-content: center;
 
-            margin: 0 auto 20px;
-            font-size: 42px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            background: #fff3cd;
+            color: #b88600;
+            font-size: 36px;
         }
-
-        /* =====================================================
-           TÍTULO DO MODAL
-        ====================================================== */
 
         .modal-desativar h3 {
-            color: #d39e00;
-            font-size: 30px;
-            font-weight: 700;
             margin-bottom: 8px;
+            color: #d39e00;
+            font-size: 27px;
+            font-weight: 850;
         }
 
-        /* =====================================================
-           TEXTO DO MODAL
-        ====================================================== */
-
-        .modal-desativar .texto-aviso {
-            color: #6c757d;
-            font-size: 17px;
+        .texto-aviso {
             margin-bottom: 22px;
+            color: var(--suave);
+            font-size: 14px;
         }
-
-        /* =====================================================
-           DADOS DO FORNECEDOR
-        ====================================================== */
 
         .dados-fornecedor {
-            background: #f8f9fa;
-            border-radius: 16px;
-            padding: 18px 20px;
-            text-align: left;
-            border: 1px solid #edf1f6;
             margin-bottom: 16px;
+            padding: 18px;
+            border: 1px solid #edf1f6;
+            border-radius: 16px;
+            background: #f8fafc;
+            text-align: left;
         }
 
         .linha-fornecedor {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .linha-fornecedor:last-child {
@@ -641,90 +708,76 @@ try {
         }
 
         .linha-fornecedor > i {
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
 
             display: flex;
             align-items: center;
             justify-content: center;
 
-            border-radius: 12px;
-            background: #e8f3ff;
-            color: var(--azul-principal);
-            font-size: 22px;
             flex-shrink: 0;
+            border-radius: 11px;
+            background: #edf5ff;
+            color: var(--azul);
+            font-size: 19px;
         }
 
         .linha-fornecedor strong {
-            color: #212529;
+            color: var(--texto);
+            font-size: 12px;
         }
 
         .linha-fornecedor span {
-            color: #495057;
-            margin-left: 4px;
+            margin-left: 3px;
+            color: #52667b;
+            font-size: 13px;
         }
 
-        /* =====================================================
-           AVISO AMARELO
-        ====================================================== */
-
         .aviso-desativacao {
-            background: #fff8e1;
+            margin-bottom: 23px;
+            padding: 13px 15px;
             border: 1px solid #ffe08a;
+            border-radius: 13px;
+            background: #fff8e1;
             color: #856404;
-            border-radius: 14px;
-            padding: 14px 16px;
-            font-size: 14px;
+            font-size: 12px;
             text-align: left;
-            margin-bottom: 25px;
         }
 
         .aviso-desativacao i {
             color: #d39e00;
         }
 
-        /* =====================================================
-           FORMULÁRIO DO MODAL
-        ====================================================== */
-
         #formDesativar {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 9px;
             flex-wrap: wrap;
         }
 
-        /* =====================================================
-           BOTÃO CANCELAR
-        ====================================================== */
+        .btn-cancelar-desativacao,
+        .btn-confirmar-desativacao {
+            padding: 10px 17px;
+            border: 0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            transition: .2s;
+        }
 
         .btn-cancelar-desativacao {
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 18px;
-            font-weight: 600;
-            transition: .25s;
+            background: #e9eef3;
+            color: #5f7082;
         }
 
         .btn-cancelar-desativacao:hover {
-            background: #5c636a;
-            color: white;
+            background: #dce3ea;
+            color: #4c5d6e;
         }
-
-        /* =====================================================
-           BOTÃO CONFIRMAR
-        ====================================================== */
 
         .btn-confirmar-desativacao {
             background: #f0b429;
             color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 20px;
-            font-weight: 600;
-            transition: .25s;
         }
 
         .btn-confirmar-desativacao:hover {
@@ -734,80 +787,83 @@ try {
         }
 
         /* =====================================================
-           FUNDO DO MODAL
-        ====================================================== */
-
-        .modal-desativar {
-            backdrop-filter: blur(3px);
-        }
-
-        /* =====================================================
-           ESTADO VAZIO
-        ====================================================== */
-
-        .estado-vazio {
-            padding: 35px 20px;
-        }
-
-        .icone-vazio {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #e8f3ff;
-            color: #8bbcf5;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            margin: 0 auto 15px;
-            font-size: 32px;
-        }
-
-        .estado-vazio h4 {
-            color: #34495e;
-            font-weight: 700;
-            margin-bottom: 7px;
-        }
-
-        /* =====================================================
            RESPONSIVIDADE
         ====================================================== */
 
         @media (max-width: 768px) {
 
-            .container-principal {
-                padding: 15px 10px 30px;
+            .pagina {
+                padding: 18px 14px 35px;
             }
 
-            .card-principal {
+            .topo {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .btn-voltar {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .conteudo-card {
                 padding: 20px;
-                border-radius: 18px;
             }
 
-            .info-card {
-                padding: 22px;
+            .pesquisa-area {
+                flex-direction: column;
             }
 
-            .titulo {
-                font-size: 26px;
+            .btn-buscar {
+                min-height: 48px;
+            }
+
+            .acoes-topo {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .botoes {
+                width: 100%;
+            }
+
+            .btn-novo,
+            .btn-desativados {
+                flex: 1;
+                justify-content: center;
             }
         }
 
         @media (max-width: 576px) {
+
+            .hero {
+                padding: 23px;
+            }
+
+            .hero h1 {
+                font-size: 25px;
+            }
+
+            .titulo {
+                font-size: 24px;
+            }
+
+            .titulo-area {
+                align-items: flex-start;
+            }
+
+            .titulo-icone {
+                width: 50px;
+                height: 50px;
+                font-size: 22px;
+            }
 
             .modal-desativar .modal-body {
                 padding: 25px 20px;
             }
 
             .modal-desativar h3 {
-                font-size: 24px;
-            }
-
-            .icone-desativar {
-                width: 75px;
-                height: 75px;
-                font-size: 34px;
+                font-size: 23px;
             }
 
             #formDesativar {
@@ -817,6 +873,12 @@ try {
             #formDesativar button {
                 width: 100%;
             }
+
+            .btn-novo,
+            .btn-desativados {
+                width: 100%;
+                flex: none;
+            }
         }
 
     </style>
@@ -825,99 +887,89 @@ try {
 
 <body>
 
-<!-- ==========================================================
-     CONTAINER PRINCIPAL
-========================================================== -->
+<div class="pagina">
 
-<div class="container-principal">
+    <!-- ======================================================
+         CABEÇALHO
+    ======================================================= -->
 
-    <div class="card-principal">
+    <section class="hero">
 
-        <!-- =====================================================
-             CABEÇALHO
-        ====================================================== -->
+        <div class="hero-content">
 
-        <div class="info-card">
-
-            <!-- Ícone e nome do sistema. -->
-            <h2>
+            <span class="hero-tag">
                 <i class="bi bi-building"></i>
-                Sistema Hospitalar
-            </h2>
+                Gestão de fornecedores
+            </span>
 
-            <!-- Descrição da página. -->
-            <p class="mb-0">
-                Gerenciamento seguro e eficiente de
-                fornecedores hospitalares.
+            <h1>Controle de Fornecedores</h1>
+
+            <p>
+                Gerencie os fornecedores cadastrados no sistema hospitalar.
             </p>
 
         </div>
 
-        <!-- =====================================================
-             TOTAL DE FORNECEDORES
-        ====================================================== -->
+    </section>
 
-        <div class="row mb-4">
 
-            <div class="col-md-12">
+    <!-- ======================================================
+         TÍTULO
+    ======================================================= -->
 
-                <div class="total-box">
+    <section class="topo">
 
-                    <!-- count() conta quantos fornecedores foram encontrados. -->
-                    <h2>
-                        <?= count($fornecedores) ?>
-                    </h2>
+        <div class="titulo-area">
 
-                    <p>
-                        Fornecedores cadastrados
-                    </p>
-
-                </div>
-
+            <div class="titulo-icone">
+                <i class="bi bi-building"></i>
             </div>
-
-        </div>
-
-        <!-- =====================================================
-             TÍTULO DA PÁGINA
-        ====================================================== -->
-
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
             <div>
 
-                <h1 class="titulo">
-                    <i class="bi bi-building"></i>
-                    Controle de Fornecedores
-                </h1>
+                <span class="rotulo">
+                    Cadastro hospitalar
+                </span>
 
-                <p class="subtitulo mb-0">
-                    Cadastro e consulta de fornecedores hospitalares
+                <h2 class="titulo">
+                    Fornecedores cadastrados
+                </h2>
+
+                <p class="subtitulo">
+                    Consulte, edite ou desative fornecedores do sistema.
                 </p>
 
             </div>
 
-            <!-- Botão para voltar ao painel administrativo. -->
-            <a
-                href="dashboard.php"
-                class="btn btn-secondary"
-            >
-                <i class="bi bi-arrow-left"></i>
-                Voltar
-            </a>
-
         </div>
 
-        <!-- =====================================================
-             FORMULÁRIO DE PESQUISA
-        ====================================================== -->
-
-        <form
-            method="GET"
-            class="row g-2 mb-4"
+        <!-- Voltar ao painel -->
+        <a
+            href="dashboard.php"
+            class="btn btn-secondary btn-voltar"
         >
+            <i class="bi bi-arrow-left"></i>
+            Voltar
+        </a>
 
-            <div class="col-md-10">
+    </section>
+
+
+    <!-- ======================================================
+         CONTEÚDO
+    ======================================================= -->
+
+    <section class="conteudo-card">
+
+        <!-- ==================================================
+             PESQUISA
+        =================================================== -->
+
+        <form method="GET" class="pesquisa-area">
+
+            <div class="campo-pesquisa">
+
+                <i class="bi bi-search"></i>
 
                 <input
                     type="text"
@@ -929,50 +981,61 @@ try {
 
             </div>
 
-            <div class="col-md-2">
-
-                <button
-                    type="submit"
-                    class="btn btn-azul btn-lg w-100"
-                    style="min-height:46px;"
-                >
-                    <i class="bi bi-search"></i>
-                    Buscar
-                </button>
-
-            </div>
+            <button
+                type="submit"
+                class="btn-buscar"
+            >
+                <i class="bi bi-search"></i>
+                Buscar
+            </button>
 
         </form>
 
-        <!-- =====================================================
-             BOTÕES DE AÇÃO
-        ====================================================== -->
 
-        <div class="d-flex gap-2 flex-wrap mb-4">
+        <!-- ==================================================
+             AÇÕES E CONTADOR
+        =================================================== -->
 
-            <!-- Novo fornecedor -->
-            <a
-                href="fornecedor_cadastrar.php"
-                class="btn btn-azul"
-            >
-                <i class="bi bi-plus-circle"></i>
-                Novo Fornecedor
-            </a>
+        <div class="acoes-topo">
 
-            <!-- Fornecedores desativados -->
-            <a
-                href="fornecedor_desativados.php"
-                class="btn btn-outline-danger btn-desativados"
-            >
-                <i class="bi bi-building-x"></i>
-                Fornecedores Desativados
-            </a>
+            <div class="total">
+
+                <strong>
+                    <?= count($fornecedores) ?>
+                </strong>
+
+                fornecedor(es) encontrado(s)
+
+            </div>
+
+            <div class="botoes">
+
+                <!-- Novo fornecedor -->
+                <a
+                    href="fornecedor_cadastrar.php"
+                    class="btn-novo"
+                >
+                    <i class="bi bi-plus-circle"></i>
+                    Novo Fornecedor
+                </a>
+
+                <!-- Fornecedores desativados -->
+                <a
+                    href="fornecedor_desativados.php"
+                    class="btn-desativados"
+                >
+                    <i class="bi bi-building-x"></i>
+                    Desativados
+                </a>
+
+            </div>
 
         </div>
 
-        <!-- =====================================================
-             TABELA DE FORNECEDORES
-        ====================================================== -->
+
+        <!-- ==================================================
+             TABELA
+        =================================================== -->
 
         <div class="table-responsive tabela-container">
 
@@ -987,7 +1050,7 @@ try {
                         <th>Telefone</th>
                         <th>E-mail</th>
                         <th>Cidade</th>
-                        <th width="180">Ações</th>
+                        <th width="190">Ações</th>
 
                     </tr>
 
@@ -997,24 +1060,18 @@ try {
 
                 <?php if (count($fornecedores) > 0): ?>
 
-                    <!-- Percorre todos os fornecedores encontrados. -->
+                    <!-- Exibe cada fornecedor encontrado. -->
                     <?php foreach ($fornecedores as $f): ?>
 
                         <tr>
 
-                            <!-- =================================================
-                                 NOME DO FORNECEDOR
-                            ================================================== -->
-
+                            <!-- Nome -->
                             <td>
 
                                 <div class="nome-fornecedor">
 
                                     <div class="icone-fornecedor">
-
-                                        <!-- Ícone Bootstrap Icons -->
                                         <i class="bi bi-building"></i>
-
                                     </div>
 
                                     <strong>
@@ -1030,22 +1087,22 @@ try {
                                 <?= htmlspecialchars($f['cnpj']) ?>
                             </td>
 
-                            <!-- TELEFONE -->
+                            <!-- Telefone -->
                             <td>
                                 <?= htmlspecialchars($f['telefone']) ?>
                             </td>
 
-                            <!-- E-MAIL -->
+                            <!-- E-mail -->
                             <td>
                                 <?= htmlspecialchars($f['email']) ?>
                             </td>
 
-                            <!-- CIDADE -->
+                            <!-- Cidade -->
                             <td>
 
                                 <span class="badge-cidade">
 
-                                    <i class="bi bi-geo-alt me-1"></i>
+                                    <i class="bi bi-geo-alt"></i>
 
                                     <?= htmlspecialchars(
                                         $f['cidade'] ?? 'Não informado'
@@ -1055,16 +1112,12 @@ try {
 
                             </td>
 
-                            <!-- =================================================
-                                 AÇÕES
-                            ================================================== -->
-
+                            <!-- Ações -->
                             <td>
 
                                 <div class="d-flex gap-2">
 
-                                    <!-- EDITAR FORNECEDOR -->
-
+                                    <!-- Editar -->
                                     <a
                                         href="fornecedor_editar.php?id=<?= (int)$f['id'] ?>"
                                         class="btn btn-editar"
@@ -1074,8 +1127,7 @@ try {
                                         Editar
                                     </a>
 
-                                    <!-- DESATIVAR FORNECEDOR -->
-
+                                    <!-- Desativar -->
                                     <button
                                         type="button"
                                         class="btn btn-desativar"
@@ -1110,10 +1162,8 @@ try {
                                             'UTF-8'
                                         ) ?>"
                                     >
-
                                         <i class="bi bi-building-dash"></i>
                                         Desativar
-
                                     </button>
 
                                 </div>
@@ -1126,10 +1176,7 @@ try {
 
                 <?php else: ?>
 
-                    <!-- =================================================
-                         NENHUM FORNECEDOR ENCONTRADO
-                    ================================================== -->
-
+                    <!-- Nenhum fornecedor encontrado. -->
                     <tr>
 
                         <td
@@ -1140,16 +1187,14 @@ try {
                             <div class="estado-vazio">
 
                                 <div class="icone-vazio">
-
                                     <i class="bi bi-building"></i>
-
                                 </div>
 
                                 <h4>
                                     Nenhum fornecedor encontrado.
                                 </h4>
 
-                                <p class="text-muted mb-0">
+                                <p class="mb-0">
                                     Tente alterar a pesquisa ou
                                     cadastrar um novo fornecedor.
                                 </p>
@@ -1168,13 +1213,14 @@ try {
 
         </div>
 
-    </div>
+    </section>
 
 </div>
 
+
 <!-- ==========================================================
-     MODAL DE CONFIRMAÇÃO DE DESATIVAÇÃO
-========================================================== -->
+     MODAL DE DESATIVAÇÃO
+=========================================================== -->
 
 <div
     class="modal fade modal-desativar"
@@ -1190,106 +1236,83 @@ try {
 
             <div class="modal-body">
 
-                <!-- ÍCONE DO MODAL -->
-
+                <!-- Ícone -->
                 <div class="icone-desativar">
-
                     <i class="bi bi-exclamation-triangle-fill"></i>
-
                 </div>
 
-                <!-- TÍTULO -->
-
+                <!-- Título -->
                 <h3 id="modalDesativarLabel">
                     Confirmar Desativação
                 </h3>
-
-                <!-- TEXTO -->
 
                 <div class="texto-aviso">
                     Deseja realmente desativar este fornecedor?
                 </div>
 
-                <!-- DADOS DO FORNECEDOR -->
 
+                <!-- Dados do fornecedor -->
                 <div class="dados-fornecedor">
-
-                    <!-- NOME -->
 
                     <div class="linha-fornecedor">
 
                         <i class="bi bi-building"></i>
 
                         <div>
-
                             <strong>Fornecedor:</strong>
-
                             <span id="nomeFornecedorDesativar">
                                 --
                             </span>
-
                         </div>
 
                     </div>
 
-                    <!-- CNPJ -->
 
                     <div class="linha-fornecedor">
 
                         <i class="bi bi-card-text"></i>
 
                         <div>
-
                             <strong>CNPJ:</strong>
-
                             <span id="cnpjFornecedorDesativar">
                                 --
                             </span>
-
                         </div>
 
                     </div>
 
-                    <!-- TELEFONE -->
 
                     <div class="linha-fornecedor">
 
                         <i class="bi bi-telephone"></i>
 
                         <div>
-
                             <strong>Telefone:</strong>
-
                             <span id="telefoneFornecedorDesativar">
                                 --
                             </span>
-
                         </div>
 
                     </div>
 
-                    <!-- E-MAIL -->
 
                     <div class="linha-fornecedor">
 
                         <i class="bi bi-envelope"></i>
 
                         <div>
-
                             <strong>E-mail:</strong>
-
                             <span id="emailFornecedorDesativar">
                                 --
                             </span>
-
                         </div>
 
                     </div>
 
                 </div>
 
-                <!-- AVISO -->
 
+                <!-- Aviso -->
                 <div class="aviso-desativacao">
 
                     <i class="bi bi-info-circle me-1"></i>
@@ -1302,16 +1325,15 @@ try {
 
                 </div>
 
-                <!-- FORMULÁRIO -->
 
+                <!-- Formulário -->
                 <form
                     method="POST"
                     id="formDesativar"
                     action="fornecedor_desativar.php"
                 >
 
-                    <!-- Campo oculto que recebe o ID. -->
-
+                    <!-- ID do fornecedor -->
                     <input
                         type="hidden"
                         name="id"
@@ -1319,29 +1341,23 @@ try {
                         value=""
                     >
 
-                    <!-- BOTÃO CANCELAR -->
-
+                    <!-- Cancelar -->
                     <button
                         type="button"
                         class="btn btn-cancelar-desativacao"
                         data-bs-dismiss="modal"
                     >
-
                         <i class="bi bi-x-circle me-1"></i>
                         Cancelar
-
                     </button>
 
-                    <!-- BOTÃO CONFIRMAR -->
-
+                    <!-- Confirmar -->
                     <button
                         type="submit"
                         class="btn btn-confirmar-desativacao"
                     >
-
                         <i class="bi bi-building-dash me-1"></i>
                         Desativar Fornecedor
-
                     </button>
 
                 </form>
@@ -1354,106 +1370,65 @@ try {
 
 </div>
 
-<!-- ==========================================================
-     BOOTSTRAP JAVASCRIPT
-========================================================== -->
 
+<!-- Bootstrap JavaScript -->
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 ></script>
 
-<!-- ==========================================================
-     JAVASCRIPT DO MODAL
-========================================================== -->
 
 <script>
 
-    // Aguarda o carregamento completo do HTML.
+    // Preenche o modal com os dados do fornecedor selecionado.
     document.addEventListener(
         'DOMContentLoaded',
         function () {
 
-            // ==========================================================
-            // LOCALIZA OS ELEMENTOS DO MODAL
-            // ==========================================================
-
             const modalDesativar =
-                document.getElementById(
-                    'modalDesativar'
-                );
+                document.getElementById('modalDesativar');
 
             const nomeFornecedor =
-                document.getElementById(
-                    'nomeFornecedorDesativar'
-                );
+                document.getElementById('nomeFornecedorDesativar');
 
             const cnpjFornecedor =
-                document.getElementById(
-                    'cnpjFornecedorDesativar'
-                );
+                document.getElementById('cnpjFornecedorDesativar');
 
             const telefoneFornecedor =
-                document.getElementById(
-                    'telefoneFornecedorDesativar'
-                );
+                document.getElementById('telefoneFornecedorDesativar');
 
             const emailFornecedor =
-                document.getElementById(
-                    'emailFornecedorDesativar'
-                );
+                document.getElementById('emailFornecedorDesativar');
 
             const idFornecedor =
-                document.getElementById(
-                    'idFornecedorDesativar'
-                );
+                document.getElementById('idFornecedorDesativar');
 
-            // ==========================================================
-            // EVENTO DE ABERTURA DO MODAL
-            // ==========================================================
 
+            // Executa quando o modal é aberto.
             modalDesativar.addEventListener(
                 'show.bs.modal',
                 function (event) {
 
-                    // Botão que abriu o modal.
-                    const botao =
-                        event.relatedTarget;
+                    const botao = event.relatedTarget;
 
-                    // ==========================================================
-                    // PEGA OS DADOS DO BOTÃO
-                    // ==========================================================
-
+                    // Recupera os dados do botão.
                     const id =
-                        botao.getAttribute(
-                            'data-id'
-                        );
+                        botao.getAttribute('data-id');
 
                     const nome =
-                        botao.getAttribute(
-                            'data-nome'
-                        );
+                        botao.getAttribute('data-nome');
 
                     const cnpj =
-                        botao.getAttribute(
-                            'data-cnpj'
-                        );
+                        botao.getAttribute('data-cnpj');
 
                     const telefone =
-                        botao.getAttribute(
-                            'data-telefone'
-                        );
+                        botao.getAttribute('data-telefone');
 
                     const email =
-                        botao.getAttribute(
-                            'data-email'
-                        );
+                        botao.getAttribute('data-email');
 
-                    // ==========================================================
-                    // PREENCHE OS DADOS NO MODAL
-                    // ==========================================================
 
-                    idFornecedor.value =
-                        id || '';
+                    // Preenche as informações do modal.
+                    idFornecedor.value = id || '';
 
                     nomeFornecedor.textContent =
                         nome || 'Não informado';

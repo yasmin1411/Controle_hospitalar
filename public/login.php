@@ -128,10 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (
         $usuario &&
-        password_verify(
-            $senha,
-            $usuario['senha']
-        )
+        password_verify($senha, $usuario['senha'])
     ) {
 
         /*
@@ -165,8 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         */
 
         header("Location: dashboard.php");
-
-        // Encerra a execução do arquivo após o redirecionamento.
         exit;
 
     } else {
@@ -186,616 +181,563 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
 
     <!-- Define a codificação dos caracteres da página. -->
     <meta charset="UTF-8">
 
     <!-- Faz a página se adaptar a celulares, tablets e computadores. -->
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Define o título que aparece na aba do navegador. -->
     <title>Controle Hospitalar - Login</title>
 
-
-    <!--
-    --------------------------------------------------------------------------
-    BOOTSTRAP
-    --------------------------------------------------------------------------
-    |
-    | Importa o Bootstrap 5.3.3 para utilizar componentes e classes
-    | prontas de estilização.
-    |
-    -->
-
+    <!-- Bootstrap 5.3.3. -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-
-    <!--
-    --------------------------------------------------------------------------
-    BOOTSTRAP ICONS
-    --------------------------------------------------------------------------
-    |
-    | Biblioteca de ícones utilizada no sistema.
-    |
-    -->
-
+    <!-- Biblioteca de ícones utilizada no sistema. -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
 
-
     <style>
 
         /*
         |--------------------------------------------------------------------------
-        | VARIÁVEIS DE CORES
+        | CORES PRINCIPAIS
         |--------------------------------------------------------------------------
-        |
-        | As variáveis permitem reutilizar as mesmas cores em diferentes
-        | partes do CSS.
-        |
         */
-
         :root {
-
-            /* Azul principal utilizado no sistema. */
             --azul-principal: #2F80ED;
-
-            /* Azul claro utilizado nos gradientes. */
             --azul-claro: #56CCF2;
+            --azul-escuro: #175dcc;
+            --texto: #26384d;
+            --cinza: #6c7b8f;
+            --borda: #dbe7f5;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | ESTILO GERAL DA PÁGINA
-        |--------------------------------------------------------------------------
-        */
-
+        /* Fundo geral da página. */
         body {
-
-            /* Remove a margem padrão do navegador. */
             margin: 0;
-
-            /* Garante que o body ocupe pelo menos toda a altura da tela. */
             min-height: 100vh;
-
-            /* Cria o fundo em degradê azul claro. */
-            background: linear-gradient(
-                135deg,
-                #eef5ff,
-                #dbeeff
-            );
-
-            /* Define a fonte principal da página. */
+            overflow-x: hidden;
             font-family: 'Segoe UI', sans-serif;
+            color: var(--texto);
+            background:
+                radial-gradient(circle at 15% 15%, rgba(86,204,242,.22), transparent 30%),
+                radial-gradient(circle at 88% 85%, rgba(47,128,237,.15), transparent 28%),
+                linear-gradient(135deg, #eef5ff, #dbeeff);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CONTAINER CENTRAL DO LOGIN
-        |--------------------------------------------------------------------------
-        */
-
-        .login-container {
-
-            /* Ocupa toda a altura disponível da tela. */
-            min-height: 100vh;
-
-            /* Ativa o Flexbox. */
-            display: flex;
-
-            /* Centraliza o card horizontalmente. */
-            justify-content: center;
-
-            /* Centraliza o card verticalmente. */
-            align-items: center;
-
-            /* Cria espaço entre o card e as bordas da tela. */
-            padding: 20px;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CARD DE LOGIN
-        |--------------------------------------------------------------------------
-        */
-
-        .login-card {
-
-            /* Permite que o card ocupe toda a largura disponível até o limite. */
-            width: 100%;
-
-            /* Define a largura máxima do card. */
-            max-width: 500px;
-
-            /* Define o fundo branco. */
-            background: white;
-
-            /* Remove a borda padrão. */
-            border: none;
-
-            /* Arredonda os cantos do card. */
-            border-radius: 25px;
-
-            /* Cria espaçamento interno. */
-            padding: 40px;
-
-            /* Cria uma sombra ao redor do card. */
-            box-shadow: 0 15px 40px rgba(47,128,237,.15);
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOGO CIRCULAR
-        |--------------------------------------------------------------------------
-        */
-
-        .logo {
-
-            /* Define a largura do círculo. */
-            width: 90px;
-
-            /* Define a altura do círculo. */
-            height: 90px;
-
-            /* Centraliza horizontalmente. */
-            margin: auto;
-
-            /* Transforma o elemento em um círculo. */
+        /* Elementos decorativos discretos do fundo. */
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            border: 1px solid rgba(47,128,237,.08);
             border-radius: 50%;
+            pointer-events: none;
+        }
 
-            /* Cria o gradiente azul da logo. */
-            background: linear-gradient(
-                135deg,
-                var(--azul-principal),
-                var(--azul-claro)
-            );
+        body::before {
+            width: 260px;
+            height: 260px;
+            top: -100px;
+            right: -80px;
+        }
 
-            /* Ativa Flexbox. */
+        body::after {
+            width: 210px;
+            height: 210px;
+            bottom: -90px;
+            left: -60px;
+            border-color: rgba(86,204,242,.10);
+        }
+
+        /* Área central que mantém o card no centro da tela. */
+        .login-container {
+            min-height: 100vh;
             display: flex;
-
-            /* Centraliza o ícone verticalmente. */
-            align-items: center;
-
-            /* Centraliza o ícone horizontalmente. */
             justify-content: center;
+            align-items: center;
+            padding: 25px;
+            position: relative;
+            z-index: 1;
+        }
 
-            /* Define a cor do ícone como branca. */
+        /* Card principal do login. */
+        .login-card {
+            width: 100%;
+            max-width: 500px;
+            padding: 42px;
+            background: rgba(255,255,255,.97);
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 28px;
+            box-shadow: 0 25px 60px rgba(47,128,237,.13), 0 8px 25px rgba(25,60,100,.05);
+            animation: aparecer .55s ease;
+        }
+
+        /* Animação suave de entrada do card. */
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Logo do hospital. */
+        .logo {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--azul-principal), var(--azul-claro));
             color: white;
-
-            /* Define o tamanho do ícone. */
             font-size: 40px;
-
-            /* Cria espaço abaixo da logo. */
-            margin-bottom: 20px;
+            border: 4px solid rgba(255,255,255,.8);
+            box-shadow: 0 12px 25px rgba(47,128,237,.22);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | TÍTULO DO LOGIN
-        |--------------------------------------------------------------------------
-        */
-
+        /* Título e subtítulo da tela. */
         .titulo {
-
-            /* Centraliza o título. */
             text-align: center;
-
-            /* Usa o azul principal. */
+            margin-bottom: 4px;
             color: var(--azul-principal);
-
-            /* Deixa o texto em negrito. */
-            font-weight: 700;
-
-            /* Pequeno espaçamento abaixo. */
-            margin-bottom: 5px;
+            font-size: 34px;
+            font-weight: 750;
+            letter-spacing: -.5px;
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SUBTÍTULO
-        |--------------------------------------------------------------------------
-        */
 
         .subtitulo {
-
-            /* Centraliza o texto. */
+            margin-bottom: 10px;
             text-align: center;
-
-            /* Define a cor cinza. */
-            color: #6c757d;
-
-            /* Espaçamento abaixo do subtítulo. */
-            margin-bottom: 30px;
+            color: var(--cinza);
+            font-size: 16px;
         }
 
+        /* Identifica o ambiente administrativo do sistema. */
+        .portal-administrativo {
+            margin-bottom: 9px;
+            text-align: center;
+            color: var(--azul-escuro);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | LABEL DOS CAMPOS
-        |--------------------------------------------------------------------------
-        */
-
-        .form-label {
-
-            /* Deixa os nomes dos campos em destaque. */
+        /* Aviso visual de acesso restrito. */
+        .acesso-restrito {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 27px;
+            padding: 9px 12px;
+            border: 1px solid #dceafe;
+            border-radius: 10px;
+            background: #f1f7ff;
+            color: #55708f;
+            font-size: 12px;
             font-weight: 600;
+        }
 
-            /* Define a cor do texto. */
+        .acesso-restrito i {
+            color: var(--azul-principal);
+        }
+
+        /* Labels dos campos. */
+        .form-label {
             color: #495057;
+            font-size: 14px;
+            font-weight: 600;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | PARTE DOS ÍCONES DOS INPUTS
-        |--------------------------------------------------------------------------
-        */
-
+        /* Área dos ícones dos inputs. */
         .input-group-text {
-
-            /* Define um fundo azul bem claro. */
+            min-width: 52px;
+            justify-content: center;
             background: #f5f9ff;
-
-            /* Define uma borda azul clara. */
             border: 1px solid #dbe7ff;
+            color: #567089;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CAMPOS DE ENTRADA
-        |--------------------------------------------------------------------------
-        */
-
+        /* Campos de email e senha. */
         .form-control {
-
-            /* Define a borda dos campos. */
-            border: 1px solid #dbe7ff;
-
-            /* Cria espaço interno no campo. */
             padding: 12px;
+            border: 1px solid #dbe7ff;
+            font-size: 15px;
+            transition: .2s ease;
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | EFEITO AO CLICAR NO CAMPO
-        |--------------------------------------------------------------------------
-        */
 
         .form-control:focus {
-
-            /* Muda a cor da borda para o azul principal. */
             border-color: var(--azul-principal);
-
-            /* Cria uma sombra suave ao redor do campo. */
             box-shadow: 0 0 0 .2rem rgba(47,128,237,.15);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | BOTÃO DE LOGIN
-        |--------------------------------------------------------------------------
-        */
-
-        .btn-login {
-
-            /* Define o fundo azul. */
-            background: var(--azul-principal);
-
-            /* Remove a borda. */
-            border: none;
-
-            /* Define o texto branco. */
-            color: white;
-
-            /* Espaçamento interno. */
-            padding: 12px;
-
-            /* Arredonda os cantos. */
-            border-radius: 12px;
-
-            /* Deixa o texto em negrito. */
-            font-weight: 600;
-
-            /* Cria uma transição suave nos efeitos. */
-            transition: .3s;
+        /* Mantém a aparência do campo quando o navegador preenche automaticamente. */
+        .form-control:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+            -webkit-text-fill-color: var(--texto) !important;
         }
 
+        /* Área do link de recuperação de senha. */
+        .recuperacao-area {
+            margin: -15px 0 22px;
+            text-align: right;
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | EFEITO HOVER DO BOTÃO
-        |--------------------------------------------------------------------------
-        */
+        /* Botão que abre a orientação de recuperação. */
+        .btn-recuperar {
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: var(--azul-principal);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-recuperar:hover {
+            color: var(--azul-escuro);
+            text-decoration: underline;
+        }
+
+        /* Botão principal de entrada no sistema. */
+        .btn-login {
+            padding: 14px;
+            border: none;
+            border-radius: 13px;
+            background: linear-gradient(135deg, var(--azul-principal), #2874d8);
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            box-shadow: 0 10px 22px rgba(47,128,237,.19);
+            transition: .25s;
+        }
 
         .btn-login:hover {
-
-            /* Escurece o azul quando o mouse passa sobre o botão. */
-            background: #1c6ad6;
-
-            /* Mantém o texto branco. */
+            background: linear-gradient(135deg, #246fcb, #1f61bc);
             color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 13px 25px rgba(47,128,237,.24);
         }
 
+        /* Aparência usada enquanto o login está sendo enviado. */
+        .btn-login.carregando {
+            opacity: .85;
+            cursor: wait;
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | RODAPÉ DO LOGIN
-        |--------------------------------------------------------------------------
-        */
-
+        /* Rodapé institucional e de segurança. */
         .rodape {
-
-            /* Centraliza o texto. */
-            text-align: center;
-
-            /* Cria espaço acima do rodapé. */
             margin-top: 25px;
+            text-align: center;
+            color: var(--cinza);
+            font-size: 13px;
+        }
 
-            /* Define a cor cinza. */
-            color: #6c757d;
+        .rodape-seguranca {
+            margin-top: 12px;
+            text-align: center;
+            color: #91a0b2;
+            font-size: 11px;
+        }
 
-            /* Define o tamanho da fonte. */
+        /* Mensagem de erro do login. */
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            border-radius: 12px;
             font-size: 14px;
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALERTA DE ERRO
+        | MODAL DE RECUPERAÇÃO DE ACESSO
         |--------------------------------------------------------------------------
+        |
+        | Essa função é apenas visual/orientativa e não altera o backend.
+        |
         */
+        .modal-recuperacao {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(13,35,60,.48);
+            backdrop-filter: blur(4px);
+        }
 
-        .alert {
+        .modal-recuperacao.ativo {
+            display: flex;
+        }
 
-            /* Arredonda os cantos da mensagem de erro. */
+        .modal-conteudo {
+            width: 100%;
+            max-width: 430px;
+            padding: 30px;
+            border-radius: 24px;
+            background: white;
+            box-shadow: 0 25px 70px rgba(0,0,0,.18);
+            animation: modalAbrir .25s ease;
+        }
+
+        /* Animação de abertura do modal. */
+        @keyframes modalAbrir {
+            from { opacity: 0; transform: scale(.96) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-icone {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 18px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef6ff;
+            color: var(--azul-principal);
+            font-size: 25px;
+        }
+
+        .modal-titulo {
+            margin: 0;
+            color: var(--texto);
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+        .modal-texto {
+            margin: 9px 0 0;
+            color: var(--cinza);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .modal-orientacao {
+            margin-top: 18px;
+            padding: 13px 14px;
+            border: 1px solid #e0ebfa;
+            border-radius: 13px;
+            background: #f5f9ff;
+            color: #5c7088;
+            font-size: 13px;
+        }
+
+        .btn-fechar-modal {
+            width: 100%;
+            margin-top: 20px;
+            padding: 11px;
+            border: none;
             border-radius: 12px;
+            background: var(--azul-principal);
+            color: white;
+            font-weight: 700;
+        }
+
+        .btn-fechar-modal:hover {
+            background: var(--azul-escuro);
+        }
+
+        /* Ajustes para telas pequenas. */
+        @media (max-width: 576px) {
+            .login-container { padding: 15px; }
+            .login-card { padding: 30px 22px; border-radius: 23px; }
+            .logo { width: 78px; height: 78px; font-size: 34px; }
+            .titulo { font-size: 27px; }
+            .subtitulo { font-size: 14px; }
+            .modal-conteudo { padding: 25px 21px; }
         }
 
     </style>
-
 </head>
-
 
 <body>
 
-    <!--
-    --------------------------------------------------------------------------
-    CONTAINER PRINCIPAL
-    --------------------------------------------------------------------------
-    |
-    | Contém todo o conteúdo da tela de login.
-    |
-    -->
-
+    <!-- Container principal da tela de login. -->
     <div class="login-container">
 
-
-        <!-- Card que contém o formulário de login. -->
+        <!-- Card que contém o acesso ao sistema. -->
         <div class="login-card">
 
-
-            <!--
-            ------------------------------------------------------------------
-            LOGO DO SISTEMA
-            ------------------------------------------------------------------
-            -->
-
+            <!-- Logo do sistema hospitalar. -->
             <div class="logo">
-
-                <!-- Ícone de hospital do Bootstrap Icons. -->
                 <i class="bi bi-hospital"></i>
-
             </div>
 
+            <!-- Título principal. -->
+            <h1 class="titulo">Controle Hospitalar</h1>
 
-            <!--
-            ------------------------------------------------------------------
-            TÍTULO PRINCIPAL
-            ------------------------------------------------------------------
-            -->
+            <!-- Subtítulo do sistema. -->
+            <p class="subtitulo">Sistema de Gestão Hospitalar</p>
 
-            <h1 class="titulo">
-                Controle Hospitalar
-            </h1>
+            <!-- Identificação do ambiente administrativo. -->
+            <div class="portal-administrativo">Portal Administrativo</div>
 
+            <!-- Informa que o acesso é destinado a usuários autorizados. -->
+            <div class="acesso-restrito">
+                <i class="bi bi-shield-lock-fill"></i>
+                Acesso restrito a usuários autorizados
+            </div>
 
-            <!-- Subtítulo apresentado abaixo do título. -->
-            <p class="subtitulo">
-                Sistema de Gestão Hospitalar
-            </p>
-
-
-            <!--
-            ------------------------------------------------------------------
-            MENSAGEM DE ERRO
-            ------------------------------------------------------------------
-            |
-            | Este bloco somente aparece quando a variável $erro foi criada.
-            |
-            -->
-
+            <!-- Mensagem de erro do login. -->
             <?php if (isset($erro)) : ?>
-
                 <div class="alert alert-danger">
-
-                    <!-- Ícone de alerta. -->
                     <i class="bi bi-exclamation-triangle-fill"></i>
-
-                    <!-- Exibe a mensagem de erro do login. -->
-                    <?= $erro ?>
-
+                    <?= htmlspecialchars($erro) ?>
                 </div>
-
             <?php endif; ?>
 
+            <!-- Formulário original de login: continua usando POST. -->
+            <form method="POST" id="formLogin">
 
-            <!--
-            ------------------------------------------------------------------
-            FORMULÁRIO DE LOGIN
-            ------------------------------------------------------------------
-            |
-            | O formulário utiliza POST para enviar email e senha para
-            | o próprio arquivo login.php.
-            |
-            -->
-
-            <form method="POST">
-
-
-                <!--
-                --------------------------------------------------------------
-                CAMPO DE EMAIL
-                --------------------------------------------------------------
-                -->
-
+                <!-- Campo de email. -->
                 <div class="mb-3">
-
-                    <!-- Nome do campo de email. -->
-                    <label class="form-label">
-                        Email
-                    </label>
-
-
-                    <!-- Agrupa o ícone e o campo de email. -->
+                    <label class="form-label" for="email">Email</label>
                     <div class="input-group">
-
-                        <!-- Ícone de email. -->
                         <span class="input-group-text">
                             <i class="bi bi-envelope-fill"></i>
                         </span>
-
-
-                        <!-- Campo onde o usuário digita o email. -->
                         <input
                             type="email"
                             name="email"
+                            id="email"
                             class="form-control"
                             placeholder="Digite seu email"
+                            autocomplete="username"
                             required
                         >
-
                     </div>
-
                 </div>
 
-
                 <!--
-                --------------------------------------------------------------
+                ------------------------------------------------------------------
                 CAMPO DE SENHA
-                --------------------------------------------------------------
+                ------------------------------------------------------------------
                 -->
-
-                <div class="mb-4">
-
-                    <!-- Nome do campo de senha. -->
-                    <label class="form-label">
-                        Senha
-                    </label>
-
-
-                    <!-- Agrupa o campo e o botão de visualizar senha. -->
+                <div class="mb-3">
+                    <label class="form-label" for="senha">Senha</label>
                     <div class="input-group">
-
-
-                        <!-- Ícone de cadeado. -->
                         <span class="input-group-text">
                             <i class="bi bi-lock-fill"></i>
                         </span>
-
-
-                        <!-- Campo onde o usuário digita a senha. -->
                         <input
                             type="password"
                             name="senha"
                             id="senha"
                             class="form-control"
                             placeholder="Digite sua senha"
+                            autocomplete="current-password"
                             required
                         >
-
-
-                        <!--
-                        ------------------------------------------------------
-                        BOTÃO MOSTRAR/OCULTAR SENHA
-                        ------------------------------------------------------
-                        |
-                        | Esse botão não envia o formulário.
-                        | Ele é controlado pelo JavaScript abaixo.
-                        |
-                        -->
-
+                        <!-- Botão para mostrar/ocultar a senha. -->
                         <button
                             type="button"
                             class="btn btn-outline-secondary"
                             id="btnMostrarSenha"
+                            aria-label="Mostrar ou ocultar senha"
+                            title="Mostrar ou ocultar senha"
                         >
-
-                            <!-- Ícone inicial de olho. -->
                             <i class="bi bi-eye-fill"></i>
-
                         </button>
-
                     </div>
-
                 </div>
 
-
                 <!--
-                ----------------------------------------------------------------
-                BOTÃO DE LOGIN
-                ----------------------------------------------------------------
+                ------------------------------------------------------------------
+                RECUPERAÇÃO DE ACESSO
+                ------------------------------------------------------------------
+                |
+                | Apenas abre uma orientação visual; não altera o backend.
                 -->
+                <div class="recuperacao-area">
+                    <button
+                        type="button"
+                        class="btn-recuperar"
+                        id="btnRecuperarSenha"
+                    >
+                        <i class="bi bi-key-fill me-1"></i>
+                        Esqueceu sua senha?
+                    </button>
+                </div>
 
+                <!-- Botão original de entrada no sistema. -->
                 <button
                     type="submit"
                     class="btn btn-login w-100"
+                    id="btnLogin"
                 >
-
-                    <!-- Ícone de entrada. -->
-                    <i class="bi bi-box-arrow-in-right"></i>
-
-                    Entrar no Sistema
-
+                    <i class="bi bi-box-arrow-in-right" id="iconeLogin"></i>
+                    <span id="textoLogin">Entrar no Sistema</span>
                 </button>
 
             </form>
 
-
-            <!--
-            ------------------------------------------------------------------
-            RODAPÉ INFORMATIVO
-            ------------------------------------------------------------------
-            -->
-
+            <!-- Rodapé institucional. -->
             <div class="rodape">
                 Segurança • Organização • Confiabilidade
             </div>
 
+            <!-- Mensagem adicional de segurança. -->
+            <div class="rodape-seguranca">
+                <i class="bi bi-shield-check me-1"></i>
+                Ambiente seguro • Dados protegidos • Acesso autorizado
+            </div>
 
         </div>
+    </div>
 
+
+    <!--
+    --------------------------------------------------------------------------
+    MODAL DE RECUPERAÇÃO DE ACESSO
+    --------------------------------------------------------------------------
+    |
+    | É mostrado quando o usuário clica em "Esqueceu sua senha?".
+    | Como o backend não foi alterado, o modal somente orienta o usuário.
+    |
+    -->
+    <div class="modal-recuperacao" id="modalRecuperacao" aria-hidden="true">
+        <div class="modal-conteudo" role="dialog" aria-modal="true" aria-labelledby="tituloRecuperacao">
+
+            <div class="modal-icone">
+                <i class="bi bi-key-fill"></i>
+            </div>
+
+            <h2 class="modal-titulo" id="tituloRecuperacao">
+                Recuperação de acesso
+            </h2>
+
+            <p class="modal-texto">
+                Para manter a segurança do sistema hospitalar, a recuperação
+                da senha deve ser realizada conforme o procedimento definido
+                pelo administrador do sistema.
+            </p>
+
+            <div class="modal-orientacao">
+                <i class="bi bi-info-circle-fill me-1"></i>
+                Entre em contato com o administrador responsável pelo sistema
+                para recuperar ou redefinir seu acesso.
+            </div>
+
+            <button type="button" class="btn-fechar-modal" id="btnFecharModal">
+                Entendi
+            </button>
+
+        </div>
     </div>
 
 
@@ -804,125 +746,93 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     JAVASCRIPT
     --------------------------------------------------------------------------
     |
-    | Controla a função de mostrar e ocultar a senha.
+    | Controla somente funções visuais da tela:
+    | mostrar/ocultar senha, modal de recuperação e estado do botão.
     |
     -->
-
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
 
-        /*
-        |--------------------------------------------------------------------------
-        | AGUARDAR O CARREGAMENTO DA PÁGINA
-        |--------------------------------------------------------------------------
-        |
-        | O código somente será executado depois que o HTML estiver carregado.
-        |
-        */
+            /*
+            |------------------------------------------------------------------
+            | MOSTRAR/OCULTAR SENHA
+            |------------------------------------------------------------------
+            |
+            | Alterna o tipo do campo entre password e text.
+            |
+            */
+            const campoSenha = document.getElementById('senha');
+            const btnMostrarSenha = document.getElementById('btnMostrarSenha');
 
-        document.addEventListener('DOMContentLoaded', function() {
+            btnMostrarSenha.addEventListener('click', function () {
+                const mostrar = campoSenha.type === 'password';
+
+                campoSenha.type = mostrar ? 'text' : 'password';
+                this.innerHTML = mostrar
+                    ? '<i class="bi bi-eye-slash-fill"></i>'
+                    : '<i class="bi bi-eye-fill"></i>';
+                this.title = mostrar ? 'Ocultar senha' : 'Mostrar senha';
+            });
 
 
             /*
-            ------------------------------------------------------------------
-            | CAMPO DE SENHA
-            ------------------------------------------------------------------
+            |------------------------------------------------------------------
+            | MODAL DE RECUPERAÇÃO DE ACESSO
+            |------------------------------------------------------------------
             |
-            | Localiza o campo pelo ID "senha".
-            |
-            */
-
-            const campoSenha =
-                document.getElementById('senha');
-
-
-            /*
-            ------------------------------------------------------------------
-            | BOTÃO MOSTRAR SENHA
-            ------------------------------------------------------------------
-            |
-            | Localiza o botão responsável por mostrar ou esconder a senha.
+            | Abre e fecha a orientação visual sem modificar o backend.
             |
             */
+            const modal = document.getElementById('modalRecuperacao');
+            const btnRecuperar = document.getElementById('btnRecuperarSenha');
+            const btnFechar = document.getElementById('btnFecharModal');
 
-            const btnMostrarSenha =
-                document.getElementById('btnMostrarSenha');
+            const fecharModal = function () {
+                modal.classList.remove('ativo');
+                modal.setAttribute('aria-hidden', 'true');
+            };
 
+            btnRecuperar.addEventListener('click', function () {
+                modal.classList.add('ativo');
+                modal.setAttribute('aria-hidden', 'false');
+            });
 
-            /*
-            ------------------------------------------------------------------
-            | EVENTO DE CLIQUE
-            ------------------------------------------------------------------
-            |
-            | Executa a função sempre que o usuário clicar no botão.
-            |
-            */
+            btnFechar.addEventListener('click', fecharModal);
 
-            btnMostrarSenha.addEventListener('click', function() {
+            modal.addEventListener('click', function (event) {
+                if (event.target === modal) fecharModal();
+            });
 
-
-                /*
-                --------------------------------------------------------------
-                | VERIFICAR SE A SENHA ESTÁ OCULTA
-                --------------------------------------------------------------
-                |
-                | O tipo "password" faz o navegador esconder os caracteres.
-                |
-                */
-
-                if (campoSenha.type === 'password') {
-
-
-                    /*
-                    ----------------------------------------------------------
-                    | MOSTRAR A SENHA
-                    ----------------------------------------------------------
-                    |
-                    | Altera o tipo do campo para "text".
-                    | Dessa forma, os caracteres ficam visíveis.
-                    |
-                    */
-
-                    campoSenha.type = 'text';
-
-
-                    /*
-                    | Troca o ícone de olho para o ícone de olho riscado.
-                    */
-
-                    this.innerHTML =
-                        '<i class="bi bi-eye-slash-fill"></i>';
-
-
-                } else {
-
-
-                    /*
-                    ----------------------------------------------------------
-                    | OCULTAR A SENHA NOVAMENTE
-                    ----------------------------------------------------------
-                    |
-                    | Volta o tipo do campo para "password".
-                    |
-                    */
-
-                    campoSenha.type = 'password';
-
-
-                    /*
-                    | Volta o ícone para o olho normal.
-                    */
-
-                    this.innerHTML =
-                        '<i class="bi bi-eye-fill"></i>';
-
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && modal.classList.contains('ativo')) {
+                    fecharModal();
                 }
+            });
 
+
+            /*
+            |------------------------------------------------------------------
+            | ESTADO DE PROCESSAMENTO DO LOGIN
+            |------------------------------------------------------------------
+            |
+            | Muda o visual do botão enquanto o formulário está sendo enviado.
+            | Não altera a lógica PHP do login.
+            |
+            */
+            const formLogin = document.getElementById('formLogin');
+            const btnLogin = document.getElementById('btnLogin');
+            const textoLogin = document.getElementById('textoLogin');
+            const iconeLogin = document.getElementById('iconeLogin');
+
+            formLogin.addEventListener('submit', function () {
+                btnLogin.classList.add('carregando');
+                btnLogin.disabled = true;
+                iconeLogin.className = 'bi bi-arrow-repeat me-1';
+                textoLogin.textContent = 'Entrando...';
             });
 
         });
-
     </script>
 
 </body>
-
 </html>

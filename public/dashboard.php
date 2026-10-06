@@ -1,701 +1,785 @@
 <?php
-
 // Inclui o arquivo de autenticação do sistema.
 // Esse arquivo normalmente verifica se o usuário está logado
 // e permite o acesso somente a usuários autenticados.
 require_once '../includes/auth.php';
-
 ?>
-
 <!DOCTYPE html>
-
 <!-- Define que este documento utiliza HTML5. -->
 <html lang="pt-br">
-
 <head>
-
     <!-- Define a codificação de caracteres utilizada pela página. -->
     <meta charset="UTF-8">
-
     <!-- Faz a página se adaptar corretamente a celulares, tablets e computadores. -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <!-- Define o título que aparecerá na aba do navegador. -->
     <title>Painel Administrativo</title>
-
-    <!-- Importa o arquivo CSS do Bootstrap 5.3.3.
-         O Bootstrap fornece componentes e estilos prontos para a página. -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Importa a biblioteca Bootstrap Icons.
-         Ela permite utilizar os ícones utilizados no sistema. -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+    <!-- Importa o Bootstrap 5.3.3. -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+    <!-- Importa a biblioteca Bootstrap Icons. -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
     <style>
-
-        /* Define variáveis de cores que poderão ser reutilizadas no CSS. */
-        :root{
-
-            /* Cor azul principal utilizada no sistema. */
-            --azul-principal:#2F80ED;
-
-            /* Cor azul claro utilizada nos elementos do sistema. */
-            --azul-claro:#56CCF2;
+        /* =========================================================
+           CORES PRINCIPAIS
+        ========================================================== */
+        :root {
+            --azul: #2F80ED;
+            --azul-2: #56CCF2;
+            --azul-escuro: #174ea6;
+            --verde: #27AE60;
+            --laranja: #F2994A;
+            --roxo: #9B51E0;
+            --vermelho: #EB5757;
+            --azul-profundo: #203a8f;
+            --texto: #203247;
+            --texto-suave: #718096;
+            --fundo: #edf5ff;
+            --card: rgba(255,255,255,.96);
         }
-
-        /* Define as características gerais do corpo da página. */
-        body{
-
-            /* Cria um fundo em degradê entre duas tonalidades de azul claro. */
-            background:linear-gradient(135deg,#eef5ff,#dbeeff);
-
-            /* Define a fonte principal utilizada na página. */
-            font-family:'Segoe UI',sans-serif;
-
-            /* Garante que a página tenha, no mínimo, a altura da tela. */
-            min-height:100vh;
+        /* =========================================================
+           FUNDO GERAL
+        ========================================================== */
+        body {
+            /* Define o fundo principal da página. */
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--texto);
+            /* Cria profundidade visual sem utilizar imagem externa. */
+            background:
+                radial-gradient(
+                    circle at 8% 10%,
+                    rgba(86,204,242,.20),
+                    transparent 25%
+                ),
+                radial-gradient(
+                    circle at 92% 18%,
+                    rgba(47,128,237,.14),
+                    transparent 26%
+                ),
+                radial-gradient(
+                    circle at 50% 100%,
+                    rgba(86,204,242,.10),
+                    transparent 30%
+                ),
+                linear-gradient(
+                    135deg,
+                    #f7fbff 0%,
+                    #edf5ff 48%,
+                    #e7f2ff 100%
+                );
         }
-
-        /* Define o estilo personalizado da barra de navegação superior. */
-        .navbar-custom{
-
-            /* Cria um degradê utilizando as duas variáveis de azul definidas anteriormente. */
-            background:linear-gradient(135deg,var(--azul-principal),var(--azul-claro));
-
-            /* Adiciona uma sombra abaixo da barra de navegação. */
-            box-shadow:0 4px 20px rgba(0,0,0,.08);
+        /* =========================================================
+           BARRA SUPERIOR
+        ========================================================== */
+        .navbar-custom {
+            /* Define a aparência da barra superior. */
+            background:
+                linear-gradient(
+                    110deg,
+                    #1767d1,
+                    #2F80ED 55%,
+                    #42b6df
+                );
+            min-height: 70px;
+            padding: 0 24px;
+            /* Cria sombra mais forte para destacar a navegação. */
+            box-shadow:
+                0 10px 30px rgba(31,91,160,.18);
         }
-
-        /* Define o estilo do cartão de boas-vindas. */
-        .hero-card{
-
-            /* Define o fundo branco do cartão. */
-            background:white;
-
-            /* Remove possíveis bordas padrão. */
-            border:none;
-
-            /* Arredonda os cantos do cartão. */
-            border-radius:25px;
-
-            /* Adiciona espaçamento interno ao cartão. */
-            padding:35px;
-
-            /* Adiciona uma sombra ao redor do cartão. */
-            box-shadow:0 15px 40px rgba(47,128,237,.12);
-
-            /* Adiciona espaço abaixo do cartão. */
-            margin-bottom:30px;
+        /* Marca do sistema. */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 19px;
+            letter-spacing: -.2px;
         }
-
-        /* Define o estilo do título principal da área de boas-vindas. */
-        .hero-title{
-
-            /* Utiliza a cor azul principal. */
-            color:var(--azul-principal);
-
-            /* Deixa o texto mais espesso. */
-            font-weight:700;
+        /* Ícone da marca. */
+        .navbar-brand i {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255,255,255,.15);
+            border: 1px solid rgba(255,255,255,.20);
         }
-
-        /* Define a aparência do subtítulo da área de boas-vindas. */
-        .hero-subtitle{
-
-            /* Define uma cor cinza para o texto. */
-            color:#6c757d;
+        /* Área do usuário logado. */
+        .usuario-topo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 12px 7px 8px;
+            border-radius: 14px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.12);
+            color: white;
         }
-
-        /* Define o estilo dos cartões dos módulos do sistema. */
-        .modulo-card{
-
-            /* Define o fundo branco dos cartões. */
-            background:white;
-
-            /* Remove as bordas padrão. */
-            border:none;
-
-            /* Arredonda os cantos dos cartões. */
-            border-radius:20px;
-
-            /* Adiciona uma sombra aos cartões. */
-            box-shadow:0 10px 25px rgba(0,0,0,.08);
-
-            /* Define uma transição suave para alterações visuais. */
-            transition:.3s;
-
-            /* Faz o cartão ocupar toda a altura disponível da coluna. */
-            height:100%;
+        /* Ícone do usuário. */
+        .usuario-topo i {
+            font-size: 18px;
         }
-
-        /* Define o comportamento dos cartões quando o mouse passa sobre eles. */
-        .modulo-card:hover{
-
-            /* Move o cartão levemente para cima. */
-            transform:translateY(-8px);
-
-            /* Aumenta a sombra quando o cartão recebe o cursor. */
-            box-shadow:0 20px 35px rgba(47,128,237,.18);
+        /* Nome do usuário. */
+        .usuario-nome {
+            font-size: 13px;
+            font-weight: 700;
         }
-
-        /* Define o tamanho e o espaçamento dos ícones dos módulos. */
-        .icone-modulo{
-
-            /* Define o tamanho da fonte do ícone. */
-            font-size:50px;
-
-            /* Adiciona espaço abaixo do ícone. */
-            margin-bottom:15px;
+        /* Botão sair. */
+        .btn-sair {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 15px;
+            background: #e94357;
+            color: white;
+            font-weight: 700;
+            transition: .25s;
         }
-
-        /* Define a cor azul dos elementos que utilizam essa classe. */
-        .azul{
-            color:#2F80ED;
+        /* Efeito visual do botão sair. */
+        .btn-sair:hover {
+            background: #cf3044;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 18px rgba(207,48,68,.25);
         }
-
-        /* Define a cor verde dos elementos que utilizam essa classe. */
-        .verde{
-            color:#27AE60;
+        /* =========================================================
+           CONTAINER
+        ========================================================== */
+        .pagina {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 38px 24px 55px;
         }
-
-        /* Define a cor laranja dos elementos que utilizam essa classe. */
-        .laranja{
-            color:#F2994A;
+        /* =========================================================
+           TOPO DO PAINEL
+        ========================================================== */
+        .hero-card {
+            position: relative;
+            overflow: hidden;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255,255,255,.98),
+                    rgba(247,251,255,.97)
+                );
+            border: 1px solid rgba(255,255,255,.95);
+            border-radius: 28px;
+            padding: 36px 38px;
+            margin-bottom: 34px;
+            box-shadow:
+                0 20px 50px rgba(39,89,145,.11);
         }
-
-        /* Define a cor roxa dos elementos que utilizam essa classe. */
-        .roxo{
-            color:#9B51E0;
+        /* Detalhe decorativo do hero. */
+        .hero-card::after {
+            content: "";
+            position: absolute;
+            width: 210px;
+            height: 210px;
+            right: -65px;
+            top: -70px;
+            border-radius: 50%;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(47,128,237,.12),
+                    rgba(86,204,242,.05)
+                );
         }
-
-        /* Define a cor vermelha dos elementos que utilizam essa classe. */
-        .vermelho{
-            color:#EB5757;
+        /* Segunda decoração do hero. */
+        .hero-card::before {
+            content: "";
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            right: 95px;
+            bottom: -95px;
+            border-radius: 50%;
+            border: 1px solid rgba(47,128,237,.08);
         }
-
-        /* Define uma tonalidade de azul escuro. */
-        .azul-escuro{
-            color:#1F3A93;
+        /* Conteúdo do hero acima das decorações. */
+        .hero-conteudo {
+            position: relative;
+            z-index: 2;
         }
-
-        /* Define o estilo dos botões utilizados para acessar os módulos. */
-        .btn-modulo{
-
-            /* Define a cor de fundo do botão. */
-            background:#2F80ED;
-
-            /* Remove a borda padrão do botão. */
-            border:none;
-
-            /* Define a cor branca para o texto. */
-            color:white;
-
-            /* Arredonda os cantos do botão. */
-            border-radius:12px;
-
-            /* Define o espaçamento interno do botão. */
-            padding:10px 20px;
-
-            /* Deixa o texto do botão mais destacado. */
-            font-weight:600;
+        /* Pequena identificação acima do título. */
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: #eef6ff;
+            border: 1px solid #dcecff;
+            color: var(--azul);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 14px;
         }
-
-        /* Define a aparência do botão quando o mouse passa sobre ele. */
-        .btn-modulo:hover{
-
-            /* Escurece o azul do botão durante o hover. */
-            background:#1c6ad6;
-
-            /* Mantém o texto do botão branco. */
-            color:white;
+        /* Título principal. */
+        .hero-title {
+            margin: 0;
+            color: var(--texto);
+            font-size: 34px;
+            line-height: 1.15;
+            font-weight: 800;
+            letter-spacing: -.8px;
         }
-
-        /* Define a aparência da etiqueta utilizada para indicar desenvolvimento. */
-        .badge-dev{
-
-            /* Define um fundo cinza claro. */
-            background:#e9ecef;
-
-            /* Define a cor cinza do texto. */
-            color:#6c757d;
-
-            /* Define o espaçamento interno da etiqueta. */
-            padding:10px 15px;
-
-            /* Arredonda os cantos da etiqueta. */
-            border-radius:12px;
+        /* Destaque azul no nome do usuário. */
+        .hero-title strong {
+            color: var(--azul);
         }
-
+        /* Texto secundário. */
+        .hero-subtitle {
+            margin: 10px 0 0;
+            color: var(--texto-suave);
+            font-size: 15px;
+            max-width: 700px;
+        }
+        /* =========================================================
+           CABEÇALHO DOS MÓDULOS
+        ========================================================== */
+        .modulos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+            margin-bottom: 18px;
+        }
+        /* Pequeno título de seção. */
+        .modulos-label {
+            margin-bottom: 5px;
+            color: var(--azul);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        /* Título da seção. */
+        .modulos-titulo {
+            margin: 0;
+            color: var(--texto);
+            font-size: 23px;
+            font-weight: 800;
+        }
+        /* Descrição da seção. */
+        .modulos-descricao {
+            margin: 5px 0 0;
+            color: var(--texto-suave);
+            font-size: 13px;
+        }
+        /* =========================================================
+           CARDS DOS MÓDULOS
+        ========================================================== */
+        .modulo-card {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+            padding: 26px;
+            border-radius: 24px;
+            border: 1px solid rgba(221,231,242,.95);
+            background: var(--card);
+            box-shadow:
+                0 13px 30px rgba(28,66,108,.08);
+            transition:
+                transform .28s ease,
+                box-shadow .28s ease,
+                border-color .28s ease;
+        }
+        /* Linha colorida no topo de cada card. */
+        .modulo-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 4px;
+            background: var(--cor-modulo);
+            opacity: .85;
+        }
+        /* Decoração suave no canto inferior. */
+        .modulo-card::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            right: -60px;
+            bottom: -65px;
+            border-radius: 50%;
+            background: var(--cor-fundo);
+        }
+        /* Hover dos cards. */
+        .modulo-card:hover {
+            transform: translateY(-9px);
+            border-color: rgba(47,128,237,.18);
+            box-shadow:
+                0 24px 45px rgba(29,73,119,.15);
+        }
+        /* Conteúdo dos cards. */
+        .modulo-conteudo {
+            position: relative;
+            z-index: 2;
+        }
+        /* =========================================================
+           ÍCONE DOS MÓDULOS
+        ========================================================== */
+        .icone-box {
+            width: 62px;
+            height: 62px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            background: var(--cor-fundo);
+            color: var(--cor-modulo);
+            font-size: 28px;
+            margin-bottom: 20px;
+            transition: .28s ease;
+        }
+        /* Movimento do ícone ao passar o mouse no card. */
+        .modulo-card:hover .icone-box {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow:
+                0 10px 20px rgba(0,0,0,.06);
+        }
+        /* =========================================================
+           TEXTO DOS MÓDULOS
+        ========================================================== */
+        .modulo-mini {
+            display: block;
+            margin-bottom: 5px;
+            color: #98a6b7;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        /* Título do módulo. */
+        .modulo-titulo {
+            margin: 0;
+            color: var(--texto);
+            font-size: 22px;
+            font-weight: 800;
+        }
+        /* Descrição do módulo. */
+        .modulo-descricao {
+            margin: 9px 0 22px;
+            min-height: 42px;
+            color: var(--texto-suave);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        /* =========================================================
+           BOTÃO DOS MÓDULOS
+        ========================================================== */
+        .btn-modulo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 13px;
+            background: var(--azul);
+            color: white;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .25s ease;
+        }
+        /* Efeito do botão. */
+        .btn-modulo:hover {
+            color: white;
+            background: var(--azul-escuro);
+            transform: translateY(-2px);
+            box-shadow:
+                0 10px 20px rgba(47,128,237,.20);
+        }
+        /* =========================================================
+           CORES DOS MÓDULOS
+        ========================================================== */
+        .medicamento {
+            --cor-modulo: #2F80ED;
+            --cor-fundo: #edf5ff;
+        }
+        .pacientes {
+            --cor-modulo: #27AE60;
+            --cor-fundo: #edf9f2;
+        }
+        .estoque {
+            --cor-modulo: #F2994A;
+            --cor-fundo: #fff5eb;
+        }
+        .fornecedor {
+            --cor-modulo: #9B51E0;
+            --cor-fundo: #f7efff;
+        }
+        .internacoes {
+            --cor-modulo: #EB5757;
+            --cor-fundo: #fff0f2;
+        }
+        .funcionarios {
+            --cor-modulo: #1F3A93;
+            --cor-fundo: #eef1ff;
+        }
+        .relatorios {
+            --cor-modulo: #2855c7;
+            --cor-fundo: #edf3ff;
+        }
+        /* =========================================================
+           RODAPÉ
+        ========================================================== */
+        .rodape {
+            text-align: center;
+            padding-top: 30px;
+            color: #97a6b7;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        /* =========================================================
+           RESPONSIVIDADE
+        ========================================================== */
+        @media (max-width: 767px) {
+            .navbar-custom {
+                padding: 0 14px;
+            }
+            .usuario-topo {
+                display: none;
+            }
+            .pagina {
+                padding: 22px 14px 40px;
+            }
+            .hero-card {
+                padding: 27px 22px;
+                border-radius: 22px;
+            }
+            .hero-title {
+                font-size: 27px;
+            }
+            .modulos-header {
+                align-items: flex-start;
+            }
+            .modulos-titulo {
+                font-size: 21px;
+            }
+            .modulo-card {
+                padding: 23px;
+            }
+        }
     </style>
-
 </head>
-
 <body>
-
 <!-- =====================================================
      MENU SUPERIOR
 ===================================================== -->
-
-<!-- Cria a barra de navegação superior.
-     As classes do Bootstrap definem o comportamento responsivo,
-     enquanto navbar-custom aplica o estilo personalizado. -->
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-
-    <!-- Cria um container que ocupa toda a largura disponível.
-         px-4 adiciona espaçamento horizontal. -->
-    <div class="container-fluid px-4">
-
-        <!-- Define o nome/logo do sistema na barra superior. -->
+<!-- Cria a barra de navegação superior do sistema. -->
+<nav class="navbar navbar-dark navbar-custom">
+    <div class="container-fluid">
+        <!-- Marca principal do sistema. -->
         <a class="navbar-brand fw-bold" href="#">
-
-            <!-- Exibe o ícone de hospital utilizando Bootstrap Icons. -->
+            <!-- Ícone de hospital utilizado na identidade do sistema. -->
             <i class="bi bi-hospital"></i>
-
-            <!-- Nome apresentado como marca do sistema. -->
             Controle Hospitalar
-
         </a>
-
-
-        <!-- Agrupa as informações do usuário e o botão de saída.
-             d-flex organiza os elementos em linha e align-items-center
-             centraliza os elementos verticalmente. -->
-        <div class="d-flex align-items-center">
-
-            <!-- Exibe o nome do usuário que está conectado ao sistema. -->
-            <span class="text-white me-3">
-
-                <!-- Exibe um ícone representando o usuário. -->
+        <div class="d-flex align-items-center gap-2">
+            <!--
+            =====================================================
+            IDENTIFICAÇÃO DO USUÁRIO
+            =====================================================
+            |
+            | Exibe visualmente o usuário atualmente conectado.
+            |
+            -->
+            <div class="usuario-topo">
                 <i class="bi bi-person-circle"></i>
-
-                <!-- Recupera o nome do usuário armazenado na sessão. -->
-                <?= $_SESSION['nome']; ?>
-
-            </span>
-
-
-            <!-- Link responsável por levar o usuário para a página de logout. -->
-            <a href="logout.php"
-               class="btn btn-danger">
-
-                <!-- Exibe o ícone de saída. -->
-                <i class="bi bi-box-arrow-right"></i>
-
-                <!-- Texto apresentado no botão. -->
+                <span class="usuario-nome">
+                    <?= $_SESSION['nome']; ?>
+                </span>
+            </div>
+            <!-- Link responsável pelo logout do sistema. -->
+            <a
+                href="logout.php"
+                class="btn btn-sair"
+            >
+                <i class="bi bi-box-arrow-right me-1"></i>
                 Sair
-
             </a>
-
         </div>
-
     </div>
-
 </nav>
-
-
-<!-- Container principal da página.
-     py-5 adiciona espaçamento vertical utilizando o Bootstrap. -->
-<div class="container py-5">
-
-
 <!-- =====================================================
-     BOAS-VINDAS
+     CONTEÚDO PRINCIPAL
 ===================================================== -->
-
-<!-- Cria o cartão de boas-vindas do painel. -->
-<div class="hero-card">
-
-    <!-- Exibe uma mensagem de saudação utilizando o nome
-         armazenado na sessão do usuário. -->
-    <h1 class="hero-title">
-
-        Olá, <?= $_SESSION['nome']; ?>
-
-    </h1>
-
-    <!-- Exibe uma descrição abaixo da mensagem de boas-vindas. -->
-    <p class="hero-subtitle mb-0">
-
-        <!-- Mensagem apresentada ao usuário. -->
-        Bem-vindo ao sistema de gestão hospitalar.
-
-        <!-- Orientação para que o usuário escolha um módulo. -->
-        Selecione um módulo para começar.
-
-    </p>
-
-</div>
-
-
-<!-- =====================================================
-     MÓDULOS
-===================================================== -->
-
-<!-- Cria uma linha do sistema Bootstrap para organizar
-     os cartões dos módulos.
-     g-4 adiciona espaçamento entre as colunas. -->
-<div class="row g-4">
-
-
-<!-- =====================================================
-     MEDICAMENTO
-===================================================== -->
-
-<!-- Define uma coluna que ocupa 4 das 12 partes disponíveis
-     em telas médias ou maiores. -->
-<div class="col-md-4">
-
-    <!-- Cria o cartão do módulo de medicamentos. -->
-    <div class="card modulo-card">
-
-        <!-- Corpo do cartão.
-             text-center centraliza os textos e p-4 adiciona espaçamento interno. -->
-        <div class="card-body text-center p-4">
-
-            <!-- Área destinada ao ícone do módulo.
-                 A classe azul define a cor do ícone. -->
-            <div class="icone-modulo azul">
-
-                <!-- Ícone de cápsula fornecido pelo Bootstrap Icons. -->
-                <i class="bi bi-capsule-pill"></i>
-
+<div class="pagina">
+    <!-- =====================================================
+         BOAS-VINDAS
+    ====================================================== -->
+    <section class="hero-card">
+        <div class="hero-conteudo">
+            <!--
+            =================================================
+            IDENTIFICAÇÃO DO PAINEL
+            =================================================
+            |
+            | Pequena etiqueta visual que identifica esta área
+            | como o painel administrativo.
+            |
+            -->
+            <div class="hero-tag">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Painel Administrativo
             </div>
-
-            <!-- Título do módulo. -->
-            <h4>Medicamento</h4>
-
-            <!-- Texto explicativo sobre o módulo. -->
-            <p class="text-muted">
-
-                Cadastro e gerenciamento de medicamentos hospitalares.
-
+            <!-- Saudação principal utilizando o nome da sessão. -->
+            <h1 class="hero-title">
+                Olá, <strong><?= $_SESSION['nome']; ?></strong>
+            </h1>
+            <!-- Descrição principal do painel. -->
+            <p class="hero-subtitle">
+                Bem-vindo ao sistema de gestão hospitalar.
+                Acesse rapidamente os módulos necessários para administrar
+                as operações do hospital.
             </p>
-
-            <!-- Link que direciona para a página de medicamentos. -->
-            <a href="medicamento.php"
-               class="btn btn-modulo">
-
-                <!-- Ícone utilizado no botão. -->
-                <i class="bi bi-arrow-right-circle"></i>
-
-                <!-- Texto do botão. -->
-                Acessar módulo
-
-            </a>
-
         </div>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     PACIENTES
-===================================================== -->
-
-<!-- Cria a coluna do módulo de pacientes. -->
-<div class="col-md-4">
-
-    <!-- Cria o cartão do módulo. -->
-    <div class="card modulo-card">
-
-        <!-- Corpo do cartão. -->
-        <div class="card-body text-center p-4">
-
-            <!-- Área do ícone do módulo.
-                 A classe verde define sua cor. -->
-            <div class="icone-modulo verde">
-
-                <!-- Ícone relacionado a paciente. -->
-                <i class="bi bi-person-heart"></i>
-
+    </section>
+    <!-- =====================================================
+         CABEÇALHO DOS MÓDULOS
+    ====================================================== -->
+    <div class="modulos-header">
+        <div>
+            <div class="modulos-label">
+                Sistema
             </div>
-
-            <!-- Título do módulo. -->
-            <h4>Pacientes</h4>
-
-            <!-- Descrição da função do módulo. -->
-            <p class="text-muted">
-
-                Cadastro e gerenciamento de pacientes.
-
+            <h2 class="modulos-titulo">
+                Módulos disponíveis
+            </h2>
+            <p class="modulos-descricao">
+                Selecione uma das áreas abaixo para continuar.
             </p>
-
-            <!-- Link para a página de pacientes. -->
-            <a href="pacientes.php"
-               class="btn btn-modulo">
-
-                <!-- Ícone do botão. -->
-                <i class="bi bi-arrow-right-circle"></i>
-
-                <!-- Texto do botão. -->
-                Acessar módulo
-
-            </a>
-
         </div>
-
     </div>
-
-</div>
-
-
-<!-- =====================================================
-     ESTOQUE
-===================================================== -->
-
-<!-- Cria a coluna do módulo de estoque. -->
-<div class="col-md-4">
-
-    <!-- Cria o cartão do módulo. -->
-    <div class="card modulo-card">
-
-        <!-- Corpo do cartão. -->
-        <div class="card-body text-center p-4">
-
-            <!-- Área do ícone do módulo.
-                 A classe laranja define sua cor. -->
-            <div class="icone-modulo laranja">
-
-                <!-- Ícone de caixa utilizado no módulo de estoque. -->
-                <i class="bi bi-box-seam"></i>
-
+    <!-- =====================================================
+         MÓDULOS
+    ====================================================== -->
+    <div class="row g-4">
+        <!-- =====================================================
+             MEDICAMENTO
+        ====================================================== -->
+        <div class="col-md-6 col-xl-4">
+            <div class="modulo-card medicamento">
+                <div class="modulo-conteudo">
+                    <div class="icone-box">
+                        <i class="bi bi-capsule-pill"></i>
+                    </div>
+                    <span class="modulo-mini">
+                        Módulo
+                    </span>
+                    <h3 class="modulo-titulo">
+                        Medicamentos
+                    </h3>
+                    <p class="modulo-descricao">
+                        Cadastro, consulta e gerenciamento dos medicamentos
+                        utilizados no hospital.
+                    </p>
+                    <a
+                        href="medicamento.php"
+                        class="btn-modulo"
+                    >
+                        Acessar módulo
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-
-            <!-- Título do módulo. -->
-            <h4>Estoque</h4>
-
-            <!-- Descrição do módulo. -->
-            <p class="text-muted">
-
-                Controle de entradas e saídas.
-
-            </p>
-
-            <!-- Link para a página de estoque. -->
-            <a href="estoque.php"
-               class="btn btn-modulo">
-
-                <!-- Ícone do botão. -->
-                <i class="bi bi-arrow-right-circle"></i>
-
-                <!-- Texto do botão. -->
-                Acessar módulo
-
-            </a>
-
         </div>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     FORNECEDORES
-===================================================== -->
-
-<!-- Cria a coluna do módulo de fornecedores. -->
-<div class="col-md-4">
-
-    <!-- Cria o cartão do módulo. -->
-    <div class="card modulo-card">
-
-        <!-- Corpo do cartão. -->
-        <div class="card-body text-center p-4">
-
-            <!-- Área do ícone do módulo.
-                 A classe roxo define sua cor. -->
-            <div class="icone-modulo roxo">
-
-                <!-- Ícone representando uma empresa/fornecedor. -->
-                <i class="bi bi-building"></i>
-
+        <!-- =====================================================
+             PACIENTES
+        ====================================================== -->
+        <div class="col-md-6 col-xl-4">
+            <div class="modulo-card pacientes">
+                <div class="modulo-conteudo">
+                    <div class="icone-box">
+                        <i class="bi bi-person-heart"></i>
+                    </div>
+                    <span class="modulo-mini">
+                        Módulo
+                    </span>
+                    <h3 class="modulo-titulo">
+                        Pacientes
+                    </h3>
+                    <p class="modulo-descricao">
+                        Cadastro, consulta e gerenciamento das informações
+                        dos pacientes.
+                    </p>
+                    <a
+                        href="pacientes.php"
+                        class="btn-modulo"
+                    >
+                        Acessar módulo
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-
-            <!-- Título do módulo. -->
-            <h4>Fornecedor</h4>
-
-            <!-- Descrição do módulo. -->
-            <p class="text-muted">
-
-                Cadastro e gerenciamento de fornecedores.
-
-            </p>
-
-            <!-- Link para a página de fornecedores. -->
-            <a href="fornecedor.php"
-               class="btn btn-modulo">
-
-                <!-- Ícone do botão. -->
-                <i class="bi bi-arrow-right-circle"></i>
-
-                <!-- Texto do botão. -->
-                Acessar módulo
-
-            </a>
-
         </div>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     INTERNAÇÕES
-===================================================== -->
-
-<!-- Cria a coluna do módulo de internações. -->
-<div class="col-md-4">
-
-    <!-- Cria o cartão do módulo. -->
-    <div class="card modulo-card">
-
-        <!-- Corpo do cartão. -->
-        <div class="card-body text-center p-4">
-
-            <!-- Área do ícone do módulo.
-                 A classe vermelho define sua cor. -->
-            <div class="icone-modulo vermelho">
-
-                <!-- Ícone de hospital preenchido. -->
-                <i class="bi bi-hospital-fill"></i>
-
+        <!-- =====================================================
+             ESTOQUE
+        ====================================================== -->
+        <div class="col-md-6 col-xl-4">
+            <div class="modulo-card estoque">
+                <div class="modulo-conteudo">
+                    <div class="icone-box">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <span class="modulo-mini">
+                        Módulo
+                    </span>
+                    <h3 class="modulo-titulo">
+                        Estoque
+                    </h3>
+                    <p class="modulo-descricao">
+                        Controle de entradas, saídas, ajustes e movimentações
+                        do estoque.
+                    </p>
+                    <a
+                        href="estoque.php"
+                        class="btn-modulo"
+                    >
+                        Acessar módulo
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-
-            <!-- Título do módulo. -->
-            <h4>Internações</h4>
-
-            <!-- Descrição do módulo. -->
-            <p class="text-muted">
-
-                Cadastro e gerenciamento de internações hospitalares.
-
-            </p>
-
-            <!-- Link para a página de internações. -->
-            <a href="internacoes.php"
-               class="btn btn-modulo">
-
-                <!-- Ícone do botão. -->
-                <i class="bi bi-arrow-right-circle"></i>
-
-                <!-- Texto do botão. -->
-                Acessar módulo
-
-            </a>
-
         </div>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     FUNCIONÁRIOS
-===================================================== -->
-
-<!-- Cria a coluna do módulo de funcionários. -->
-<div class="col-md-4">
-
-    <!-- Cria o cartão do módulo. -->
-    <div class="card modulo-card">
-
-        <!-- Corpo do cartão. -->
-        <div class="card-body text-center p-4">
-
-            <!-- Área do ícone do módulo.
-                 A classe azul-escuro define a cor. -->
-            <div class="icone-modulo azul-escuro">
-
-                <!-- Ícone representando um grupo de pessoas. -->
-                <i class="bi bi-people-fill"></i>
-
+        <!-- =====================================================
+             FORNECEDORES
+        ====================================================== -->
+        <div class="col-md-6 col-xl-4">
+            <div class="modulo-card fornecedor">
+                <div class="modulo-conteudo">
+                    <div class="icone-box">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <span class="modulo-mini">
+                        Módulo
+                    </span>
+                    <h3 class="modulo-titulo">
+                        Fornecedores
+                    </h3>
+                    <p class="modulo-descricao">
+                        Cadastro e gerenciamento dos fornecedores vinculados
+                        ao hospital.
+                    </p>
+                    <a
+                        href="fornecedor.php"
+                        class="btn-modulo"
+                    >
+                        Acessar módulo
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-
-            <!-- Título do módulo. -->
-            <h4>Funcionários</h4>
-
-            <!-- Descrição do módulo. -->
-            <p class="text-muted">
-
-                Cadastro e gerenciamento dos profissionais do hospital.
-
-            </p>
-
-            <!-- Link para a página de funcionários. -->
-            <a href="funcionarios.php"
-               class="btn btn-modulo">
-
-                <!-- Ícone do botão. -->
-                <i class="bi bi-arrow-right-circle"></i>
-
-                <!-- Texto do botão. -->
-                Acessar módulo
-
-            </a>
-
         </div>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     RELATÓRIOS
-===================================================== -->
-
-<!-- Cria a coluna do módulo de relatórios. -->
-<div class="col-md-4">
-
-    <!-- Cria o cartão do módulo. -->
-    <div class="card modulo-card">
-
-        <!-- Corpo do cartão. -->
-        <div class="card-body text-center p-4">
-
-            <!-- Área do ícone do módulo.
-                 A classe azul-escuro define a cor. -->
-            <div class="icone-modulo azul-escuro">
-
-                <!-- Ícone de gráfico utilizado para representar relatórios. -->
-                <i class="bi bi-bar-chart-line"></i>
-
+        <!-- =====================================================
+             INTERNAÇÕES
+        ====================================================== -->
+        <div class="col-md-6 col-xl-4">
+            <div class="modulo-card internacoes">
+                <div class="modulo-conteudo">
+                    <div class="icone-box">
+                        <i class="bi bi-hospital-fill"></i>
+                    </div>
+                    <span class="modulo-mini">
+                        Módulo
+                    </span>
+                    <h3 class="modulo-titulo">
+                        Internações
+                    </h3>
+                    <p class="modulo-descricao">
+                        Cadastro e acompanhamento das internações hospitalares.
+                    </p>
+                    <a
+                        href="internacoes.php"
+                        class="btn-modulo"
+                    >
+                        Acessar módulo
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-
-            <!-- Título do módulo. -->
-            <h4>Relatórios</h4>
-
-            <!-- Descrição do módulo. -->
-            <p class="text-muted">
-
-                Consultas e relatórios do sistema.
-
-            </p>
-
-            <!-- Link para a página de relatórios. -->
-            <a href="relatorios.php"
-               class="btn btn-modulo">
-
-                <!-- Ícone do botão. -->
-                <i class="bi bi-arrow-right-circle"></i>
-
-                <!-- Texto do botão. -->
-                Acessar módulo
-
-            </a>
-
         </div>
-
+        <!-- =====================================================
+             FUNCIONÁRIOS
+        ====================================================== -->
+        <div class="col-md-6 col-xl-4">
+            <div class="modulo-card funcionarios">
+                <div class="modulo-conteudo">
+                    <div class="icone-box">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <span class="modulo-mini">
+                        Módulo
+                    </span>
+                    <h3 class="modulo-titulo">
+                        Funcionários
+                    </h3>
+                    <p class="modulo-descricao">
+                        Cadastro e gerenciamento dos profissionais do hospital.
+                    </p>
+                    <a
+                        href="funcionarios.php"
+                        class="btn-modulo"
+                    >
+                        Acessar módulo
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- =====================================================
+             RELATÓRIOS
+        ====================================================== -->
+        <div class="col-md-6 col-xl-4">
+            <div class="modulo-card relatorios">
+                <div class="modulo-conteudo">
+                    <div class="icone-box">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </div>
+                    <span class="modulo-mini">
+                        Módulo
+                    </span>
+                    <h3 class="modulo-titulo">
+                        Relatórios
+                    </h3>
+                    <p class="modulo-descricao">
+                        Consultas, análises e relatórios das informações
+                        registradas no sistema.
+                    </p>
+                    <a
+                        href="relatorios.php"
+                        class="btn-modulo"
+                    >
+                        Acessar módulo
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-
+    <!-- =====================================================
+         RODAPÉ
+    ====================================================== -->
+    <div class="rodape">
+        <i class="bi bi-shield-check me-1"></i>
+        Ambiente administrativo • Controle Hospitalar
+    </div>
 </div>
-
-<!-- Fecha o HTML da página. -->
 </body>
-
 </html>

@@ -1,769 +1,485 @@
 <?php
 
-// ==========================================================
-// ARQUIVOS NECESSÁRIOS
-// ==========================================================
+// =========================================================
+// AUTENTICAÇÃO E CONEXÃO COM O BANCO
+// =========================================================
 
-// Inclui o arquivo responsável por verificar
-// se o usuário está autenticado no sistema.
+// Verifica se o usuário está autenticado.
 require_once '../includes/auth.php';
 
-// Inclui o arquivo responsável pela conexão
-// com o banco de dados.
+// Carrega a conexão com o banco de dados.
 require_once '../config/database.php';
 
 
-// ==========================================================
+// =========================================================
 // VERIFICAR ID
-// ==========================================================
+// =========================================================
 
 // Verifica se o ID do item foi enviado pela URL.
-// Exemplo: estoque_editar.php?id=5
 if (!isset($_GET['id'])) {
-
-    // Caso o ID não tenha sido informado,
-    // volta para a página principal do estoque.
+    // Caso não exista, volta para o estoque.
     header("Location: estoque.php");
-
-    // Encerra a execução do código.
     exit;
 }
 
-
-// Guarda o ID recebido pela URL na variável $id.
+// Guarda o ID recebido.
 $id = $_GET['id'];
 
 
-// ==========================================================
-// BUSCAR O ITEM DO ESTOQUE
-// ==========================================================
+// =========================================================
+// BUSCAR ITEM DO ESTOQUE
+// =========================================================
 
-// Prepara a consulta para buscar o item do estoque pelo ID.
+// Busca o item pelo ID informado.
 $sql = $pdo->prepare("
     SELECT *
     FROM estoque
     WHERE id = ?
 ");
 
-// Executa a consulta substituindo o ? pelo ID recebido.
+// Executa a consulta.
 $sql->execute([$id]);
 
-// Recupera os dados encontrados como um array associativo.
+// Recupera os dados do item.
 $estoque = $sql->fetch(PDO::FETCH_ASSOC);
 
-
-// Verifica se nenhum item foi encontrado.
+// Verifica se o item existe.
 if (!$estoque) {
-
-    // Exibe uma mensagem de erro e encerra o programa.
     die("Item não encontrado.");
 }
 
 
-// ==========================================================
+// =========================================================
 // LISTAR MEDICAMENTOS
-// ==========================================================
+// =========================================================
 
-// Busca todos os medicamentos cadastrados.
-
-// Os medicamentos são ordenados pelo nome.
+// Busca os medicamentos para preencher o select.
 $medicamentos = $pdo
     ->query("SELECT id, nome FROM medicamento ORDER BY nome")
     ->fetchAll(PDO::FETCH_ASSOC);
 
 
-// ==========================================================
+// =========================================================
 // LISTAR FORNECEDORES
-// ==========================================================
+// =========================================================
 
-// Busca todos os fornecedores cadastrados.
-
-// Os fornecedores também são ordenados pelo nome.
+// Busca os fornecedores para preencher o select.
 $fornecedores = $pdo
     ->query("SELECT id, nome FROM fornecedor ORDER BY nome")
     ->fetchAll(PDO::FETCH_ASSOC);
 
 
-// ==========================================================
-// VERIFICAR SE O FORMULÁRIO FOI ENVIADO
-// ==========================================================
+// =========================================================
+// ATUALIZAR ITEM
+// =========================================================
 
-// Verifica se a requisição foi feita através do método POST.
-
-// Isso acontece quando o usuário clica em
-// "Salvar Alterações".
+// Verifica se o formulário foi enviado.
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // ======================================================
-    // ATUALIZAR ITEM DO ESTOQUE
-    // ======================================================
-
-    // Prepara o comando SQL responsável
-    // por atualizar o item.
+    // Prepara a atualização do item no banco.
     $update = $pdo->prepare("
-
         UPDATE estoque SET
-
             medicamento_id = ?,
-
             quantidade = ?,
-
             lote = ?,
-
             validade = ?,
-
             fornecedor_id = ?,
-
             codigo_de_barra = ?
-
         WHERE id = ?
-
     ");
 
-
-    // Executa o comando UPDATE.
-
-    // Os valores são retirados dos campos
-    // enviados pelo formulário.
+    // Executa a atualização com os dados enviados.
     $update->execute([
-
-        // ID do medicamento selecionado.
         $_POST['medicamento'],
-
-        // Quantidade informada.
         $_POST['quantidade'],
-
-        // Lote informado.
         $_POST['lote'],
-
-        // Data de validade informada.
         $_POST['validade'],
-
-        // ID do fornecedor selecionado.
         $_POST['fornecedor'],
-
-        // Código de barras informado.
         $_POST['codigo'],
-
-        // ID do item que será atualizado.
         $id
     ]);
 
-
-    // Depois de atualizar o registro,
-    // volta para a página principal do estoque.
+    // Retorna para a listagem do estoque.
     header("Location: estoque.php");
-
-    // Encerra a execução para evitar
-    // que o restante da página seja processado.
     exit;
 }
 
 ?>
-
 <!DOCTYPE html>
-
-<!-- Define que este documento utiliza HTML5. -->
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
 
-    <!-- Define a codificação de caracteres utilizada pela página. -->
+    <!-- Define a codificação da página. -->
     <meta charset="UTF-8">
 
-    <!-- Faz a página se adaptar a diferentes tamanhos de tela. -->
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <!-- Permite adaptação para celulares e tablets. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Define o título que aparece na aba do navegador. -->
+    <!-- Define o título da página. -->
     <title>Editar Estoque</title>
 
-
-    <!-- Importa o Bootstrap 5.3.3 para utilizar
-         seus componentes e classes. -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
-
-    <!-- Importa os ícones do Bootstrap Icons. -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
-
+    <!-- Importa Bootstrap e Bootstrap Icons. -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
+        :root{--azul:#2F80ED;--azul2:#56CCF2;--azule:#174ea6;--texto:#203247;--suave:#708198;--borda:#dce7f2}
+        *{box-sizing:border-box}
 
-        /* =====================================================
-           CONFIGURAÇÕES GERAIS DA PÁGINA
-           ===================================================== */
+        /* Fundo geral seguindo a identidade visual do medicamento. */
+        body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;color:var(--texto);background:radial-gradient(circle at 7% 12%,rgba(86,204,242,.17),transparent 24%),radial-gradient(circle at 94% 20%,rgba(47,128,237,.14),transparent 25%),linear-gradient(135deg,#f7fbff,#edf5ff 52%,#e7f2ff)}
 
-        /* Define o fundo, altura mínima e fonte da página. */
-        body {
+        .pagina{max-width:1050px;margin:auto;padding:26px 26px 50px}
 
-            /* Cria um fundo em degradê. */
-            background: linear-gradient(
-                135deg,
-                #eef5ff,
-                #dbeeff
-            );
+        /* Cabeçalho principal do módulo. */
+        .hero{position:relative;overflow:hidden;margin-bottom:24px;padding:28px 32px;border-radius:26px;color:#fff;background:linear-gradient(110deg,#1767d1,#2F80ED 55%,#42b6df);box-shadow:0 20px 45px rgba(31,91,160,.16)}
+        .hero:before,.hero:after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.1);pointer-events:none}
+        .hero:before{width:250px;height:250px;right:-90px;top:-135px;background:rgba(255,255,255,.06)}
+        .hero:after{width:105px;height:105px;right:170px;bottom:-65px}
+        .hero-content{position:relative;z-index:1}
+        .hero-tag{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;margin-bottom:11px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.12);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}
+        .hero h1{margin:0;font-size:31px;font-weight:850;letter-spacing:-.6px}
+        .hero p{margin:6px 0 0;color:rgba(255,255,255,.88);font-size:14px}
 
-            /* Faz o corpo ocupar pelo menos toda a altura da tela. */
-            min-height: 100vh;
+        /* Área do título e botão de retorno. */
+        .topo{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:18px;padding:0 4px}
+        .titulo-area{display:flex;align-items:center;gap:14px}
+        .titulo-icone{width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:#edf5ff;color:var(--azul);font-size:27px;box-shadow:0 9px 22px rgba(47,128,237,.08)}
+        .rotulo{display:block;margin-bottom:3px;color:var(--azul);font-size:10px;font-weight:850;letter-spacing:1.1px;text-transform:uppercase}
+        .titulo{margin:0;font-size:28px;font-weight:850;letter-spacing:-.6px}
+        .subtitulo{margin:4px 0 0;color:var(--suave);font-size:13px}
+        .btn-voltar{display:inline-flex;align-items:center;gap:7px;padding:11px 16px;border-radius:12px;font-weight:750}
 
-            /* Define a fonte utilizada na página. */
-            font-family: 'Segoe UI', sans-serif;
+        /* Card principal do formulário. */
+        .form-card{padding:28px;border:1px solid var(--borda);border-radius:22px;background:rgba(255,255,255,.94);box-shadow:0 16px 38px rgba(39,89,145,.08)}
+
+        /* Organiza os campos em duas colunas. */
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+        .campo{margin-bottom:18px}
+        .campo.full{grid-column:1/-1}
+
+        /* Título de cada grupo de informações. */
+        .secao + .secao{margin-top:4px;padding-top:24px;border-top:1px solid #edf2f7}
+        .secao-titulo{display:flex;align-items:center;gap:9px;margin-bottom:18px;color:#315b8b;font-size:15px;font-weight:850}
+        .secao-titulo i{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#edf5ff;color:var(--azul);font-size:16px}
+
+        /* Labels e campos seguem o mesmo padrão do editar medicamento. */
+        .form-label{display:block;margin-bottom:8px;color:#42566d;font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.45px}
+        .campo-box{position:relative}
+        .campo-box>i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#8193a7;font-size:16px;pointer-events:none;z-index:2}
+
+        .form-control,.form-select{min-height:50px;border:1px solid var(--borda);border-radius:13px;padding:0 15px 0 43px;color:var(--texto);font-size:14px;background:#fbfdff;transition:.2s}
+        .form-control:focus,.form-select:focus{border-color:var(--azul);box-shadow:0 0 0 .2rem rgba(47,128,237,.1);background:#fff}
+
+        /* Área dos botões no final do formulário. */
+        .acoes{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-top:8px;padding-top:20px;border-top:1px solid #edf2f7}
+        .acoes-info{color:#8998a9;font-size:11px}
+        .acoes-botoes{display:flex;gap:9px}
+        .btn-salvar,.btn-cancelar{display:inline-flex;align-items:center;gap:7px;padding:11px 17px;border-radius:12px;font-size:13px;font-weight:800;text-decoration:none}
+        .btn-salvar{border:0;background:var(--azul);color:#fff;transition:.22s}
+        .btn-salvar:hover{background:var(--azule);color:#fff;transform:translateY(-2px);box-shadow:0 9px 18px rgba(47,128,237,.18)}
+        .btn-cancelar{border:1px solid #d9e3ed;background:#fff;color:#64768a;transition:.22s}
+        .btn-cancelar:hover{background:#f5f8fb;color:#405268}
+
+        /* Ajusta o formulário para telas menores. */
+        @media(max-width:700px){
+            .pagina{padding:18px 14px 35px}
+            .topo{align-items:flex-start;flex-direction:column}
+            .btn-voltar{width:100%;justify-content:center}
+            .form-grid{grid-template-columns:1fr}
+            .campo.full{grid-column:auto}
+            .form-card{padding:20px}
+            .acoes{align-items:stretch;flex-direction:column}
+            .acoes-botoes{width:100%}
+            .btn-salvar,.btn-cancelar{flex:1;justify-content:center}
         }
-
-
-        /* =====================================================
-           CARD PRINCIPAL
-           ===================================================== */
-
-        /* Estiliza o cartão que contém o formulário. */
-        .card-principal {
-
-            /* Define o fundo branco. */
-            background: white;
-
-            /* Arredonda os cantos do cartão. */
-            border-radius: 25px;
-
-            /* Define o espaçamento interno. */
-            padding: 35px;
-
-            /* Adiciona uma sombra ao redor do cartão. */
-            box-shadow: 0 15px 40px rgba(
-                47,
-                128,
-                237,
-                .12
-            );
-        }
-
-
-        /* =====================================================
-           CABEÇALHO DO FORMULÁRIO
-           ===================================================== */
-
-        /* Define o estilo da área azul no topo do formulário. */
-        .header-card {
-
-            /* Cria um degradê azul. */
-            background: linear-gradient(
-                135deg,
-                #2F80ED,
-                #56CCF2
-            );
-
-            /* Define a cor dos textos como branca. */
-            color: white;
-
-            /* Arredonda os cantos do cabeçalho. */
-            border-radius: 20px;
-
-            /* Adiciona espaço interno. */
-            padding: 25px;
-
-            /* Cria espaço abaixo do cabeçalho. */
-            margin-bottom: 30px;
-        }
-
-
-        /* Define o peso da fonte do título do cabeçalho. */
-        .header-card h2 {
-
-            /* Deixa o título mais espesso. */
-            font-weight: 700;
-        }
-
-
-        /* =====================================================
-           LABELS DOS CAMPOS
-           ===================================================== */
-
-        /* Define o estilo dos textos que identificam os campos. */
-        .form-label {
-
-            /* Deixa o texto mais destacado. */
-            font-weight: 600;
-
-            /* Define uma cor cinza escura. */
-            color: #455A64;
-        }
-
-
-        /* =====================================================
-           CAMPOS DE TEXTO E SELECT
-           ===================================================== */
-
-        /* Aplica estilo aos campos de texto
-           e listas de seleção. */
-        .form-control,
-        .form-select {
-
-            /* Arredonda os campos. */
-            border-radius: 12px;
-
-            /* Define o espaçamento interno. */
-            padding: 12px;
-
-            /* Define uma borda clara. */
-            border: 1px solid #dbe7ff;
-        }
-
-
-        /* Define o efeito visual quando o usuário
-           clica em um campo. */
-        .form-control:focus,
-        .form-select:focus {
-
-            /* Altera a cor da borda. */
-            border-color: #2F80ED;
-
-            /* Adiciona uma sombra azul clara. */
-            box-shadow: 0 0 0 .2rem rgba(
-                47,
-                128,
-                237,
-                .15
-            );
-        }
-
-
-        /* =====================================================
-           BOTÃO SALVAR
-           ===================================================== */
-
-        /* Define o estilo principal do botão de salvar. */
-        .btn-salvar {
-
-            /* Define o fundo azul. */
-            background: #2F80ED;
-
-            /* Define o texto branco. */
-            color: white;
-
-            /* Remove a borda. */
-            border: none;
-
-            /* Arredonda os cantos. */
-            border-radius: 12px;
-
-            /* Define o espaçamento interno. */
-            padding: 10px 25px;
-
-            /* Deixa o texto mais destacado. */
-            font-weight: 600;
-        }
-
-
-        /* Altera a aparência do botão
-           quando o mouse passa sobre ele. */
-        .btn-salvar:hover {
-
-            /* Escurece o fundo do botão. */
-            background: #1c6ad6;
-
-            /* Mantém o texto branco. */
-            color: white;
-        }
-
-
-        /* =====================================================
-           BOTÃO CANCELAR
-           ===================================================== */
-
-        /* Define o formato e espaçamento
-           do botão cancelar. */
-        .btn-cancelar {
-
-            /* Arredonda os cantos. */
-            border-radius: 12px;
-
-            /* Define o espaçamento interno. */
-            padding: 10px 25px;
-        }
-
-
-        /* =====================================================
-           ÍCONES DOS CAMPOS
-           ===================================================== */
-
-        /* Define a cor e o espaçamento dos ícones. */
-        .icone {
-
-            /* Define a cor azul. */
-            color: #2F80ED;
-
-            /* Adiciona espaço à direita do ícone. */
-            margin-right: 5px;
-        }
-
     </style>
 
 </head>
 
-
 <body>
 
-    <!-- Container principal do Bootstrap. -->
-    <div class="container py-5">
+<div class="pagina">
 
-        <!-- Centraliza a linha horizontalmente. -->
-        <div class="row justify-content-center">
+    <!-- =====================================================
+         CABEÇALHO
+         ===================================================== -->
 
-            <!--
-                Define uma largura máxima de 8 colunas
-                em telas grandes.
-            -->
-            <div class="col-lg-8">
+    <!-- Identidade visual do módulo de estoque. -->
+    <section class="hero">
+        <div class="hero-content">
 
-                <!-- Card que contém todo o formulário. -->
-                <div class="card-principal">
+            <span class="hero-tag">
+                <i class="bi bi-box-seam"></i> Controle de estoque
+            </span>
 
+            <h1>
+                <i class="bi bi-pencil-square me-2"></i>Editar Estoque
+            </h1>
 
-                    <!-- ==================================================
-                         CABEÇALHO
-                         ================================================== -->
+            <p>Atualize as informações do item cadastrado no estoque hospitalar.</p>
 
-                    <!-- Cabeçalho visual da página. -->
-                    <div class="header-card">
-
-                        <!-- Título da página acompanhado de um ícone. -->
-                        <h2>
-
-                            <!-- Ícone de edição do Bootstrap Icons. -->
-                            <i class="bi bi-pencil-square"></i>
-
-                            Editar Item do Estoque
-
-                        </h2>
+        </div>
+    </section>
 
 
-                        <!-- Texto explicativo abaixo do título. -->
-                        <p class="mb-0">
+    <!-- =====================================================
+         TÍTULO DA PÁGINA
+         ===================================================== -->
 
-                            <!-- Mensagem apresentada ao usuário. -->
-                            Atualize as informações do medicamento cadastrado.
+    <section class="topo">
 
-                        </p>
+        <div class="titulo-area">
 
-                    </div>
+            <div class="titulo-icone">
+                <i class="bi bi-box-seam"></i>
+            </div>
 
+            <div>
+                <span class="rotulo">Controle de estoque</span>
 
-                    <!-- ==================================================
-                         FORMULÁRIO
-                         ================================================== -->
+                <h2 class="titulo">Informações do estoque</h2>
 
-                    <!--
-                        Formulário responsável por enviar
-                        os dados através do método POST.
-                    -->
-                    <form method="POST">
+                <p class="subtitulo">
+                    Confira e atualize os dados do medicamento armazenado.
+                </p>
+            </div>
 
+        </div>
 
-                        <!-- ==================================================
-                             CAMPO MEDICAMENTO
-                             ================================================== -->
+        <!-- Retorna para a listagem do estoque. -->
+        <a href="estoque.php" class="btn btn-secondary btn-voltar">
+            <i class="bi bi-arrow-left"></i>Voltar ao estoque
+        </a>
 
-                        <!-- Cria o grupo do campo medicamento. -->
-                        <div class="mb-3">
-
-                            <!-- Texto que identifica o campo. -->
-                            <label class="form-label">
-
-                                <!-- Ícone de cápsula. -->
-                                <i class="bi bi-capsule icone"></i>
-
-                                Medicamento
-
-                            </label>
+    </section>
 
 
-                            <!--
-                                Lista de medicamentos cadastrados
-                                no banco de dados.
-                            -->
-                            <select
-                                name="medicamento"
-                                class="form-select"
-                                required
-                            >
+    <!-- =====================================================
+         FORMULÁRIO
+         ===================================================== -->
 
-                                <!-- Percorre todos os medicamentos. -->
+    <section class="form-card">
+
+        <form method="POST">
+
+            <!-- =================================================
+                 DADOS DO ITEM
+                 ================================================= -->
+
+            <section class="secao">
+
+                <div class="secao-titulo">
+                    <i class="bi bi-box-seam"></i>
+                    Dados do item
+                </div>
+
+                <div class="form-grid">
+
+                    <!-- Medicamento -->
+                    <div class="campo full">
+
+                        <label class="form-label">Medicamento</label>
+
+                        <div class="campo-box">
+                            <i class="bi bi-capsule"></i>
+
+                            <select name="medicamento" class="form-select" required>
+
+                                <!-- Mantém o medicamento atualmente selecionado. -->
                                 <?php foreach ($medicamentos as $m): ?>
-
-                                    <!--
-                                        Cria uma opção para cada medicamento.
-
-                                        Se o ID do medicamento atual for igual
-                                        ao medicamento relacionado ao estoque,
-                                        a opção recebe "selected".
-                                    -->
                                     <option
                                         value="<?= $m['id'] ?>"
                                         <?= ($m['id'] == $estoque['medicamento_id']) ? 'selected' : '' ?>
                                     >
-
-                                        <!--
-                                            Mostra o nome do medicamento
-                                            com segurança.
-                                        -->
                                         <?= htmlspecialchars($m['nome']) ?>
-
                                     </option>
-
                                 <?php endforeach; ?>
 
                             </select>
-
                         </div>
 
-
-                        <!-- ==================================================
-                             QUANTIDADE E CÓDIGO DE BARRAS
-                             ================================================== -->
-
-                        <!-- Cria uma linha para organizar os dois campos. -->
-                        <div class="row">
+                    </div>
 
 
-                            <!-- Campo da quantidade. -->
-                            <div class="col-md-6 mb-3">
+                    <!-- Quantidade -->
+                    <div class="campo">
 
-                                <!-- Nome do campo. -->
-                                <label class="form-label">
+                        <label class="form-label">Quantidade</label>
 
-                                    <!-- Ícone de caixa. -->
-                                    <i class="bi bi-box icone"></i>
+                        <div class="campo-box">
+                            <i class="bi bi-box"></i>
 
-                                    Quantidade
-
-                                </label>
-
-
-                                <!--
-                                    Campo numérico preenchido
-                                    com a quantidade atual.
-                                -->
-                                <input
-                                    type="number"
-                                    name="quantidade"
-                                    class="form-control"
-                                    min="1"
-                                    step="1"
-                                    value="<?= htmlspecialchars($estoque['quantidade']) ?>"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <!-- Campo do código de barras. -->
-                            <div class="col-md-6 mb-3">
-
-                                <!-- Nome do campo. -->
-                                <label class="form-label">
-
-                                    <!-- Ícone de código de barras. -->
-                                    <i class="bi bi-upc icone"></i>
-
-                                    Código de Barras
-
-                                </label>
-
-
-                                <!-- Campo para editar o código de barras. -->
-                                <input
-                                    type="text"
-                                    name="codigo"
-                                    class="form-control"
-                                    value="<?= htmlspecialchars($estoque['codigo_de_barra']) ?>"
-                                    required
-                                >
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- ==================================================
-                             LOTE E VALIDADE
-                             ================================================== -->
-
-                        <!-- Cria outra linha para organizar os campos. -->
-                        <div class="row">
-
-
-                            <!-- Campo do lote. -->
-                            <div class="col-md-6 mb-3">
-
-                                <!-- Nome do campo. -->
-                                <label class="form-label">
-
-                                    <!-- Ícone de etiqueta. -->
-                                    <i class="bi bi-tag icone"></i>
-
-                                    Lote
-
-                                </label>
-
-
-                                <!-- Campo para editar o lote. -->
-                                <input
-                                    type="text"
-                                    name="lote"
-                                    class="form-control"
-                                    value="<?= htmlspecialchars($estoque['lote']) ?>"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <!-- Campo da validade. -->
-                            <div class="col-md-6 mb-3">
-
-                                <!-- Nome do campo. -->
-                                <label class="form-label">
-
-                                    <!-- Ícone de calendário. -->
-                                    <i class="bi bi-calendar-event icone"></i>
-
-                                    Validade
-
-                                </label>
-
-
-                                <!-- Campo específico para datas. -->
-                                <input
-                                    type="date"
-                                    name="validade"
-                                    class="form-control"
-                                    value="<?= htmlspecialchars($estoque['validade']) ?>"
-                                    required
-                                >
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- ==================================================
-                             CAMPO FORNECEDOR
-                             ================================================== -->
-
-                        <!-- Cria o grupo do campo fornecedor. -->
-                        <div class="mb-4">
-
-                            <!-- Nome do campo. -->
-                            <label class="form-label">
-
-                                <!-- Ícone de caminhão. -->
-                                <i class="bi bi-truck icone"></i>
-
-                                Fornecedor
-
-                            </label>
-
-
-                            <!-- Lista de fornecedores cadastrados. -->
-                            <select
-                                name="fornecedor"
-                                class="form-select"
+                            <input
+                                type="number"
+                                name="quantidade"
+                                class="form-control"
+                                min="1"
+                                step="1"
+                                value="<?= htmlspecialchars($estoque['quantidade']) ?>"
                                 required
                             >
+                        </div>
 
-                                <!-- Percorre todos os fornecedores. -->
+                    </div>
+
+
+                    <!-- Código de barras -->
+                    <div class="campo">
+
+                        <label class="form-label">Código de barras</label>
+
+                        <div class="campo-box">
+                            <i class="bi bi-upc"></i>
+
+                            <input
+                                type="text"
+                                name="codigo"
+                                class="form-control"
+                                value="<?= htmlspecialchars($estoque['codigo_de_barra']) ?>"
+                                required
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 LOTE E VALIDADE
+                 ================================================= -->
+
+            <section class="secao">
+
+                <div class="secao-titulo">
+                    <i class="bi bi-clipboard2-check"></i>
+                    Lote e validade
+                </div>
+
+                <div class="form-grid">
+
+                    <!-- Lote -->
+                    <div class="campo">
+
+                        <label class="form-label">Lote</label>
+
+                        <div class="campo-box">
+                            <i class="bi bi-tag"></i>
+
+                            <input
+                                type="text"
+                                name="lote"
+                                class="form-control"
+                                value="<?= htmlspecialchars($estoque['lote']) ?>"
+                                required
+                            >
+                        </div>
+
+                    </div>
+
+
+                    <!-- Validade -->
+                    <div class="campo">
+
+                        <label class="form-label">Validade</label>
+
+                        <div class="campo-box">
+                            <i class="bi bi-calendar-event"></i>
+
+                            <input
+                                type="date"
+                                name="validade"
+                                class="form-control"
+                                value="<?= htmlspecialchars($estoque['validade']) ?>"
+                                required
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FORNECEDOR
+                 ================================================= -->
+
+            <section class="secao">
+
+                <div class="secao-titulo">
+                    <i class="bi bi-truck"></i>
+                    Fornecedor
+                </div>
+
+                <div class="form-grid">
+
+                    <div class="campo full">
+
+                        <label class="form-label">Fornecedor</label>
+
+                        <div class="campo-box">
+                            <i class="bi bi-truck"></i>
+
+                            <select name="fornecedor" class="form-select" required>
+
+                                <!-- Mantém o fornecedor atualmente selecionado. -->
                                 <?php foreach ($fornecedores as $f): ?>
-
-                                    <!--
-                                        Cria uma opção para cada fornecedor.
-
-                                        Se o ID do fornecedor atual for igual
-                                        ao fornecedor registrado no estoque,
-                                        a opção recebe "selected".
-                                    -->
                                     <option
                                         value="<?= $f['id'] ?>"
                                         <?= ($f['id'] == $estoque['fornecedor_id']) ? 'selected' : '' ?>
                                     >
-
-                                        <!--
-                                            Exibe o nome do fornecedor
-                                            com segurança.
-                                        -->
                                         <?= htmlspecialchars($f['nome']) ?>
-
                                     </option>
-
                                 <?php endforeach; ?>
 
                             </select>
-
                         </div>
 
+                    </div>
 
-                        <!-- ==================================================
-                             BOTÕES
-                             ================================================== -->
+                </div>
 
-                        <!-- Organiza os botões no lado direito. -->
-                        <div class="d-flex justify-content-end gap-3">
+            </section>
 
 
-                            <!--
-                                Botão que cancela a edição
-                                e volta para o estoque.
-                            -->
-                            <a
-                                href="estoque.php"
-                                class="btn btn-secondary btn-cancelar"
-                            >
+            <!-- =================================================
+                 BOTÕES
+                 ================================================= -->
 
-                                <!-- Ícone de seta para voltar. -->
-                                <i class="bi bi-arrow-left"></i>
+            <div class="acoes">
 
-                                Cancelar
+                <div class="acoes-info">
+                    <i class="bi bi-shield-check me-1"></i>
+                    As alterações serão salvas no estoque.
+                </div>
 
-                            </a>
+                <div class="acoes-botoes">
 
+                    <!-- Cancela a edição e retorna ao estoque. -->
+                    <a href="estoque.php" class="btn-cancelar">
+                        <i class="bi bi-x-lg"></i>Cancelar
+                    </a>
 
-                            <!--
-                                Botão responsável por enviar
-                                o formulário.
-                            -->
-                            <button
-                                type="submit"
-                                class="btn btn-salvar"
-                            >
-
-                                <!-- Ícone de confirmação. -->
-                                <i class="bi bi-check-circle"></i>
-
-                                Salvar Alterações
-
-                            </button>
-
-                        </div>
-
-
-                    <!-- Finaliza o formulário. -->
-                    </form>
+                    <!-- Envia o formulário para atualizar o registro. -->
+                    <button type="submit" class="btn-salvar">
+                        <i class="bi bi-check-lg"></i>Salvar alterações
+                    </button>
 
                 </div>
 
             </div>
 
-        </div>
+        </form>
 
-    </div>
+    </section>
+
+</div>
 
 </body>
-
 </html>

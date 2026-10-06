@@ -1,1303 +1,448 @@
 <?php
-
-// Carrega o sistema de autenticação.
-// Garante que apenas usuários autorizados possam acessar a página.
+// =========================================================
+// AUTENTICAÇÃO E CONEXÃO COM O BANCO
+// =========================================================
+// Carrega a autenticação do sistema.
 require_once '../includes/auth.php';
-
 // Carrega a conexão com o banco de dados.
-// A conexão fica disponível através da variável $pdo.
 require_once '../config/database.php';
-
-
 // =========================================================
 // PESQUISA
 // =========================================================
-
-// Recupera o texto digitado no campo de pesquisa.
-// Caso não exista, utiliza uma string vazia.
+// Recupera o texto enviado pela pesquisa.
 $pesquisa = $_GET['pesquisa'] ?? '';
-
-
-// Verifica se o usuário realizou alguma pesquisa.
 if (!empty($pesquisa)) {
-
-    // Adiciona o caractere % antes e depois do texto pesquisado.
-    // Isso permite encontrar o texto mesmo que ele esteja no meio
-    // do nome, CPF, telefone ou cartão.
+    // Adiciona % para pesquisar trechos dentro dos campos.
     $busca = "%{$pesquisa}%";
-
-
-    // =========================================================
-    // CONSULTA DE PESQUISA
-    // =========================================================
-
-    // Prepara a consulta SQL de pesquisa.
+    // Pesquisa paciente por nome, CPF, telefone ou cartão.
     $sql = $pdo->prepare("
         SELECT
             p.*,
-
-            -- Dados do endereço do paciente.
-            e.rua,
-            e.numero,
-            e.cidade,
-            e.cep,
-            e.complemento,
-
-            -- Nome do responsável relacionado ao paciente.
+            e.rua, e.numero, e.cidade, e.cep, e.complemento,
             r.nome AS responsavel_nome
-
         FROM pacientes p
-
-        -- Relaciona cada paciente ao seu endereço.
-        INNER JOIN endereco e
-            ON p.endereco_id = e.id
-
-        -- Relaciona o paciente ao responsável.
-        -- O LEFT JOIN permite que pacientes sem responsável
-        -- também apareçam na lista.
-        LEFT JOIN responsavel r
-            ON p.responsavel_id = r.id
-
-        -- Pesquisa em diferentes campos do cadastro.
+        INNER JOIN endereco e ON p.endereco_id = e.id
+        LEFT JOIN responsavel r ON p.responsavel_id = r.id
         WHERE
             p.nome LIKE ?
             OR p.cpf LIKE ?
             OR p.telefone LIKE ?
             OR p.cartao_cidadao LIKE ?
-
-        -- Organiza os resultados pelo nome do paciente.
         ORDER BY p.nome
     ");
-
-
-    // Executa a consulta utilizando o mesmo texto de pesquisa
-    // nos quatro campos definidos no WHERE.
     $sql->execute([
         $busca,
         $busca,
         $busca,
         $busca
     ]);
-
 } else {
-
-    // =========================================================
-    // CONSULTA DE TODOS OS PACIENTES
-    // =========================================================
-
-    // Caso nenhuma pesquisa tenha sido informada,
-    // busca todos os pacientes cadastrados.
+    // Busca todos os pacientes quando não existe pesquisa.
     $sql = $pdo->query("
         SELECT
             p.*,
-
-            -- Dados do endereço do paciente.
-            e.rua,
-            e.numero,
-            e.cidade,
-            e.cep,
-            e.complemento,
-
-            -- Nome do responsável.
+            e.rua, e.numero, e.cidade, e.cep, e.complemento,
             r.nome AS responsavel_nome
-
         FROM pacientes p
-
-        -- Relaciona cada paciente ao seu endereço.
-        INNER JOIN endereco e
-            ON p.endereco_id = e.id
-
-        -- Relaciona o paciente ao responsável.
-        -- O LEFT JOIN permite que pacientes sem responsável
-        -- também apareçam na lista.
-        LEFT JOIN responsavel r
-            ON p.responsavel_id = r.id
-
-        -- Organiza todos os pacientes pelo nome.
+        INNER JOIN endereco e ON p.endereco_id = e.id
+        LEFT JOIN responsavel r ON p.responsavel_id = r.id
         ORDER BY p.nome
     ");
 }
-
-
 // =========================================================
 // RECUPERAÇÃO DOS RESULTADOS
 // =========================================================
-
-// Recupera todos os resultados da consulta.
-// PDO::FETCH_ASSOC transforma cada registro em um array associativo.
+// Recupera os pacientes em formato de array associativo.
 $pacientes = $sql->fetchAll(PDO::FETCH_ASSOC);
-
 ?>
-
 <!DOCTYPE html>
-
 <html lang="pt-br">
-
 <head>
-
-    <!-- Define a codificação utilizada pela página. -->
+    <!-- Define a codificação de caracteres da página. -->
     <meta charset="UTF-8">
-
     <!-- Faz a página se adaptar a celulares, tablets e computadores. -->
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Define o título exibido na aba do navegador. -->
     <title>Controle de Pacientes</title>
-
-
-    <!-- Carrega o Bootstrap 5.3.3. -->
+    <!-- Importa o Bootstrap 5.3.3. -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
-
-    <!-- Carrega os ícones do Bootstrap Icons. -->
+    <!-- Importa os ícones utilizados no sistema. -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
-
-
     <style>
-
-        /*
-        ==================================================
-        CORES PRINCIPAIS DO SISTEMA
-        ==================================================
-        */
-
-        /* Variáveis utilizadas para padronizar as cores da página. */
-        :root {
-            --azul-principal: #2F80ED;
-            --azul-claro: #56CCF2;
-        }
-
-
-        /*
-        ==================================================
-        CONFIGURAÇÃO GERAL DA PÁGINA
-        ==================================================
-        */
-
-        /* Define o fundo, fonte e altura mínima da página. */
-        body {
-            background: linear-gradient(
-                135deg,
-                #eef5ff,
-                #dbeeff
-            );
-
-            font-family: 'Segoe UI', sans-serif;
-
-            min-height: 100vh;
-        }
-
-
-        /*
-        ==================================================
-        CARD PRINCIPAL
-        ==================================================
-        */
-
-        /* Card que envolve todo o conteúdo da página. */
-        .card-principal {
-            background: white;
-
-            border: none;
-
-            border-radius: 25px;
-
-            /* Adiciona uma sombra suave ao redor do card. */
-            box-shadow:
-                0 15px 40px rgba(47, 128, 237, .12);
-
-            /* Espaçamento interno. */
-            padding: 35px;
-        }
-
-
-        /*
-        ==================================================
-        TÍTULOS
-        ==================================================
-        */
-
-        /* Estilo do título principal da página. */
-        .titulo {
-            color: var(--azul-principal);
-
-            font-weight: 700;
-
-            margin-bottom: 5px;
-        }
-
-
-        /* Estilo do texto abaixo do título. */
-        .subtitulo {
-            color: #6c757d;
-
-            font-size: 14px;
-        }
-
-
-        /*
-        ==================================================
-        CARD INFORMATIVO
-        ==================================================
-        */
-
-        /* Card azul exibido no início da página. */
-        .info-card {
-            background: linear-gradient(
-                135deg,
-                var(--azul-principal),
-                var(--azul-claro)
-            );
-
-            color: white;
-
-            border-radius: 20px;
-
-            padding: 25px;
-
-            margin-bottom: 30px;
-        }
-
-
-        /* Deixa o título do card informativo em negrito. */
-        .info-card h3 {
-            font-weight: 700;
-        }
-
-
-        /*
-        ==================================================
-        BOTÃO AZUL
-        ==================================================
-        */
-
-        /* Estilo dos botões principais do sistema. */
-        .btn-azul {
-            background: var(--azul-principal);
-
-            border: none;
-
-            color: white;
-
-            border-radius: 12px;
-
-            font-weight: 600;
-        }
-
-
-        /* Altera a cor quando o mouse passa sobre o botão. */
-        .btn-azul:hover {
-            background: #1c6ad6;
-
-            color: white;
-        }
-
-
-        /* Arredonda os botões secundários. */
-        .btn-secondary {
-            border-radius: 12px;
-        }
-
-
-        /*
-        ==================================================
-        CAMPO DE PESQUISA
-        ==================================================
-        */
-
-        /* Estiliza os campos de entrada. */
-        .form-control {
-            border-radius: 12px;
-
-            border: 1px solid #dbe7ff;
-        }
-
-
-        /* Estilo aplicado quando o campo recebe foco. */
-        .form-control:focus {
-            border-color: var(--azul-principal);
-
-            box-shadow:
-                0 0 0 .2rem rgba(47, 128, 237, .15);
-        }
-
-
-        /*
-        ==================================================
-        TABELA
-        ==================================================
-        */
-
-        /* Configuração geral da tabela. */
-        .table {
-            overflow: hidden;
-
-            border-radius: 15px;
-
-            background: white;
-        }
-
-
-        /* Cabeçalho da tabela. */
-        .table thead th {
-            background: var(--azul-principal) !important;
-
-            color: white;
-
-            border: none;
-
-            padding: 15px;
-        }
-
-
-        /* Células do corpo da tabela. */
-        .table tbody td {
-            padding: 15px;
-
-            vertical-align: middle;
-        }
-
-
-        /* Destaca levemente a linha quando o mouse passa sobre ela. */
-        .table-hover tbody tr:hover {
-            background: #f5f9ff;
-        }
-
-
-        /*
-        ==================================================
-        BOTÃO EDITAR
-        ==================================================
-        */
-
-        /* Estilo inicial do botão de edição. */
-        .btn-editar {
-            background: #e8f3ff;
-
-            color: #2F80ED;
-
-            border: none;
-
-            border-radius: 12px;
-
-            padding: 8px 14px;
-        }
-
-
-        /* Estilo do botão de edição ao passar o mouse. */
-        .btn-editar:hover {
-            background: #2F80ED;
-
-            color: white;
-        }
-
-
-        /*
-        ==================================================
-        BOTÃO EXCLUIR
-        ==================================================
-        */
-
-        /* Estilo inicial do botão de exclusão. */
-        .btn-excluir {
-            background: #fff1f2;
-
-            color: #dc3545;
-
-            border: none;
-
-            border-radius: 12px;
-
-            padding: 8px 14px;
-        }
-
-
-        /* Estilo do botão de exclusão ao passar o mouse. */
-        .btn-excluir:hover {
-            background: #dc3545;
-
-            color: white;
-        }
-
-
-        /*
-        ==================================================
-        CONTADOR DE PACIENTES
-        ==================================================
-        */
-
-        /* Card utilizado para mostrar a quantidade de pacientes. */
-        .total-box {
-            background: white;
-
-            border-radius: 18px;
-
-            padding: 20px;
-
-            text-align: center;
-
-            box-shadow:
-                0 5px 20px rgba(0, 0, 0, .06);
-
-            margin-bottom: 25px;
-        }
-
-
-        /* Número total de pacientes. */
-        .total-box h2 {
-            color: var(--azul-principal);
-
-            margin: 0;
-
-            font-weight: 700;
-        }
-
-
-        /* Texto abaixo do número. */
-        .total-box p {
-            margin: 0;
-
-            color: #6c757d;
-        }
-
-
-        /*
-        ==================================================
-        MODAL DE EXCLUSÃO DO PACIENTE
-        ==================================================
-        */
-
-        /* Corpo principal do modal. */
-        .modal-content {
-            background: white;
-
-            border: none;
-
-            border-radius: 25px;
-
-            box-shadow:
-                0 15px 40px rgba(47, 128, 237, .18);
-
-            padding: 20px;
-        }
-
-
-        /* Cabeçalho do modal. */
-        .modal-header {
-            border: none;
-
-            display: block;
-
-            text-align: center;
-
-            padding-bottom: 5px;
-        }
-
-
-        /* Círculo amarelo com o ícone de alerta. */
-        .modal-alerta {
-            width: 90px;
-
-            height: 90px;
-
-            margin: 10px auto 20px;
-
-            border-radius: 50%;
-
-            background: #fff3cd;
-
-            color: #856404;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-size: 40px;
-        }
-
-
-        /* Título do modal. */
-        .modal-title {
-            color: #dc3545;
-
-            font-weight: 700;
-
-            text-align: center;
-
-            margin-bottom: 8px;
-        }
-
-
-        /* Área que apresenta os dados do paciente. */
-        .modal-body {
-            background: #f8f9fa;
-
-            border-radius: 15px;
-
-            padding: 20px;
-
-            margin: 15px 0;
-        }
-
-
-        /* Alinha as informações do paciente à esquerda. */
-        .info-paciente {
-            text-align: left;
-        }
-
-
-        /* Espaçamento dos parágrafos dentro do modal. */
-        .info-paciente p {
-            margin-bottom: 10px;
-
-            font-size: 15px;
-
-            color: #212529;
-        }
-
-
-        /* Destaca os nomes dos campos. */
-        .info-paciente strong {
-            color: #212529;
-
-            font-weight: 700;
-        }
-
-
-        /* Rodapé do modal. */
-        .modal-footer {
-            border: none;
-
-            justify-content: center;
-
-            gap: 8px;
-
-            padding-top: 5px;
-        }
-
-
-        /* Botão vermelho de confirmação da exclusão. */
-        .btn-modal-excluir {
-            background: #dc3545;
-
-            border: none;
-
-            color: white;
-
-            border-radius: 12px;
-
-            padding: 10px 18px;
-
-            font-weight: 600;
-        }
-
-
-        /* Altera a cor do botão de exclusão ao passar o mouse. */
-        .btn-modal-excluir:hover {
-            background: #bb2d3b;
-
-            color: white;
-        }
-
-
-        /* Botão utilizado para cancelar a exclusão. */
-        .btn-modal-cancelar {
-            border-radius: 12px;
-
-            padding: 10px 18px;
-        }
-
+/* =====================================================
+           CORES E FUNDO
+        ====================================================== */
+:root{--azul:#2F80ED;--azul-escuro:#174ea6;--azul-claro:#56CCF2;--texto:#203247;--suave:#718096;--verde:#27AE60;--vermelho:#EB5757;--card:rgba(255,255,255,.96);}
+/* Cria o mesmo fundo sofisticado utilizado no módulo de medicamentos. */
+body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;color:var(--texto);background:radial-gradient(circle at 8% 10%,rgba(86,204,242,.18),transparent 25%),radial-gradient(circle at 92% 18%,rgba(47,128,237,.13),transparent 27%),linear-gradient(135deg,#f7fbff,#edf5ff 55%,#e7f2ff);}
+/* =====================================================
+           BARRA SUPERIOR
+        ====================================================== */
+.navbar-custom{min-height:70px;padding:0 24px;background:linear-gradient(110deg,#1767d1,#2F80ED 55%,#42b6df);box-shadow:0 10px 30px rgba(31,91,160,.18);}.navbar-brand{display:flex;align-items:center;gap:10px;font-size:19px;}.navbar-brand i{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.20);}
+/* Identifica o usuário atualmente conectado. */
+.usuario-topo{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:13px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);color:white;font-size:13px;font-weight:700;}.btn-sair{border:none;border-radius:12px;padding:10px 15px;background:#e94357;color:white;font-weight:700;transition:.25s;}.btn-sair:hover{background:#cf3044;color:white;transform:translateY(-2px);}
+/* =====================================================
+           CONTAINER
+        ====================================================== */
+.pagina{max-width:1440px;margin:auto;padding:38px 24px 50px;}
+/* =====================================================
+           CABEÇALHO DO MÓDULO
+        ====================================================== */
+.cabecalho{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:28px;}.etiqueta{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;margin-bottom:10px;border-radius:999px;background:#eef6ff;border:1px solid #dcecff;color:var(--azul);font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;}.titulo{margin:0;color:var(--texto);font-size:33px;font-weight:800;letter-spacing:-.7px;}.subtitulo{margin:8px 0 0;color:var(--suave);font-size:14px;}.btn-voltar{border-radius:13px;padding:11px 16px;font-weight:700;}
+/* =====================================================
+           RESUMO
+        ====================================================== */
+.resumo{display:flex;align-items:center;gap:16px;padding:20px 22px;margin-bottom:24px;border-radius:20px;background:var(--card);border:1px solid rgba(221,231,242,.95);box-shadow:0 13px 30px rgba(28,66,108,.07);}.resumo-icone{width:58px;height:58px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:17px;background:#edf5ff;color:var(--azul);font-size:26px;}.resumo-label{display:block;margin-bottom:3px;color:#97a6b7;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;}.resumo-numero{margin:0;color:var(--azul);font-size:28px;font-weight:800;}.resumo-texto{margin:2px 0 0;color:var(--suave);font-size:13px;}
+/* =====================================================
+           PESQUISA
+        ====================================================== */
+.pesquisa-box{padding:22px;margin-bottom:22px;border-radius:20px;background:var(--card);border:1px solid rgba(221,231,242,.95);box-shadow:0 13px 30px rgba(28,66,108,.06);}.pesquisa-topo{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:13px;}.pesquisa-titulo{margin:0;font-size:16px;font-weight:800;}.pesquisa-ajuda{margin:3px 0 0;color:var(--suave);font-size:12px;}.campo-pesquisa{min-height:50px;border:1px solid #dbe7ff;border-radius:13px;font-size:14px;}.campo-pesquisa:focus{border-color:var(--azul);box-shadow:0 0 0 .2rem rgba(47,128,237,.12);}.btn-buscar{min-height:50px;border:none;border-radius:13px;background:var(--azul);color:white;font-weight:800;}.btn-buscar:hover{background:var(--azul-escuro);color:white;}.btn-limpar{min-height:50px;border-radius:13px;border:1px solid #dbe3ed;background:white;color:#64778d;font-weight:700;}.btn-limpar:hover{background:#f5f8fc;}
+/* =====================================================
+           CABEÇALHO DA LISTA
+        ====================================================== */
+.lista-topo{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:15px;}.lista-titulo{margin:0;font-size:19px;font-weight:800;}.lista-subtitulo{margin:4px 0 0;color:var(--suave);font-size:12px;}.contador{padding:8px 12px;border-radius:10px;background:#f3f7fb;color:#587087;font-size:12px;font-weight:700;}.btn-novo{border:none;border-radius:13px;padding:11px 16px;background:var(--azul);color:white;font-weight:800;text-decoration:none;transition:.2s;}.btn-novo:hover{background:var(--azul-escuro);color:white;transform:translateY(-2px);}
+/* =====================================================
+           TABELA
+        ====================================================== */
+.tabela-card{overflow:hidden;border-radius:22px;background:var(--card);border:1px solid rgba(221,231,242,.95);box-shadow:0 15px 35px rgba(28,66,108,.08);}.tabela{min-width:1050px;margin:0;}.tabela thead th{padding:16px 17px;background:#f7faff;color:#62758b;border-bottom:1px solid #e7edf4;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;white-space:nowrap;}.tabela tbody td{padding:16px 17px;vertical-align:middle;border-bottom:1px solid #edf1f5;font-size:13px;color:#40536a;}.tabela tbody tr{transition:.2s;}.tabela tbody tr:hover{background:#f8fbff;}.tabela tbody tr:last-child td{border-bottom:none;}.paciente-area{display:flex;align-items:center;gap:11px;min-width:220px;}.paciente-icone{width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:13px;background:#edf9f2;color:var(--verde);font-size:18px;}.paciente-nome{color:var(--texto);font-weight:800;}.paciente-sub{margin-top:2px;color:#9aa7b6;font-size:11px;}.badge-cidade{display:inline-flex;padding:7px 10px;border-radius:10px;background:#eef6ff;color:var(--azul);font-size:11px;font-weight:800;}.responsavel{color:#53677d;font-weight:600;}.sem-responsavel{color:#a0acb9;font-style:italic;}.btn-editar,.btn-excluir{border:none;border-radius:10px;padding:8px 11px;font-size:12px;font-weight:700;transition:.2s;}.btn-editar{background:#eaf3ff;color:var(--azul);}.btn-editar:hover{background:var(--azul);color:white;}.btn-excluir{background:#fff0f2;color:var(--vermelho);}.btn-excluir:hover{background:var(--vermelho);color:white;}
+/* =====================================================
+           ESTADO VAZIO
+        ====================================================== */
+.vazio{padding:65px 20px !important;text-align:center;}.vazio-icone{width:72px;height:72px;margin:0 auto 14px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:#f1f6fb;color:#91a0b2;font-size:29px;}.vazio-titulo{margin:0 0 6px;color:var(--texto);font-weight:800;}.vazio-texto{margin:0;color:var(--suave);font-size:13px;}
+/* =====================================================
+           MODAL DE EXCLUSÃO
+        ====================================================== */
+.modal-content{border:none;border-radius:24px;box-shadow:0 20px 55px rgba(24,63,105,.18);}.modal-alerta{width:82px;height:82px;margin:8px auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff3cd;color:#856404;font-size:36px;}.modal-title{color:var(--vermelho);font-weight:800;}.info-paciente{padding:16px;border-radius:15px;background:#f7f9fc;}.info-paciente p{margin-bottom:9px;color:#44576d;font-size:14px;}.info-paciente strong{color:var(--texto);}.btn-modal-excluir,.btn-modal-cancelar{border-radius:11px;padding:10px 16px;font-weight:700;}.btn-modal-excluir{background:var(--vermelho);border:none;}.btn-modal-excluir:hover{background:#c83c4d;}
+/* =====================================================
+           RESPONSIVIDADE
+        ====================================================== */
+@media (max-width:767px){.navbar-custom{padding:0 14px;}.usuario-topo{display:none;}.pagina{padding:24px 14px 40px;}.cabecalho,.lista-topo{align-items:flex-start;flex-direction:column;}.titulo{font-size:28px;}.btn-voltar,.btn-novo{width:100%;text-align:center;}.pesquisa-topo{align-items:flex-start;flex-direction:column;}}
     </style>
-
 </head>
-
-
 <body>
-
-    <!-- Container principal que centraliza o conteúdo. -->
-    <div class="container py-5">
-
-        <!-- Card que reúne todas as informações da página. -->
-        <div class="card-principal">
-
-
-            <!-- ================================================= -->
-            <!-- CARD INFORMATIVO -->
-            <!-- ================================================= -->
-
-            <div class="info-card">
-
-                <!-- Título do sistema. -->
-                <h3>
-
-                    <i class="bi bi-hospital"></i>
-
-                    Sistema Hospitalar
-
-                </h3>
-
-
-                <!-- Descrição do sistema. -->
-                <p class="mb-0">
-
-                    Gerenciamento seguro e eficiente de pacientes.
-
+<!-- =====================================================
+     BARRA SUPERIOR
+===================================================== -->
+<nav class="navbar navbar-dark navbar-custom">
+    <div class="container-fluid">
+        <!-- Identidade principal do sistema. -->
+        <a class="navbar-brand fw-bold" href="dashboard.php">
+            <i class="bi bi-hospital"></i>
+            Controle Hospitalar
+        </a>
+        <!-- Exibe o usuário conectado e o botão de saída. -->
+        <div class="d-flex align-items-center gap-2">
+            <div class="usuario-topo">
+                <i class="bi bi-person-circle"></i>
+                <?= $_SESSION['nome']; ?>
+            </div>
+            <a href="logout.php" class="btn btn-sair">
+                <i class="bi bi-box-arrow-right me-1"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="pagina">
+    <!-- =====================================================
+         CABEÇALHO DO MÓDULO
+    ====================================================== -->
+    <section class="cabecalho">
+        <div>
+            <!-- Identifica visualmente o módulo atual. -->
+            <div class="etiqueta">
+                <i class="bi bi-people-fill"></i>
+                Cadastro de pacientes
+            </div>
+            <h1 class="titulo">Controle de Pacientes</h1>
+            <p class="subtitulo">
+                Cadastro, consulta e gerenciamento dos pacientes do hospital.
+            </p>
+        </div>
+        <!-- Retorna ao painel administrativo. -->
+        <a href="dashboard.php" class="btn btn-secondary btn-voltar">
+            <i class="bi bi-arrow-left me-1"></i>
+            Voltar ao painel
+        </a>
+    </section>
+    <!-- =====================================================
+         RESUMO
+    ====================================================== -->
+    <section class="resumo">
+        <div class="resumo-icone">
+            <i class="bi bi-person-vcard"></i>
+        </div>
+        <div>
+            <span class="resumo-label">Catálogo de pacientes</span>
+            <h2 class="resumo-numero">
+                <?= count($pacientes) ?>
+            </h2>
+            <p class="resumo-texto">
+                <?= !empty($pesquisa) ? 'Registros encontrados na pesquisa.' : 'Pacientes cadastrados no sistema.' ?>
+            </p>
+        </div>
+    </section>
+    <!-- =====================================================
+         PESQUISA
+    ====================================================== -->
+    <section class="pesquisa-box">
+        <div class="pesquisa-topo">
+            <div>
+                <h2 class="pesquisa-titulo">
+                    <i class="bi bi-search text-primary me-1"></i>
+                    Pesquisar pacientes
+                </h2>
+                <p class="pesquisa-ajuda">
+                    Busque por nome, CPF, telefone ou cartão do cidadão.
                 </p>
-
             </div>
-
-
-            <!-- ================================================= -->
-            <!-- TOTAL DE PACIENTES -->
-            <!-- ================================================= -->
-
-            <div class="row mb-4">
-
-                <div class="col-md-12">
-
-                    <div class="total-box">
-
-                        <!-- count() conta quantos pacientes foram
-                             retornados pela consulta SQL. -->
-                        <h2>
-
-                            <?= count($pacientes) ?>
-
-                        </h2>
-
-
-                        <p>
-
-                            Pacientes Cadastrados
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- ================================================= -->
-            <!-- TÍTULO E BOTÃO VOLTAR -->
-            <!-- ================================================= -->
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
-
-                <!-- Título e descrição da seção. -->
-                <div>
-
-                    <h2 class="titulo">
-
-                        <i class="bi bi-person-vcard"></i>
-
-                        Controle de Pacientes
-
-                    </h2>
-
-
-                    <div class="subtitulo">
-
-                        Cadastro e consulta de pacientes
-
-                    </div>
-
-                </div>
-
-
-                <!-- Retorna para o painel administrativo. -->
-                <a
-                    href="dashboard.php"
-                    class="btn btn-secondary"
-                >
-
-                    <i class="bi bi-arrow-left"></i>
-
-                    Voltar
-
-                </a>
-
-            </div>
-
-
-            <!-- ================================================= -->
-            <!-- FORMULÁRIO DE PESQUISA -->
-            <!-- ================================================= -->
-
-            <!-- O método GET permite que o texto da pesquisa
-                 apareça na URL. -->
-            <form
-                method="GET"
-                class="row g-2 mb-4"
-            >
-
-                <!-- Campo onde o usuário digita o que deseja pesquisar. -->
-                <div class="col-md-10">
-
+        </div>
+        <form method="GET">
+            <div class="row g-2">
+                <div class="col-lg-9">
                     <input
                         type="text"
                         name="pesquisa"
-                        class="form-control form-control-lg"
-                        placeholder="Pesquisar paciente, CPF ou telefone..."
+                        class="form-control campo-pesquisa"
+                        placeholder="Digite o nome, CPF, telefone ou cartão..."
                         value="<?= htmlspecialchars($pesquisa) ?>"
                     >
-
                 </div>
-
-
-                <!-- Botão responsável por realizar a pesquisa. -->
-                <div class="col-md-2">
-
-                    <button class="btn btn-azul btn-lg w-100">
-
-                        <i class="bi bi-search"></i>
-
+                <div class="col-lg-2">
+                    <button class="btn btn-buscar w-100">
+                        <i class="bi bi-search me-1"></i>
                         Buscar
-
                     </button>
-
                 </div>
-
-            </form>
-
-
-            <!-- ================================================= -->
-            <!-- BOTÃO NOVO PACIENTE -->
-            <!-- ================================================= -->
-
-            <div class="mb-4">
-
-                <!-- Abre a página de cadastro de um novo paciente. -->
-                <a
-                    href="paciente_cadastrar.php"
-                    class="btn btn-azul"
-                >
-
-                    <i class="bi bi-plus-circle"></i>
-
-                    Novo Paciente
-
-                </a>
-
+                <div class="col-lg-1">
+                    <a
+                        href="pacientes.php"
+                        class="btn btn-limpar w-100"
+                        title="Limpar pesquisa"
+                    >
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
             </div>
-
-
-            <!-- ================================================= -->
-            <!-- TABELA DE PACIENTES -->
-            <!-- ================================================= -->
-
-            <!-- Permite que a tabela tenha rolagem horizontal
-                 em telas menores. -->
-            <div class="table-responsive">
-
-                <table class="table table-hover align-middle">
-
-
-                    <!-- Cabeçalho da tabela. -->
-                    <thead>
-
-                        <tr>
-
-                            <th>Nome</th>
-
-                            <th>CPF</th>
-
-                            <th>Telefone</th>
-
-                            <th>Cartão</th>
-
-                            <th>Cidade</th>
-
-                            <th>Responsável</th>
-
-                            <th width="150">Ações</th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-
-                        <?php
-
-                        // Verifica se existe pelo menos um paciente
-                        // retornado pela consulta.
-                        if (count($pacientes) > 0):
-
-                        ?>
-
-
-                            <?php
-
-                            // Percorre todos os pacientes encontrados.
-                            foreach ($pacientes as $p):
-
-                            ?>
-
-
-                                <tr>
-
-
-                                    <!-- ================================= -->
-                                    <!-- NOME -->
-                                    <!-- ================================= -->
-
-                                    <td>
-
-                                        <strong>
-
-                                            <?= htmlspecialchars($p['nome']) ?>
-
-                                        </strong>
-
-                                    </td>
-
-
-                                    <!-- ================================= -->
-                                    <!-- CPF -->
-                                    <!-- ================================= -->
-
-                                    <td>
-
-                                        <?= htmlspecialchars($p['cpf']) ?>
-
-                                    </td>
-
-
-                                    <!-- ================================= -->
-                                    <!-- TELEFONE -->
-                                    <!-- ================================= -->
-
-                                    <td>
-
-                                        <?= htmlspecialchars($p['telefone']) ?>
-
-                                    </td>
-
-
-                                    <!-- ================================= -->
-                                    <!-- CARTÃO -->
-                                    <!-- ================================= -->
-
-                                    <td>
-
-                                        <?= htmlspecialchars($p['cartao_cidadao']) ?>
-
-                                    </td>
-
-
-                                    <!-- ================================= -->
-                                    <!-- CIDADE -->
-                                    <!-- ================================= -->
-
-                                    <td>
-
-                                        <span class="badge-forma">
-
-                                            <?= htmlspecialchars($p['cidade']) ?>
-
-                                        </span>
-
-                                    </td>
-
-
-                                    <!-- ================================= -->
-                                    <!-- RESPONSÁVEL -->
-                                    <!-- ================================= -->
-
-                                    <td>
-
-                                        <?php
-
-                                        // Verifica se existe um responsável
-                                        // relacionado ao paciente.
-                                        if ($p['responsavel_nome']):
-
-                                        ?>
-
-
-                                            <!-- Mostra o nome do responsável. -->
-                                            <?= htmlspecialchars($p['responsavel_nome']) ?>
-
-
-                                        <?php else: ?>
-
-
-                                            <!-- Caso não exista responsável,
-                                                 apresenta uma mensagem informativa. -->
-                                            <span class="text-muted">
-
-                                                Não possui
-
-                                            </span>
-
-
-                                        <?php endif; ?>
-
-                                    </td>
-
-
-                                    <!-- ================================= -->
-                                    <!-- AÇÕES -->
-                                    <!-- ================================= -->
-
-                                    <td>
-
-                                        <div class="d-flex gap-2">
-
-
-                                            <!-- ================================= -->
-                                            <!-- BOTÃO EDITAR -->
-                                            <!-- ================================= -->
-
-                                            <!-- Envia o ID do paciente para
-                                                 a página de edição. -->
-                                            <a
-                                                href="paciente_editar.php?id=<?= $p['id'] ?>"
-                                                class="btn btn-editar btn-sm"
-                                            >
-
-                                                <i class="bi bi-pencil-square"></i>
-
-                                                Editar
-
-                                            </a>
-
-
-                                            <!-- ================================= -->
-                                            <!-- BOTÃO EXCLUIR -->
-                                            <!-- ================================= -->
-
-                                            <!--
-                                                Este botão não exclui imediatamente.
-                                                Ele apenas abre o modal de confirmação
-                                                correspondente ao paciente.
-                                            -->
-                                            <button
-                                                type="button"
-                                                class="btn btn-excluir btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#modalExcluir<?= $p['id'] ?>"
-                                            >
-
-                                                <i class="bi bi-trash"></i>
-
-                                                Excluir
-
-                                            </button>
-
-
-                                            <!-- ================================= -->
-                                            <!-- MODAL DE EXCLUSÃO -->
-                                            <!-- ================================= -->
-
-                                            <!--
-                                                Cada paciente possui seu próprio modal.
-                                                O ID do modal utiliza o ID do paciente
-                                                para evitar conflitos entre os registros.
-                                            -->
-                                            <div
-                                                class="modal fade"
-                                                id="modalExcluir<?= $p['id'] ?>"
-                                                tabindex="-1"
-                                            >
-
-                                                <div class="modal-dialog modal-dialog-centered">
-
-                                                    <div class="modal-content">
-
-
-                                                        <!-- ================================= -->
-                                                        <!-- CABEÇALHO DO MODAL -->
-                                                        <!-- ================================= -->
-
-                                                        <div class="modal-header">
-
-                                                            <!-- Ícone de alerta. -->
-                                                            <div class="modal-alerta">
-
-                                                                <i class="bi bi-exclamation-triangle-fill"></i>
-
-                                                            </div>
-
-
-                                                            <!-- Título de confirmação. -->
-                                                            <h2 class="modal-title">
-
-                                                                Confirmar Exclusão
-
-                                                            </h2>
-
-
-                                                            <!-- Aviso sobre a exclusão. -->
-                                                            <p class="text-center text-muted mb-0">
-
-                                                                Esta ação não poderá ser desfeita.
-
-                                                            </p>
-
-                                                        </div>
-
-
-                                                        <!-- ================================= -->
-                                                        <!-- INFORMAÇÕES DO PACIENTE -->
-                                                        <!-- ================================= -->
-
-                                                        <div class="modal-body">
-
-                                                            <div class="info-paciente">
-
-
-                                                                <!-- Nome. -->
-                                                                <p>
-
-                                                                    <strong>
-
-                                                                        Paciente:
-
-                                                                    </strong>
-
-                                                                    <?= htmlspecialchars($p['nome']) ?>
-
-                                                                </p>
-
-
-                                                                <!-- CPF. -->
-                                                                <p>
-
-                                                                    <strong>
-
-                                                                        CPF:
-
-                                                                    </strong>
-
-                                                                    <?= htmlspecialchars($p['cpf']) ?>
-
-                                                                </p>
-
-
-                                                                <!-- Data de nascimento. -->
-                                                                <p>
-
-                                                                    <strong>
-
-                                                                        Data de Nascimento:
-
-                                                                    </strong>
-
-                                                                    <?= htmlspecialchars($p['data_de_nascimento']) ?>
-
-                                                                </p>
-
-
-                                                                <!-- Telefone. -->
-                                                                <p>
-
-                                                                    <strong>
-
-                                                                        Telefone:
-
-                                                                    </strong>
-
-                                                                    <?= htmlspecialchars($p['telefone']) ?>
-
-                                                                </p>
-
-
-                                                                <!-- Cartão do Cidadão. -->
-                                                                <p>
-
-                                                                    <strong>
-
-                                                                        Cartão do Cidadão:
-
-                                                                    </strong>
-
-                                                                    <?= htmlspecialchars($p['cartao_cidadao']) ?>
-
-                                                                </p>
-
-
-                                                                <!-- Cidade. -->
-                                                                <p>
-
-                                                                    <strong>
-
-                                                                        Cidade:
-
-                                                                    </strong>
-
-                                                                    <?= htmlspecialchars($p['cidade']) ?>
-
-                                                                </p>
-
-
-                                                                <!-- Responsável. -->
-                                                                <p class="mb-0">
-
-                                                                    <strong>
-
-                                                                        Responsável:
-
-                                                                    </strong>
-
-
-                                                                    <?php
-
-                                                                    // Verifica se existe responsável.
-                                                                    if ($p['responsavel_nome']):
-
-                                                                    ?>
-
-
-                                                                        <?= htmlspecialchars($p['responsavel_nome']) ?>
-
-
-                                                                    <?php else: ?>
-
-
-                                                                        <span class="text-muted">
-
-                                                                            Não possui
-
-                                                                        </span>
-
-
-                                                                    <?php endif; ?>
-
-                                                                </p>
-
-                                                            </div>
-
-                                                        </div>
-
-
-                                                        <!-- ================================= -->
-                                                        <!-- RODAPÉ DO MODAL -->
-                                                        <!-- ================================= -->
-
-                                                        <div class="modal-footer">
-
-
-                                                            <!--
-                                                                Formulário responsável por
-                                                                enviar a solicitação de exclusão.
-                                                                O ID do paciente é enviado
-                                                                pela URL para paciente_apagar.php.
-                                                            -->
-                                                            <form
-                                                                method="POST"
-                                                                action="paciente_apagar.php?id=<?= $p['id'] ?>"
-                                                                class="m-0"
-                                                            >
-
-                                                                <!-- Botão que confirma a exclusão. -->
-                                                                <button
-                                                                    type="submit"
-                                                                    class="btn btn-modal-excluir"
-                                                                >
-
-                                                                    <i class="bi bi-trash"></i>
-
-                                                                    Excluir Paciente
-
-                                                                </button>
-
-                                                            </form>
-
-
-                                                            <!-- Botão que fecha o modal
-                                                                 sem excluir o paciente. -->
-                                                            <button
-                                                                type="button"
-                                                                class="btn btn-secondary btn-modal-cancelar"
-                                                                data-bs-dismiss="modal"
-                                                            >
-
-                                                                <i class="bi bi-arrow-left"></i>
-
-                                                                Cancelar
-
-                                                            </button>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-
-                                        </div>
-
-                                    </td>
-
-                                </tr>
-
-
-                            <?php endforeach; ?>
-
-
-                        <?php else: ?>
-
-
-                            <!--
-                                Caso a consulta não encontre nenhum paciente,
-                                exibe uma linha informando o usuário.
-                            -->
-                            <tr>
-
-                                <td
-                                    colspan="7"
-                                    class="text-center text-muted py-4"
-                                >
-
-                                    <i class="bi bi-search"></i>
-
-                                    Nenhum paciente encontrado.
-
-                                </td>
-
-                            </tr>
-
-
-                        <?php endif; ?>
-
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
+        </form>
+    </section>
+    <!-- =====================================================
+         CABEÇALHO DA LISTA
+    ====================================================== -->
+    <section class="lista-topo">
+        <div>
+            <h2 class="lista-titulo">
+                Pacientes cadastrados
+            </h2>
+            <p class="lista-subtitulo">
+                Informações principais e ações disponíveis para cada paciente.
+            </p>
         </div>
-
-    </div>
-
-
-    <!--
-        Carrega o JavaScript do Bootstrap.
-        Ele é necessário para funcionalidades como o modal
-        de confirmação de exclusão.
-    -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    ></script>
-
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="contador">
+                <?= count($pacientes) ?> registro(s)
+            </span>
+            <a href="paciente_cadastrar.php" class="btn-novo">
+                <i class="bi bi-plus-circle me-1"></i>
+                Novo paciente
+            </a>
+        </div>
+    </section>
+    <!-- =====================================================
+         TABELA
+    ====================================================== -->
+    <section class="tabela-card">
+        <div class="table-responsive">
+            <table class="table tabela align-middle">
+                <thead>
+                    <tr>
+                        <th>Paciente</th>
+                        <th>CPF</th>
+                        <th>Telefone</th>
+                        <th>Cartão</th>
+                        <th>Cidade</th>
+                        <th>Responsável</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php if (count($pacientes) > 0): ?>
+                    <?php foreach ($pacientes as $p): ?>
+                        <tr>
+                            <!-- Exibe o nome e a identificação visual do paciente. -->
+                            <td>
+                                <div class="paciente-area">
+                                    <div class="paciente-icone">
+                                        <i class="bi bi-person-heart"></i>
+                                    </div>
+                                    <div>
+                                        <div class="paciente-nome">
+                                            <?= htmlspecialchars($p['nome']) ?>
+                                        </div>
+                                        <div class="paciente-sub">
+                                            Paciente cadastrado
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <?= htmlspecialchars($p['cpf']) ?>
+                            </td>
+                            <td>
+                                <?= htmlspecialchars($p['telefone']) ?>
+                            </td>
+                            <td>
+                                <?= htmlspecialchars($p['cartao_cidadao']) ?>
+                            </td>
+                            <td>
+                                <span class="badge-cidade">
+                                    <?= htmlspecialchars($p['cidade']) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($p['responsavel_nome']): ?>
+                                    <span class="responsavel">
+                                        <?= htmlspecialchars($p['responsavel_nome']) ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="sem-responsavel">
+                                        Não possui
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <!-- Envia o ID para a página de edição. -->
+                                    <a
+                                        href="paciente_editar.php?id=<?= $p['id'] ?>"
+                                        class="btn btn-editar"
+                                    >
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <!-- Abre o modal de confirmação sem excluir imediatamente. -->
+                                    <button
+                                        type="button"
+                                        class="btn btn-excluir"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalExcluir<?= $p['id'] ?>"
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <!-- Cada paciente possui seu próprio modal de exclusão. -->
+                                    <div
+                                        class="modal fade"
+                                        id="modalExcluir<?= $p['id'] ?>"
+                                        tabindex="-1"
+                                    >
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-body p-4">
+                                                    <div class="modal-alerta">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                    </div>
+                                                    <h3 class="modal-title text-center">
+                                                        Confirmar exclusão
+                                                    </h3>
+                                                    <p class="text-center text-muted">
+                                                        Esta ação não poderá ser desfeita.
+                                                    </p>
+                                                    <!-- Mostra os dados do paciente antes da exclusão. -->
+                                                    <div class="info-paciente my-3 text-start">
+                                                        <p>
+                                                            <strong>Paciente:</strong>
+                                                            <?= htmlspecialchars($p['nome']) ?>
+                                                        </p>
+                                                        <p>
+                                                            <strong>CPF:</strong>
+                                                            <?= htmlspecialchars($p['cpf']) ?>
+                                                        </p>
+                                                        <p>
+                                                            <strong>Data de Nascimento:</strong>
+                                                            <?= htmlspecialchars($p['data_de_nascimento']) ?>
+                                                        </p>
+                                                        <p>
+                                                            <strong>Telefone:</strong>
+                                                            <?= htmlspecialchars($p['telefone']) ?>
+                                                        </p>
+                                                        <p>
+                                                            <strong>Cartão do Cidadão:</strong>
+                                                            <?= htmlspecialchars($p['cartao_cidadao']) ?>
+                                                        </p>
+                                                        <p>
+                                                            <strong>Cidade:</strong>
+                                                            <?= htmlspecialchars($p['cidade']) ?>
+                                                        </p>
+                                                        <p class="mb-0">
+                                                            <strong>Responsável:</strong>
+                                                            <?php if ($p['responsavel_nome']): ?>
+                                                                <?= htmlspecialchars($p['responsavel_nome']) ?>
+                                                            <?php else: ?>
+                                                                <span class="text-muted">Não possui</span>
+                                                            <?php endif; ?>
+                                                        </p>
+                                                    </div>
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        <!-- Envia a exclusão para o mesmo arquivo original. -->
+                                                        <form
+                                                            method="POST"
+                                                            action="paciente_apagar.php?id=<?= $p['id'] ?>"
+                                                            class="m-0"
+                                                        >
+                                                            <button
+                                                                type="submit"
+                                                                class="btn btn-danger btn-modal-excluir"
+                                                            >
+                                                                <i class="bi bi-trash me-1"></i>
+                                                                Excluir paciente
+                                                            </button>
+                                                        </form>
+                                                        <!-- Fecha o modal sem excluir o paciente. -->
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-secondary btn-modal-cancelar"
+                                                            data-bs-dismiss="modal"
+                                                        >
+                                                            Cancelar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <!-- Mostra um estado vazio quando nenhum paciente for encontrado. -->
+                    <tr>
+                        <td colspan="7" class="vazio">
+                            <div class="vazio-icone">
+                                <i class="bi bi-person-x"></i>
+                            </div>
+                            <h3 class="vazio-titulo">
+                                Nenhum paciente encontrado
+                            </h3>
+                            <p class="vazio-texto">
+                                Tente modificar a pesquisa ou limpar os filtros.
+                            </p>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+<!-- Importa o JavaScript do Bootstrap para o funcionamento dos modais. -->
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
 </body>
-
 </html>

@@ -1,27 +1,13 @@
 <?php
 
 // ============================================================
-// CONFIGURAÇÃO DE ERROS
+// CONFIGURAÇÃO E CONEXÃO
 // ============================================================
 
-// Ativa a exibição dos erros do PHP na tela.
-// Isso ajuda a identificar problemas durante o desenvolvimento.
 ini_set('display_errors', 1);
-
-// Configura o PHP para informar todos os tipos de erros.
 error_reporting(E_ALL);
 
-
-// ============================================================
-// ARQUIVOS DO SISTEMA
-// ============================================================
-
-// Carrega o arquivo responsável pela autenticação do usuário.
-// Impede que pessoas não autenticadas acessem esta página.
 require_once '../includes/auth.php';
-
-// Carrega o arquivo responsável pela conexão com o banco de dados.
-// A variável $pdo será disponibilizada por esse arquivo.
 require_once '../config/database.php';
 
 
@@ -29,76 +15,31 @@ require_once '../config/database.php';
 // BUSCA FORNECEDORES DESATIVADOS
 // ============================================================
 
-// Inicia um bloco para tentar executar a consulta ao banco.
 try {
-
-    // Prepara a consulta SQL que buscará somente
-    // os fornecedores que estão desativados.
     $sql = $pdo->prepare("
-
         SELECT
-
-            -- ID do fornecedor.
             f.id,
-
-            -- Nome do fornecedor.
             f.nome,
-
-            -- CNPJ do fornecedor.
             f.cnpj,
-
-            -- E-mail do fornecedor.
             f.email,
-
-            -- Telefone do fornecedor.
             f.telefone,
-
-            -- ID do endereço relacionado ao fornecedor.
             f.endereco_id,
-
-            -- Rua do endereço.
             e.rua,
-
-            -- Número do endereço.
             e.numero,
-
-            -- CEP do endereço.
             e.cep,
-
-            -- Cidade do endereço.
             e.cidade,
-
-            -- Complemento do endereço.
             e.complemento
-
-        -- Define a tabela fornecedor como tabela principal.
         FROM fornecedor f
-
-        -- Relaciona fornecedor com endereço.
-        -- O LEFT JOIN permite que o fornecedor apareça
-        -- mesmo que não exista um endereço relacionado.
         LEFT JOIN endereco e
             ON f.endereco_id = e.id
-
-        -- Busca somente fornecedores desativados.
         WHERE f.ativa = 0
-
-        -- Organiza os fornecedores em ordem alfabética.
         ORDER BY f.nome ASC
-
     ");
 
-    // Executa a consulta preparada.
     $sql->execute();
-
-    // Obtém todos os resultados da consulta.
-    // PDO::FETCH_ASSOC retorna os dados como array associativo.
     $fornecedores = $sql->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-
-    // Caso aconteça algum erro no banco de dados,
-    // interrompe a execução e mostra a mensagem de erro.
     die(
         "Erro ao buscar fornecedores desativados: "
         . htmlspecialchars($e->getMessage())
@@ -111,1877 +52,1182 @@ try {
 <html lang="pt-BR">
 
 <head>
-
-    <!-- Define a codificação dos caracteres como UTF-8. -->
     <meta charset="UTF-8">
-
-    <!-- Faz a página se adaptar a diferentes tamanhos de tela. -->
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
 
-    <!-- Define o título exibido na aba do navegador. -->
     <title>Fornecedores Desativados</title>
 
-
-    <!-- =====================================================
-         BOOTSTRAP
-    ====================================================== -->
-
-    <!-- Importa o CSS do Bootstrap. -->
+    <!-- Bootstrap e Bootstrap Icons -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-
-    <!-- =====================================================
-         BOOTSTRAP ICONS
-    ====================================================== -->
-
-    <!-- Importa a biblioteca de ícones do Bootstrap. -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
 
-
     <style>
 
         /* =====================================================
-           CONFIGURAÇÕES GERAIS
-        ====================================================== */
+           CORES E CONFIGURAÇÕES
+        ===================================================== */
 
-        /* Cria variáveis CSS que serão utilizadas na página. */
         :root {
-
-            /* Cor azul principal do sistema. */
-            --azul-principal: #2f80ed;
-
-            /* Azul mais claro. */
-            --azul-claro: #56ccf2;
-
-            /* Cor principal dos textos. */
-            --texto: #172033;
-
-            /* Cor dos textos secundários. */
-            --texto-secundario: #6b7890;
-
-            /* Cor padrão das bordas. */
-            --borda: #e3eaf3;
-
-            /* Cor utilizada para indicar desativação. */
+            --azul: #2F80ED;
+            --azul-escuro: #174ea6;
+            --texto: #203247;
+            --suave: #708198;
+            --borda: #dce7f2;
             --vermelho: #e5484d;
-
-            /* Cor utilizada para indicar reativação. */
+            --vermelho-escuro: #c9343a;
             --verde: #159957;
         }
 
-
-        /* Facilita o controle das dimensões dos elementos. */
         * {
             box-sizing: border-box;
         }
 
-
-        /* =====================================================
-           CORPO DA PÁGINA
-        ====================================================== */
-
         body {
-
-            /* Remove a margem padrão do navegador. */
             margin: 0;
-
-            /* Garante que a página ocupe pelo menos toda a tela. */
             min-height: 100vh;
-
-            /* Define as fontes utilizadas. */
-            font-family:
-                "Segoe UI",
-                Roboto,
-                Arial,
-                sans-serif;
-
-            /* Cria o fundo em degradê azul claro. */
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            color: var(--texto);
             background:
+                radial-gradient(
+                    circle at 7% 12%,
+                    rgba(86, 204, 242, .14),
+                    transparent 24%
+                ),
+                radial-gradient(
+                    circle at 94% 20%,
+                    rgba(229, 72, 77, .08),
+                    transparent 25%
+                ),
                 linear-gradient(
                     135deg,
-                    #eef5ff 0%,
-                    #f7fbff 50%,
-                    #e8f3ff 100%
+                    #f7fbff,
+                    #edf5ff 55%,
+                    #e8f2ff
                 );
-
-            /* Define a cor padrão dos textos. */
-            color: var(--texto);
         }
 
-
-        /* =====================================================
-           CONTAINER PRINCIPAL
-        ====================================================== */
-
-        /* Área que envolve todo o conteúdo da página. */
         .pagina {
-
-            /* Ocupa toda a largura disponível. */
             width: 100%;
-
-            /* Define uma largura máxima para o conteúdo. */
             max-width: 1500px;
-
-            /* Centraliza o conteúdo. */
-            margin: 0 auto;
-
-            /* Define os espaçamentos internos. */
-            padding: 35px 50px 50px;
+            margin: auto;
+            padding: 30px 42px 50px;
         }
 
 
         /* =====================================================
            CABEÇALHO
-        ====================================================== */
+        ===================================================== */
 
-        /* Organiza o cabeçalho utilizando Flexbox. */
         .topo {
-
-            /* Ativa o Flexbox. */
             display: flex;
-
-            /* Alinha os elementos verticalmente. */
             align-items: center;
-
-            /* Coloca os elementos nos lados opostos. */
             justify-content: space-between;
-
-            /* Espaçamento entre os elementos. */
             gap: 25px;
-
-            /* Espaço abaixo do cabeçalho. */
-            margin-bottom: 30px;
+            margin-bottom: 27px;
         }
 
-
-        /* Área que contém o ícone e o título. */
         .titulo-area {
-
-            /* Ativa o Flexbox. */
             display: flex;
-
-            /* Centraliza verticalmente. */
             align-items: center;
-
-            /* Espaço entre o ícone e o texto. */
-            gap: 22px;
+            gap: 18px;
         }
 
-
-        /* Caixa que contém o ícone principal. */
         .icone-titulo {
-
-            /* Define a largura. */
-            width: 70px;
-
-            /* Define a altura. */
-            height: 70px;
-
-            /* Arredonda os cantos. */
-            border-radius: 20px;
-
-            /* Ativa o Flexbox. */
+            width: 66px;
+            height: 66px;
             display: flex;
-
-            /* Centraliza verticalmente. */
             align-items: center;
-
-            /* Centraliza horizontalmente. */
             justify-content: center;
-
-            /* Impede que o elemento diminua. */
             flex-shrink: 0;
-
-            /* Fundo avermelhado claro. */
+            border-radius: 20px;
             background: #fff0f1;
-
-            /* Cor do ícone. */
             color: var(--vermelho);
-
-            /* Tamanho do ícone. */
-            font-size: 31px;
+            font-size: 29px;
+            box-shadow: 0 10px 25px rgba(229,72,77,.08);
         }
 
+        .rotulo {
+            margin-bottom: 3px;
+            color: var(--vermelho);
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: 1.1px;
+            text-transform: uppercase;
+        }
 
-        /* Título principal. */
         .titulo-area h1 {
-
-            /* Remove a margem padrão. */
             margin: 0;
-
-            /* Define o tamanho da fonte. */
-            font-size: 36px;
-
-            /* Deixa o título em negrito. */
-            font-weight: 750;
-
-            /* Ajusta o espaçamento entre letras. */
-            letter-spacing: -0.7px;
-
-            /* Define a cor do título. */
             color: #172d49;
+            font-size: 34px;
+            font-weight: 850;
+            letter-spacing: -.7px;
         }
 
-
-        /* Texto abaixo do título. */
         .titulo-area p {
-
-            /* Define a margem. */
-            margin: 7px 0 0;
-
-            /* Define a cor. */
+            margin: 6px 0 0;
             color: #657693;
-
-            /* Define o tamanho. */
-            font-size: 17px;
+            font-size: 14px;
         }
 
-
-        /* =====================================================
-           BOTÃO VOLTAR
-        ====================================================== */
-
-        /* Permite organizar ícone e texto lado a lado. */
         .btn-voltar {
-
-            /* Organiza o conteúdo horizontalmente. */
             display: inline-flex;
-
-            /* Centraliza verticalmente. */
             align-items: center;
-
-            /* Espaço entre ícone e texto. */
-            gap: 10px;
-
-            /* Espaçamento interno. */
-            padding: 13px 21px;
-
-            /* Arredonda os cantos. */
-            border-radius: 15px;
-
-            /* Define a cor de fundo. */
-            background: #f7f9fc;
-
-            /* Define a borda. */
-            border: 1px solid #dce4ee;
-
-            /* Define a cor do texto. */
+            gap: 8px;
+            padding: 11px 17px;
+            border: 1px solid var(--borda);
+            border-radius: 13px;
+            background: rgba(255,255,255,.75);
             color: #405a78;
-
-            /* Remove o sublinhado. */
             text-decoration: none;
-
-            /* Define o tamanho do texto. */
-            font-size: 16px;
-
-            /* Define o peso da fonte. */
-            font-weight: 500;
-
-            /* Cria uma transição suave. */
-            transition: all .2s ease;
+            font-size: 13px;
+            font-weight: 750;
+            transition: .2s;
         }
 
-
-        /* Efeito quando o mouse passa sobre o botão. */
         .btn-voltar:hover {
-
-            /* Altera o fundo. */
-            background: #edf3f9;
-
-            /* Altera a borda. */
-            border-color: #cbd7e5;
-
-            /* Altera a cor do texto. */
-            color: #274766;
-
-            /* Move levemente o botão para cima. */
-            transform: translateY(-1px);
-        }
-
-
-        /* Tamanho do ícone do botão voltar. */
-        .btn-voltar i {
-            font-size: 18px;
+            color: var(--azul-escuro);
+            background: #fff;
+            border-color: #cbd9e8;
+            transform: translateY(-2px);
         }
 
 
         /* =====================================================
            CARDS DE RESUMO
-        ====================================================== */
+        ===================================================== */
 
-        /* Cria uma grade com três cards. */
         .resumo-grid {
-
-            /* Ativa CSS Grid. */
             display: grid;
-
-            /* Cria três colunas iguais. */
             grid-template-columns: repeat(3, 1fr);
-
-            /* Espaçamento entre os cards. */
             gap: 20px;
-
-            /* Espaço abaixo dos cards. */
-            margin-bottom: 30px;
+            margin-bottom: 27px;
         }
 
-
-        /* Cada card de resumo. */
         .resumo-card {
-
-            /* Define uma altura mínima. */
-            min-height: 115px;
-
-            /* Espaçamento interno. */
-            padding: 24px 27px;
-
-            /* Define o fundo. */
-            background: rgba(255, 255, 255, .92);
-
-            /* Define a borda. */
-            border: 1px solid var(--borda);
-
-            /* Arredonda os cantos. */
-            border-radius: 21px;
-
-            /* Organiza os elementos horizontalmente. */
+            min-height: 112px;
             display: flex;
-
-            /* Centraliza verticalmente. */
             align-items: center;
-
-            /* Espaço entre ícone e texto. */
-            gap: 20px;
-
-            /* Adiciona sombra. */
-            box-shadow:
-                0 8px 25px rgba(42, 72, 110, .05);
+            gap: 17px;
+            padding: 22px 25px;
+            border: 1px solid var(--borda);
+            border-radius: 21px;
+            background: rgba(255,255,255,.94);
+            box-shadow: 0 15px 35px rgba(39,89,145,.07);
         }
 
-
-        /* Ícones dos cards. */
         .resumo-icone {
-
-            /* Define a largura. */
-            width: 65px;
-
-            /* Define a altura. */
-            height: 65px;
-
-            /* Arredonda os cantos. */
-            border-radius: 18px;
-
-            /* Centraliza o ícone. */
+            width: 62px;
+            height: 62px;
             display: flex;
             align-items: center;
             justify-content: center;
-
-            /* Impede redução. */
             flex-shrink: 0;
-
-            /* Define o tamanho do ícone. */
-            font-size: 27px;
+            border-radius: 18px;
+            font-size: 25px;
         }
 
-
-        /* Ícone vermelho. */
         .resumo-icone.vermelho {
-            background: #fff0f1;
             color: var(--vermelho);
+            background: #fff0f1;
         }
 
-
-        /* Ícone azul. */
         .resumo-icone.azul {
-            background: #eaf3ff;
-            color: var(--azul-principal);
+            color: var(--azul);
+            background: #edf5ff;
         }
 
-
-        /* Ícone verde. */
         .resumo-icone.verde {
-            background: #eafaf2;
             color: var(--verde);
+            background: #eafaf2;
         }
 
-
-        /* Texto pequeno do card. */
         .resumo-label {
+            margin-bottom: 4px;
             color: #73839b;
-            font-size: 14px;
-            margin-bottom: 3px;
+            font-size: 13px;
         }
 
-
-        /* Valor principal do card. */
         .resumo-valor {
-            color: #21344b;
-            font-size: 29px;
+            color: #203247;
+            font-size: 28px;
             line-height: 1;
-            font-weight: 750;
+            font-weight: 850;
         }
 
 
         /* =====================================================
-           CARD DA TABELA
-        ====================================================== */
+           CARD PRINCIPAL
+        ===================================================== */
 
         .card-tabela {
-
-            /* Define o fundo. */
-            background: rgba(255, 255, 255, .96);
-
-            /* Define a borda. */
-            border: 1px solid var(--borda);
-
-            /* Arredonda os cantos. */
-            border-radius: 23px;
-
-            /* Impede que o conteúdo ultrapasse os cantos. */
             overflow: hidden;
-
-            /* Adiciona sombra. */
-            box-shadow:
-                0 10px 35px rgba(42, 72, 110, .06);
+            border: 1px solid var(--borda);
+            border-radius: 23px;
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 17px 40px rgba(39,89,145,.08);
         }
 
-
-        /* Cabeçalho da tabela. */
         .cabecalho-tabela {
-
-            /* Espaçamento interno. */
-            padding: 24px 28px;
-
-            /* Linha inferior. */
-            border-bottom: 1px solid var(--borda);
-
-            /* Ativa Flexbox. */
             display: flex;
-
-            /* Centraliza verticalmente. */
             align-items: center;
-
-            /* Coloca os conteúdos nos lados. */
             justify-content: space-between;
-
-            /* Espaçamento entre os elementos. */
             gap: 20px;
+            padding: 24px 27px 20px;
+            border-bottom: 1px solid var(--borda);
         }
 
-
-        /* Título da tabela. */
         .cabecalho-tabela h2 {
-
-            /* Remove margem padrão. */
             margin: 0;
-
-            /* Define tamanho. */
-            font-size: 19px;
-
-            /* Define peso. */
-            font-weight: 700;
-
-            /* Define cor. */
             color: #203651;
+            font-size: 19px;
+            font-weight: 850;
         }
 
-
-        /* Texto abaixo do título. */
         .cabecalho-tabela p {
-
-            /* Define margem. */
             margin: 5px 0 0;
-
-            /* Define cor. */
-            color: var(--texto-secundario);
-
-            /* Define tamanho. */
+            color: var(--suave);
             font-size: 13px;
         }
 
-
-        /* Badge de quantidade de registros. */
         .badge-total {
-
-            /* Organiza ícone e texto lado a lado. */
             display: inline-flex;
-
-            /* Centraliza verticalmente. */
             align-items: center;
-
-            /* Espaço entre ícone e texto. */
             gap: 7px;
-
-            /* Espaçamento interno. */
             padding: 8px 13px;
-
-            /* Arredonda o badge. */
             border-radius: 20px;
+            background: #fff0f1;
+            color: var(--vermelho);
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
 
-            /* Define fundo. */
-            background: #eef5ff;
 
-            /* Define cor. */
-            color: #2f72d7;
+        /* =====================================================
+           PESQUISA
+        ===================================================== */
 
-            /* Define tamanho do texto. */
+        .filtros {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 17px 27px;
+            border-bottom: 1px solid #edf2f7;
+            background: #fbfdff;
+        }
+
+        .campo-pesquisa {
+            position: relative;
+            width: min(420px, 100%);
+        }
+
+        .campo-pesquisa i {
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            z-index: 2;
+            color: #8494a8;
+            font-size: 15px;
+            transform: translateY(-50%);
+        }
+
+        .campo-pesquisa input {
+            width: 100%;
+            height: 43px;
+            padding: 0 15px 0 40px;
+            border: 1px solid var(--borda);
+            border-radius: 12px;
+            outline: none;
+            color: var(--texto);
+            background: #fff;
             font-size: 13px;
+            transition: .2s;
+        }
 
-            /* Define peso. */
-            font-weight: 650;
+        .campo-pesquisa input:focus {
+            border-color: var(--azul);
+            box-shadow: 0 0 0 .2rem rgba(47,128,237,.09);
+        }
+
+        .resultado-pesquisa {
+            margin-left: auto;
+            color: #8493a6;
+            font-size: 12px;
         }
 
 
         /* =====================================================
            TABELA
-        ====================================================== */
+        ===================================================== */
 
-        /* Permite rolagem horizontal em telas menores. */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
         }
 
-
-        /* Configurações gerais da tabela. */
         table {
             width: 100%;
             margin: 0;
             border-collapse: collapse;
         }
 
-
-        /* Cabeçalho das colunas. */
         thead th {
-
-            /* Espaçamento interno. */
-            padding: 17px 20px;
-
-            /* Fundo do cabeçalho. */
-            background: #f8fafc;
-
-            /* Cor do texto. */
-            color: #718098;
-
-            /* Tamanho da fonte. */
-            font-size: 11px;
-
-            /* Peso da fonte. */
-            font-weight: 750;
-
-            /* Transforma em letras maiúsculas. */
-            text-transform: uppercase;
-
-            /* Espaçamento entre letras. */
-            letter-spacing: .5px;
-
-            /* Linha inferior. */
+            padding: 16px 20px;
             border-bottom: 1px solid var(--borda);
-
-            /* Impede quebra de linha. */
+            background: #f8fafc;
+            color: #718098;
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: .6px;
+            text-transform: uppercase;
             white-space: nowrap;
         }
 
-
-        /* Células da tabela. */
         tbody td {
-
-            /* Espaçamento interno. */
-            padding: 18px 20px;
-
-            /* Cor do texto. */
-            color: #29384d;
-
-            /* Tamanho da fonte. */
-            font-size: 14px;
-
-            /* Linha separadora. */
+            padding: 17px 20px;
             border-bottom: 1px solid #edf1f5;
-
-            /* Alinhamento vertical. */
+            color: #29384d;
+            font-size: 13px;
             vertical-align: middle;
         }
 
-
-        /* Transição das linhas. */
         tbody tr {
-            transition: background .18s ease;
+            transition: .18s;
         }
 
-
-        /* Efeito ao passar o mouse sobre uma linha. */
         tbody tr:hover {
-            background: #f9fbfe;
+            background: #fff8f8;
         }
 
-
-        /* Remove a borda da última linha. */
         tbody tr:last-child td {
             border-bottom: none;
         }
 
-
-        /* Destaca o nome do fornecedor. */
         .nome-fornecedor {
-            font-weight: 700;
             color: #1c3049;
+            font-weight: 750;
         }
 
-
-        /* Estilo do e-mail. */
         .email {
             color: #60718a;
         }
 
-
-        /* Badge que indica fornecedor desativado. */
         .status {
-
-            /* Organiza ícone e texto. */
             display: inline-flex;
-
-            /* Centraliza verticalmente. */
             align-items: center;
-
-            /* Espaço entre os elementos. */
             gap: 6px;
-
-            /* Espaçamento interno. */
-            padding: 6px 11px;
-
-            /* Arredonda o badge. */
+            padding: 6px 10px;
             border-radius: 20px;
-
-            /* Fundo vermelho claro. */
             background: #fff0f1;
-
-            /* Cor do texto. */
-            color: #d83b45;
-
-            /* Tamanho da fonte. */
-            font-size: 11px;
-
-            /* Deixa o texto em negrito. */
-            font-weight: 700;
+            color: var(--vermelho-escuro);
+            font-size: 10px;
+            font-weight: 800;
         }
 
-
-        /* Define o tamanho do pequeno círculo do status. */
         .status i {
-            font-size: 9px;
+            font-size: 7px;
         }
 
 
         /* =====================================================
            BOTÕES DE AÇÃO
-        ====================================================== */
+        ===================================================== */
 
-        /* Organiza os botões lado a lado. */
         .acoes {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
         }
 
-
-        /* Estilo base dos botões. */
         .btn-acao {
-
-            /* Largura. */
-            width: 43px;
-
-            /* Altura. */
-            height: 43px;
-
-            /* Arredonda os cantos. */
-            border-radius: 12px;
-
-            /* Centraliza o ícone. */
+            width: 42px;
+            height: 42px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-
-            /* Define a borda. */
             border: 1px solid;
-
-            /* Fundo transparente. */
+            border-radius: 12px;
             background: transparent;
-
-            /* Remove sublinhado. */
             text-decoration: none;
-
-            /* Tamanho do ícone. */
-            font-size: 18px;
-
-            /* Transição suave. */
-            transition: all .2s ease;
-
-            /* Mostra o cursor de clique. */
+            font-size: 17px;
             cursor: pointer;
+            transition: .2s;
         }
 
-
-        /* Botão visualizar. */
         .btn-visualizar {
-            color: #2f6fb5;
             border-color: #d9e5f3;
             background: #f8fbff;
+            color: #2f6fb5;
         }
 
-
-        /* Efeito do botão visualizar. */
         .btn-visualizar:hover {
-            background: #eaf3ff;
             border-color: #bcd4ef;
+            background: #eaf3ff;
             transform: translateY(-2px);
         }
 
-
-        /* Botão reativar. */
         .btn-reativar {
-            color: var(--verde);
             border-color: #cfeede;
             background: #f3fcf7;
+            color: var(--verde);
         }
 
-
-        /* Efeito do botão reativar. */
         .btn-reativar:hover {
-            background: #e5f8ed;
             border-color: #a9dfc2;
+            background: #e5f8ed;
             transform: translateY(-2px);
         }
 
 
         /* =====================================================
            ESTADO VAZIO
-        ====================================================== */
+        ===================================================== */
 
         .estado-vazio {
-
-            /* Centraliza o conteúdo. */
-            text-align: center;
-
-            /* Define espaçamento interno. */
             padding: 65px 20px;
+            text-align: center;
         }
 
-
-        /* Ícone do estado vazio. */
         .estado-vazio i {
-            font-size: 45px;
-            color: #9eb0c5;
+            color: #a2b1c3;
+            font-size: 43px;
         }
 
-
-        /* Título do estado vazio. */
         .estado-vazio h3 {
-            margin: 15px 0 7px;
-            font-size: 18px;
+            margin: 14px 0 7px;
             color: #42566f;
+            font-size: 18px;
+            font-weight: 750;
         }
 
-
-        /* Texto do estado vazio. */
         .estado-vazio p {
             margin: 0;
             color: #7d8da3;
-            font-size: 14px;
+            font-size: 13px;
         }
 
 
         /* =====================================================
            MODAL
-        ====================================================== */
+        ===================================================== */
 
-        /* Estiliza o conteúdo da modal. */
         .modal-content {
-
-            /* Remove a borda padrão. */
-            border: none;
-
-            /* Arredonda os cantos. */
-            border-radius: 22px;
-
-            /* Impede que o conteúdo ultrapasse os cantos. */
             overflow: hidden;
-
-            /* Adiciona sombra. */
-            box-shadow:
-                0 25px 70px rgba(20, 35, 55, .25);
+            border: none;
+            border-radius: 22px;
+            box-shadow: 0 25px 70px rgba(20,35,55,.25);
         }
 
-
-        /* Cabeçalho da modal. */
         .modal-header {
-
-            /* Espaçamento interno. */
-            padding: 28px 32px;
-
-            /* Fundo branco. */
-            background: #ffffff;
-
-            /* Linha inferior. */
-            border-bottom: 1px solid #e6ebf1;
-
-            /* Organiza os elementos. */
             display: flex;
-
-            /* Centraliza verticalmente. */
             align-items: center;
-
-            /* Espaço entre elementos. */
-            gap: 17px;
+            gap: 15px;
+            padding: 25px 29px;
+            border-bottom: 1px solid #e6ebf1;
         }
 
-
-        /* Ícone do cabeçalho da modal. */
         .modal-header-icon {
-
-            /* Define largura. */
-            width: 65px;
-
-            /* Define altura. */
-            height: 65px;
-
-            /* Arredonda. */
-            border-radius: 18px;
-
-            /* Centraliza o ícone. */
+            width: 58px;
+            height: 58px;
             display: flex;
             align-items: center;
             justify-content: center;
-
-            /* Impede redução. */
             flex-shrink: 0;
-
-            /* Fundo verde claro. */
+            border-radius: 17px;
             background: #eafaf2;
-
-            /* Cor verde. */
             color: var(--verde);
-
-            /* Tamanho do ícone. */
-            font-size: 29px;
+            font-size: 26px;
         }
 
-
-        /* Título da modal. */
         .modal-titulo {
             margin: 0;
             color: #172033;
-            font-size: 25px;
-            font-weight: 750;
+            font-size: 22px;
+            font-weight: 850;
         }
 
-
-        /* Subtítulo da modal. */
         .modal-subtitulo {
             margin: 4px 0 0;
             color: #728098;
-            font-size: 16px;
+            font-size: 13px;
         }
 
-
-        /* Botão X para fechar. */
         .btn-fechar {
-
-            /* Empurra o botão para a direita. */
             margin-left: auto;
-
-            /* Remove borda. */
-            border: none;
-
-            /* Fundo transparente. */
+            padding: 3px 5px;
+            border: 0;
             background: transparent;
-
-            /* Cor do X. */
             color: #7f8791;
-
-            /* Tamanho. */
-            font-size: 29px;
-
-            /* Altura da linha. */
-            line-height: 1;
-
-            /* Espaçamento. */
-            padding: 2px 5px;
-
-            /* Cursor. */
+            font-size: 21px;
             cursor: pointer;
         }
 
-
-        /* Efeito do botão fechar. */
         .btn-fechar:hover {
             color: #303840;
         }
 
-
-        /* Corpo da modal. */
         .modal-body {
-            padding: 34px 32px;
+            padding: 27px 29px;
         }
 
-
-        /* =====================================================
-           AVISO DE REATIVAÇÃO
-        ====================================================== */
-
         .aviso-reativacao {
-
-            /* Organiza ícone e texto. */
             display: flex;
-
-            /* Alinha no início. */
             align-items: flex-start;
-
-            /* Espaço entre ícone e texto. */
-            gap: 16px;
-
-            /* Espaçamento interno. */
-            padding: 20px 22px;
-
-            /* Espaço abaixo. */
-            margin-bottom: 27px;
-
-            /* Borda amarela. */
+            gap: 13px;
+            margin-bottom: 22px;
+            padding: 16px 18px;
             border: 1px solid #ffd36a;
-
-            /* Fundo amarelo claro. */
+            border-radius: 15px;
             background: #fffaf0;
-
-            /* Arredonda os cantos. */
-            border-radius: 17px;
-
-            /* Cor do texto. */
             color: #934718;
-
-            /* Tamanho da fonte. */
-            font-size: 16px;
-
-            /* Altura das linhas. */
+            font-size: 13px;
             line-height: 1.55;
         }
 
-
-        /* Ícone do aviso. */
         .aviso-reativacao i {
-            font-size: 25px;
             flex-shrink: 0;
             margin-top: 1px;
+            font-size: 20px;
         }
-
-
-        /* Destaca textos em negrito dentro do aviso. */
-        .aviso-reativacao strong {
-            font-weight: 750;
-        }
-
-
-        /* =====================================================
-           DADOS DA MODAL
-        ====================================================== */
 
         .dados-modal {
-
-            /* Define o fundo. */
-            background: #f8fafc;
-
-            /* Define a borda. */
+            padding: 22px;
             border: 1px solid #e2e8f0;
-
-            /* Arredonda. */
-            border-radius: 20px;
-
-            /* Espaçamento interno. */
-            padding: 27px 25px;
+            border-radius: 18px;
+            background: #f8fafc;
         }
 
-
-        /* Cada bloco de informação. */
         .dado {
-            margin-bottom: 23px;
+            margin-bottom: 18px;
         }
 
-
-        /* Remove margem do último item. */
         .dado:last-child {
             margin-bottom: 0;
         }
 
-
-        /* Nome do campo. */
         .dado-label {
-            margin-bottom: 7px;
+            margin-bottom: 5px;
             color: #68768c;
-            font-size: 12px;
-            font-weight: 750;
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: .5px;
             text-transform: uppercase;
-            letter-spacing: .4px;
         }
 
-
-        /* Valor apresentado. */
         .dado-valor {
             color: #182337;
-            font-size: 17px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 650;
             word-break: break-word;
         }
 
-
-        /* =====================================================
-           RODAPÉ DA MODAL
-        ====================================================== */
-
         .modal-footer {
-
-            /* Espaçamento interno. */
-            padding: 22px 32px;
-
-            /* Fundo branco. */
-            background: #ffffff;
-
-            /* Linha superior. */
-            border-top: 1px solid #e6ebf1;
-
-            /* Organiza os botões. */
             display: flex;
-
-            /* Alinha à direita. */
             justify-content: flex-end;
-
-            /* Espaço entre os botões. */
-            gap: 10px;
+            gap: 9px;
+            padding: 19px 29px;
+            border-top: 1px solid #e6ebf1;
         }
 
-
-        /* Estilo base dos botões da modal. */
         .btn-modal {
-
-            /* Altura mínima. */
-            min-height: 48px;
-
-            /* Espaçamento interno. */
-            padding: 11px 20px;
-
-            /* Arredonda os cantos. */
-            border-radius: 13px;
-
-            /* Tamanho da fonte. */
-            font-size: 16px;
-
-            /* Peso da fonte. */
-            font-weight: 650;
-
-            /* Centraliza conteúdo. */
+            min-height: 44px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-
-            /* Espaço entre ícone e texto. */
-            gap: 9px;
-
-            /* Cursor de clique. */
-            cursor: pointer;
-
-            /* Remove sublinhado. */
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 800;
             text-decoration: none;
-
-            /* Transição suave. */
-            transition: all .2s ease;
+            cursor: pointer;
+            transition: .2s;
         }
 
-
-        /* Botão cancelar. */
         .btn-cancelar {
-            background: white;
-            color: #526176;
             border: 1px solid #d4dce7;
+            background: #fff;
+            color: #526176;
         }
 
-
-        /* Efeito do botão cancelar. */
         .btn-cancelar:hover {
             background: #f6f8fa;
             color: #37465a;
         }
 
-
-        /* Botão confirmar. */
         .btn-confirmar {
-            background: var(--verde);
-            color: white;
+            min-width: 245px;
             border: 1px solid var(--verde);
-            min-width: 275px;
+            background: var(--verde);
+            color: #fff;
         }
 
-
-        /* Efeito do botão confirmar. */
         .btn-confirmar:hover {
-            background: #10864d;
             border-color: #10864d;
-            color: white;
+            background: #10864d;
+            color: #fff;
             transform: translateY(-1px);
         }
 
 
         /* =====================================================
            RESPONSIVIDADE
-        ====================================================== */
+        ===================================================== */
 
-        /* Regras aplicadas em telas de até 900 pixels. */
-        @media (max-width: 900px) {
+        @media (max-width: 950px) {
 
-            /* Reduz o espaçamento da página. */
             .pagina {
-                padding: 25px 20px 40px;
+                padding: 22px 18px 40px;
             }
 
-
-            /* Coloca o cabeçalho em coluna. */
             .topo {
                 align-items: flex-start;
                 flex-direction: column;
             }
 
+            .btn-voltar {
+                width: 100%;
+                justify-content: center;
+            }
 
-            /* Coloca os cards em uma única coluna. */
             .resumo-grid {
                 grid-template-columns: 1fr;
             }
 
+            .cabecalho-tabela {
+                align-items: flex-start;
+                flex-direction: column;
+            }
 
-            /* Reduz o tamanho do título. */
+            .badge-total {
+                align-self: flex-start;
+            }
+
+            .resultado-pesquisa {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .titulo-area {
+                align-items: flex-start;
+            }
+
+            .icone-titulo {
+                width: 56px;
+                height: 56px;
+                font-size: 25px;
+            }
+
             .titulo-area h1 {
-                font-size: 29px;
+                font-size: 27px;
             }
 
-
-            /* Reduz o tamanho do subtítulo. */
             .titulo-area p {
-                font-size: 14px;
+                font-size: 13px;
             }
 
+            .filtros {
+                align-items: stretch;
+                flex-direction: column;
+            }
 
-            /* Reduz o espaçamento horizontal da modal. */
+            .campo-pesquisa {
+                width: 100%;
+            }
+
+            .resultado-pesquisa {
+                margin: 0;
+            }
+
             .modal-header,
             .modal-body,
             .modal-footer {
-                padding-left: 20px;
-                padding-right: 20px;
+                padding-left: 19px;
+                padding-right: 19px;
             }
 
-
-            /* Coloca os botões da modal em coluna. */
             .modal-footer {
                 flex-direction: column-reverse;
             }
 
-
-            /* Faz os botões ocuparem toda a largura. */
             .btn-modal {
                 width: 100%;
             }
 
-
-            /* Remove a largura mínima do botão confirmar. */
             .btn-confirmar {
                 min-width: 0;
             }
         }
 
     </style>
-
 </head>
-
 
 <body>
 
-    <!-- Container principal da página. -->
-    <div class="pagina">
+<div class="pagina">
 
+    <!-- =====================================================
+         CABEÇALHO
+    ====================================================== -->
 
-        <!-- =====================================================
-             CABEÇALHO
-        ====================================================== -->
+    <div class="topo">
 
-        <div class="topo">
+        <div class="titulo-area">
 
-            <!-- Área que contém o ícone e o título. -->
-            <div class="titulo-area">
-
-                <!-- Caixa do ícone principal. -->
-                <div class="icone-titulo">
-
-                    <!-- Ícone de fornecedor desativado. -->
-                    <i class="bi bi-building-x"></i>
-
-                </div>
-
-
-                <!-- Área dos textos do cabeçalho. -->
-                <div>
-
-                    <!-- Título da página. -->
-                    <h1>
-                        Fornecedores Desativados
-                    </h1>
-
-                    <!-- Descrição da página. -->
-                    <p>
-                        Consulte os fornecedores que foram temporariamente
-                        retirados da lista de ativos.
-                    </p>
-
-                </div>
-
+            <div class="icone-titulo">
+                <i class="bi bi-building-x"></i>
             </div>
 
+            <div>
+                <div class="rotulo">Gestão de fornecedores</div>
 
-            <!-- Link para voltar à lista principal. -->
-            <a
-                href="fornecedor.php"
-                class="btn-voltar"
-            >
+                <h1>Fornecedores Desativados</h1>
 
-                <!-- Ícone de seta para esquerda. -->
-                <i class="bi bi-arrow-left"></i>
-
-                <!-- Texto do botão. -->
-                Voltar aos Fornecedores
-
-            </a>
+                <p>
+                    Consulte, visualize e reative fornecedores
+                    temporariamente retirados da lista de ativos.
+                </p>
+            </div>
 
         </div>
 
+        <a href="fornecedor.php" class="btn-voltar">
+            <i class="bi bi-arrow-left"></i>
+            Voltar aos Fornecedores
+        </a>
 
-        <!-- =====================================================
-             CARDS DE RESUMO
-        ====================================================== -->
-
-        <div class="resumo-grid">
-
-
-            <!-- Primeiro card: quantidade de fornecedores desativados. -->
-            <div class="resumo-card">
-
-                <!-- Ícone do card. -->
-                <div class="resumo-icone vermelho">
-
-                    <i class="bi bi-building-x"></i>
-
-                </div>
+    </div>
 
 
-                <!-- Informações do card. -->
-                <div>
+    <!-- =====================================================
+         RESUMO
+    ====================================================== -->
 
-                    <!-- Nome da informação. -->
-                    <div class="resumo-label">
-                        Fornecedores desativados
-                    </div>
+    <div class="resumo-grid">
 
-                    <!-- Quantidade encontrada. -->
-                    <div class="resumo-valor">
-                        <?= count($fornecedores) ?>
-                    </div>
+        <div class="resumo-card">
 
-                </div>
-
+            <div class="resumo-icone vermelho">
+                <i class="bi bi-building-x"></i>
             </div>
 
-
-            <!-- Segundo card. -->
-            <div class="resumo-card">
-
-                <!-- Ícone azul. -->
-                <div class="resumo-icone azul">
-
-                    <i class="bi bi-database-check"></i>
-
+            <div>
+                <div class="resumo-label">
+                    Fornecedores desativados
                 </div>
 
-
-                <div>
-
-                    <!-- Descrição. -->
-                    <div class="resumo-label">
-                        Registros preservados
-                    </div>
-
-                    <!-- Valor apresentado. -->
-                    <div class="resumo-valor">
-                        100%
-                    </div>
-
+                <div class="resumo-valor">
+                    <?= count($fornecedores) ?>
                 </div>
-
-            </div>
-
-
-            <!-- Terceiro card. -->
-            <div class="resumo-card">
-
-                <!-- Ícone verde. -->
-                <div class="resumo-icone verde">
-
-                    <i class="bi bi-shield-check"></i>
-
-                </div>
-
-
-                <div>
-
-                    <!-- Descrição. -->
-                    <div class="resumo-label">
-                        Dados mantidos no sistema
-                    </div>
-
-                    <!-- Status apresentado. -->
-                    <div class="resumo-valor">
-                        Ativo
-                    </div>
-
-                </div>
-
             </div>
 
         </div>
 
 
-        <!-- =====================================================
-             TABELA
-        ====================================================== -->
+        <div class="resumo-card">
 
-        <!-- Card que contém a tabela. -->
-        <div class="card-tabela">
+            <div class="resumo-icone azul">
+                <i class="bi bi-database-check"></i>
+            </div>
+
+            <div>
+                <div class="resumo-label">
+                    Registros preservados
+                </div>
+
+                <div class="resumo-valor">
+                    100%
+                </div>
+            </div>
+
+        </div>
 
 
-            <!-- Cabeçalho da tabela. -->
-            <div class="cabecalho-tabela">
+        <div class="resumo-card">
+
+            <div class="resumo-icone verde">
+                <i class="bi bi-shield-check"></i>
+            </div>
+
+            <div>
+                <div class="resumo-label">
+                    Dados mantidos no sistema
+                </div>
+
+                <div class="resumo-valor">
+                    Ativo
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         LISTA
+    ====================================================== -->
+
+    <div class="card-tabela">
+
+        <div class="cabecalho-tabela">
+
+            <div>
+                <h2>Lista de fornecedores desativados</h2>
+
+                <p>
+                    Os registros abaixo podem ser visualizados
+                    e reativados quando necessário.
+                </p>
+            </div>
+
+            <div class="badge-total">
+                <i class="bi bi-archive"></i>
+                <span id="contadorTotal">
+                    <?= count($fornecedores) ?>
+                </span>
+                registro(s)
+            </div>
+
+        </div>
+
+
+        <!-- Pesquisa sem alterar o backend -->
+        <div class="filtros">
+
+            <div class="campo-pesquisa">
+                <i class="bi bi-search"></i>
+
+                <input
+                    type="search"
+                    id="pesquisaFornecedor"
+                    placeholder="Pesquisar fornecedor, CNPJ, telefone, e-mail ou cidade..."
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="resultado-pesquisa">
+                <span id="resultadoTexto">
+                    <?= count($fornecedores) ?> registro(s) encontrado(s)
+                </span>
+            </div>
+
+        </div>
+
+
+        <?php if (count($fornecedores) > 0): ?>
+
+            <div class="table-responsive">
+
+                <table id="tabelaFornecedores">
+
+                    <thead>
+                        <tr>
+                            <th>Fornecedor</th>
+                            <th>CNPJ</th>
+                            <th>Telefone</th>
+                            <th>E-mail</th>
+                            <th>Cidade</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <?php foreach ($fornecedores as $fornecedor): ?>
+
+                        <tr>
+
+                            <td>
+                                <div class="nome-fornecedor">
+                                    <?= htmlspecialchars(
+                                        $fornecedor['nome'] ?? ''
+                                    ) ?>
+                                </div>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars(
+                                    $fornecedor['cnpj'] ?? ''
+                                ) ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars(
+                                    $fornecedor['telefone'] ?? ''
+                                ) ?>
+                            </td>
+
+                            <td>
+                                <div class="email">
+                                    <?= htmlspecialchars(
+                                        $fornecedor['email'] ?? ''
+                                    ) ?>
+                                </div>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars(
+                                    $fornecedor['cidade'] ?? ''
+                                ) ?>
+                            </td>
+
+                            <td>
+                                <span class="status">
+                                    <i class="bi bi-circle-fill"></i>
+                                    Desativado
+                                </span>
+                            </td>
+
+                            <td>
+
+                                <div class="acoes">
+
+                                    <!-- Visualização continua usando a página original -->
+                                    <a
+                                        href="fornecedor_visualizar.php?id=<?= $fornecedor['id'] ?>"
+                                        class="btn-acao btn-visualizar"
+                                        title="Visualizar fornecedor"
+                                    >
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+
+                                    <!-- Reativação continua usando a mesma modal -->
+                                    <button
+                                        type="button"
+                                        class="btn-acao btn-reativar"
+                                        title="Reativar fornecedor"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalReativar"
+                                        data-id="<?= $fornecedor['id'] ?>"
+                                        data-nome="<?= htmlspecialchars(
+                                            $fornecedor['nome'] ?? '',
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ) ?>"
+                                        data-cnpj="<?= htmlspecialchars(
+                                            $fornecedor['cnpj'] ?? '',
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ) ?>"
+                                        data-telefone="<?= htmlspecialchars(
+                                            $fornecedor['telefone'] ?? '',
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ) ?>"
+                                        data-email="<?= htmlspecialchars(
+                                            $fornecedor['email'] ?? '',
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ) ?>"
+                                    >
+                                        <i class="bi bi-person-check"></i>
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        <?php else: ?>
+
+            <!-- Estado quando não existem registros -->
+            <div class="estado-vazio">
+
+                <i class="bi bi-building-check"></i>
+
+                <h3>Nenhum fornecedor desativado</h3>
+
+                <p>
+                    Não existem fornecedores desativados no momento.
+                </p>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL DE REATIVAÇÃO
+========================================================== -->
+
+<div
+    class="modal fade"
+    id="modalReativar"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <div class="modal-header-icon">
+                    <i class="bi bi-person-check"></i>
+                </div>
 
                 <div>
-
-                    <!-- Título da lista. -->
-                    <h2>
-                        Lista de fornecedores desativados
+                    <h2 class="modal-titulo">
+                        Reativar fornecedor
                     </h2>
 
-                    <!-- Explicação. -->
-                    <p>
-                        Os registros abaixo podem ser visualizados
-                        e reativados quando necessário.
+                    <p class="modal-subtitulo">
+                        Confira os dados antes de confirmar a reativação.
                     </p>
-
                 </div>
 
-
-                <!-- Mostra a quantidade de registros. -->
-                <div class="badge-total">
-
-                    <!-- Ícone de arquivo. -->
-                    <i class="bi bi-archive"></i>
-
-                    <!-- Quantidade de registros. -->
-                    <?= count($fornecedores) ?> registro(s)
-
-                </div>
+                <button
+                    type="button"
+                    class="btn-fechar"
+                    data-bs-dismiss="modal"
+                    aria-label="Fechar"
+                >
+                    <i class="bi bi-x-lg"></i>
+                </button>
 
             </div>
 
 
-            <!-- Verifica se existem fornecedores desativados. -->
-            <?php if (count($fornecedores) > 0): ?>
+            <div class="modal-body">
 
+                <div class="aviso-reativacao">
 
-                <!-- Permite rolagem horizontal em telas pequenas. -->
-                <div class="table-responsive">
+                    <i class="bi bi-exclamation-triangle"></i>
 
-                    <!-- Inicia a tabela. -->
-                    <table>
-
-                        <!-- Cabeçalho da tabela. -->
-                        <thead>
-
-                            <tr>
-
-                                <th>Fornecedor</th>
-                                <th>CNPJ</th>
-                                <th>Telefone</th>
-                                <th>E-mail</th>
-                                <th>Cidade</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <!-- Corpo da tabela. -->
-                        <tbody>
-
-
-                            <!-- Percorre todos os fornecedores encontrados. -->
-                            <?php foreach ($fornecedores as $fornecedor): ?>
-
-                                <tr>
-
-
-                                    <!-- ============================
-                                         NOME
-                                    ============================= -->
-
-                                    <td>
-
-                                        <!-- Destaca o nome. -->
-                                        <div class="nome-fornecedor">
-
-                                            <?= htmlspecialchars(
-                                                $fornecedor['nome'] ?? ''
-                                            ) ?>
-
-                                        </div>
-
-                                    </td>
-
-
-                                    <!-- ============================
-                                         CNPJ
-                                    ============================= -->
-
-                                    <td>
-
-                                        <?= htmlspecialchars(
-                                            $fornecedor['cnpj'] ?? ''
-                                        ) ?>
-
-                                    </td>
-
-
-                                    <!-- ============================
-                                         TELEFONE
-                                    ============================= -->
-
-                                    <td>
-
-                                        <?= htmlspecialchars(
-                                            $fornecedor['telefone'] ?? ''
-                                        ) ?>
-
-                                    </td>
-
-
-                                    <!-- ============================
-                                         E-MAIL
-                                    ============================= -->
-
-                                    <td>
-
-                                        <div class="email">
-
-                                            <?= htmlspecialchars(
-                                                $fornecedor['email'] ?? ''
-                                            ) ?>
-
-                                        </div>
-
-                                    </td>
-
-
-                                    <!-- ============================
-                                         CIDADE
-                                    ============================= -->
-
-                                    <td>
-
-                                        <?= htmlspecialchars(
-                                            $fornecedor['cidade'] ?? ''
-                                        ) ?>
-
-                                    </td>
-
-
-                                    <!-- ============================
-                                         STATUS
-                                    ============================= -->
-
-                                    <td>
-
-                                        <!-- Badge indicando que está desativado. -->
-                                        <span class="status">
-
-                                            <!-- Pequeno círculo indicador. -->
-                                            <i class="bi bi-circle-fill"></i>
-
-                                            <!-- Texto do status. -->
-                                            Desativado
-
-                                        </span>
-
-                                    </td>
-
-
-                                    <!-- ============================
-                                         AÇÕES
-                                    ============================= -->
-
-                                    <td>
-
-                                        <!-- Agrupa os botões de ação. -->
-                                        <div class="acoes">
-
-
-                                            <!-- VISUALIZAR -->
-
-                                            <!-- Link para visualizar os detalhes. -->
-                                            <a
-                                                href="fornecedor_visualizar.php?id=<?= $fornecedor['id'] ?>"
-                                                class="btn-acao btn-visualizar"
-                                                title="Visualizar fornecedor"
-                                            >
-
-                                                <!-- Ícone de olho. -->
-                                                <i class="bi bi-eye"></i>
-
-                                            </a>
-
-
-                                            <!-- REATIVAR -->
-
-                                            <!-- Botão que abre a modal de reativação. -->
-                                            <button
-                                                type="button"
-                                                class="btn-acao btn-reativar"
-                                                title="Reativar fornecedor"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#modalReativar"
-                                                data-id="<?= $fornecedor['id'] ?>"
-                                                data-nome="<?= htmlspecialchars(
-                                                    $fornecedor['nome'] ?? '',
-                                                    ENT_QUOTES,
-                                                    'UTF-8'
-                                                ) ?>"
-                                                data-cnpj="<?= htmlspecialchars(
-                                                    $fornecedor['cnpj'] ?? '',
-                                                    ENT_QUOTES,
-                                                    'UTF-8'
-                                                ) ?>"
-                                                data-telefone="<?= htmlspecialchars(
-                                                    $fornecedor['telefone'] ?? '',
-                                                    ENT_QUOTES,
-                                                    'UTF-8'
-                                                ) ?>"
-                                                data-email="<?= htmlspecialchars(
-                                                    $fornecedor['email'] ?? '',
-                                                    ENT_QUOTES,
-                                                    'UTF-8'
-                                                ) ?>"
-                                            >
-
-                                                <!-- Ícone de reativação. -->
-                                                <i class="bi bi-person-check"></i>
-
-                                            </button>
-
-
-                                        </div>
-
-                                    </td>
-
-
-                                </tr>
-
-                            <?php endforeach; ?>
-
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-
-            <?php else: ?>
-
-
-                <!-- =================================================
-                     ESTADO VAZIO
-                ================================================== -->
-
-                <div class="estado-vazio">
-
-                    <!-- Ícone indicando ausência de registros. -->
-                    <i class="bi bi-building-check"></i>
-
-                    <!-- Mensagem principal. -->
-                    <h3>
-                        Nenhum fornecedor desativado
-                    </h3>
-
-                    <!-- Explicação. -->
-                    <p>
-                        Não existem fornecedores desativados no momento.
-                    </p>
-
-                </div>
-
-
-            <?php endif; ?>
-
-
-        </div>
-
-    </div>
-
-
-    <!-- =========================================================
-         MODAL DE REATIVAÇÃO
-    ========================================================== -->
-
-    <div
-        class="modal fade"
-        id="modalReativar"
-        tabindex="-1"
-        aria-hidden="true"
-    >
-
-        <!-- Define o tamanho e posicionamento da modal. -->
-        <div
-            class="modal-dialog modal-dialog-centered modal-lg"
-        >
-
-            <!-- Conteúdo principal da modal. -->
-            <div class="modal-content">
-
-
-                <!-- =================================================
-                     CABEÇALHO DA MODAL
-                ================================================== -->
-
-                <div class="modal-header">
-
-
-                    <!-- Ícone da modal. -->
-                    <div class="modal-header-icon">
-
-                        <i class="bi bi-person-check"></i>
-
-                    </div>
-
-
-                    <!-- Títulos da modal. -->
                     <div>
+                        <strong>Atenção:</strong>
+                        você está prestes a reativar este fornecedor.
 
-                        <h2 class="modal-titulo">
-                            Reativar fornecedor
-                        </h2>
-
-                        <p class="modal-subtitulo">
-                            Confira os dados antes de confirmar a reativação.
-                        </p>
-
+                        Após a confirmação, ele voltará a ser considerado
+                        <strong>ativo</strong> no hospital.
                     </div>
-
-
-                    <!-- Botão utilizado para fechar a modal. -->
-                    <button
-                        type="button"
-                        class="btn-fechar"
-                        data-bs-dismiss="modal"
-                        aria-label="Fechar"
-                    >
-
-                        <!-- Ícone X. -->
-                        <i class="bi bi-x-lg"></i>
-
-                    </button>
-
 
                 </div>
 
 
-                <!-- =================================================
-                     CORPO DA MODAL
-                ================================================== -->
+                <div class="dados-modal">
 
-                <div class="modal-body">
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <div class="dado">
+                                <div class="dado-label">
+                                    Nome do fornecedor
+                                </div>
+
+                                <div
+                                    class="dado-valor"
+                                    id="modalNome"
+                                >
+                                    —
+                                </div>
+                            </div>
+                        </div>
 
 
-                    <!-- Aviso apresentado antes da confirmação. -->
-                    <div class="aviso-reativacao">
+                        <div class="col-md-6">
+                            <div class="dado">
+                                <div class="dado-label">
+                                    CNPJ
+                                </div>
 
-                        <!-- Ícone de atenção. -->
-                        <i class="bi bi-exclamation-triangle"></i>
+                                <div
+                                    class="dado-valor"
+                                    id="modalCnpj"
+                                >
+                                    —
+                                </div>
+                            </div>
+                        </div>
 
 
-                        <div>
+                        <div class="col-md-6">
+                            <div class="dado">
+                                <div class="dado-label">
+                                    Telefone
+                                </div>
 
-                            <!-- Palavra de destaque. -->
-                            <strong>Atenção:</strong>
+                                <div
+                                    class="dado-valor"
+                                    id="modalTelefone"
+                                >
+                                    —
+                                </div>
+                            </div>
+                        </div>
 
-                            Você está prestes a reativar este fornecedor.
 
-                            <!-- Explicação da ação. -->
-                            Após a confirmação, ele voltará a ser considerado
-                            <strong>ativo</strong> no hospital.
+                        <div class="col-md-6">
+                            <div class="dado">
+                                <div class="dado-label">
+                                    E-mail
+                                </div>
 
+                                <div
+                                    class="dado-valor"
+                                    id="modalEmail"
+                                >
+                                    —
+                                </div>
+                            </div>
                         </div>
 
                     </div>
 
-
-                    <!-- Caixa que contém os dados do fornecedor. -->
-                    <div class="dados-modal">
-
-
-                        <div class="row">
-
-
-                            <!-- Nome do fornecedor. -->
-                            <div class="col-md-6">
-
-                                <div class="dado">
-
-                                    <div class="dado-label">
-                                        Nome do fornecedor
-                                    </div>
-
-                                    <!-- O JavaScript substituirá este conteúdo. -->
-                                    <div
-                                        class="dado-valor"
-                                        id="modalNome"
-                                    >
-                                        —
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- CNPJ do fornecedor. -->
-                            <div class="col-md-6">
-
-                                <div class="dado">
-
-                                    <div class="dado-label">
-                                        CNPJ
-                                    </div>
-
-                                    <div
-                                        class="dado-valor"
-                                        id="modalCnpj"
-                                    >
-                                        —
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- Telefone do fornecedor. -->
-                            <div class="col-md-6">
-
-                                <div class="dado">
-
-                                    <div class="dado-label">
-                                        Telefone
-                                    </div>
-
-                                    <div
-                                        class="dado-valor"
-                                        id="modalTelefone"
-                                    >
-                                        —
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- E-mail do fornecedor. -->
-                            <div class="col-md-6">
-
-                                <div class="dado">
-
-                                    <div class="dado-label">
-                                        E-mail
-                                    </div>
-
-                                    <div
-                                        class="dado-valor"
-                                        id="modalEmail"
-                                    >
-                                        —
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                        </div>
-
-
-                    </div>
-
-
                 </div>
 
-
-                <!-- =================================================
-                     RODAPÉ DA MODAL
-                ================================================== -->
-
-                <div class="modal-footer">
+            </div>
 
 
-                    <!-- Botão para cancelar. -->
-                    <button
-                        type="button"
-                        class="btn-modal btn-cancelar"
-                        data-bs-dismiss="modal"
-                    >
+            <div class="modal-footer">
 
-                        <!-- Ícone de X. -->
-                        <i class="bi bi-x-lg"></i>
-
-                        Cancelar
-
-                    </button>
+                <button
+                    type="button"
+                    class="btn-modal btn-cancelar"
+                    data-bs-dismiss="modal"
+                >
+                    <i class="bi bi-x-lg"></i>
+                    Cancelar
+                </button>
 
 
-                    <!-- Link que será preenchido pelo JavaScript. -->
-                    <a
-                        href="#"
-                        id="btnConfirmarReativacao"
-                        class="btn-modal btn-confirmar"
-                    >
-
-                        <!-- Ícone de confirmação. -->
-                        <i class="bi bi-person-check"></i>
-
-                        Sim, reativar fornecedor
-
-                    </a>
-
-
-                </div>
-
+                <a
+                    href="#"
+                    id="btnConfirmarReativacao"
+                    class="btn-modal btn-confirmar"
+                >
+                    <i class="bi bi-person-check"></i>
+                    Sim, reativar fornecedor
+                </a>
 
             </div>
 
@@ -1989,106 +1235,104 @@ try {
 
     </div>
 
-
-    <!-- =========================================================
-         BOOTSTRAP JS
-    ========================================================== -->
-
-    <!-- Importa o JavaScript do Bootstrap.
-         Ele é necessário para o funcionamento da modal. -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    ></script>
+</div>
 
 
-    <!-- =========================================================
-         JAVASCRIPT DA MODAL
-    ========================================================== -->
-
-    <script>
-
-        // Localiza a modal pelo seu ID.
-        document
-            .getElementById('modalReativar')
-            .addEventListener(
-                'show.bs.modal',
-                function (event) {
-
-                    // Guarda o botão que foi clicado para abrir a modal.
-                    const botao = event.relatedTarget;
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
-                    // ====================================================
-                    // PEGA OS DADOS DO FORNECEDOR
-                    // ====================================================
+<script>
 
-                    // Obtém o ID armazenado no botão.
-                    const id =
-                        botao.getAttribute('data-id');
+    // =========================================================
+    // PESQUISA INSTANTÂNEA
+    // Funciona somente no frontend e não altera o backend.
+    // =========================================================
 
-                    // Obtém o nome.
-                    const nome =
-                        botao.getAttribute('data-nome');
+    const pesquisa = document.getElementById('pesquisaFornecedor');
+    const tabela = document.getElementById('tabelaFornecedores');
+    const contador = document.getElementById('contadorTotal');
+    const resultadoTexto = document.getElementById('resultadoTexto');
 
-                    // Obtém o CNPJ.
-                    const cnpj =
-                        botao.getAttribute('data-cnpj');
+    if (pesquisa && tabela) {
 
-                    // Obtém o telefone.
-                    const telefone =
-                        botao.getAttribute('data-telefone');
+        const linhas = tabela.querySelectorAll('tbody tr');
 
-                    // Obtém o e-mail.
-                    const email =
-                        botao.getAttribute('data-email');
+        pesquisa.addEventListener('input', function () {
 
+            const termo = this.value
+                .toLowerCase()
+                .trim();
 
-                    // ====================================================
-                    // COLOCA OS DADOS NA MODAL
-                    // ====================================================
+            let encontrados = 0;
 
-                    // Coloca o nome na modal.
-                    document
-                        .getElementById('modalNome')
-                        .textContent = nome || 'Não informado';
+            linhas.forEach(function (linha) {
 
+                const texto = linha.textContent.toLowerCase();
 
-                    // Coloca o CNPJ na modal.
-                    document
-                        .getElementById('modalCnpj')
-                        .textContent = cnpj || 'Não informado';
+                const corresponde =
+                    texto.includes(termo);
 
+                linha.style.display =
+                    corresponde ? '' : 'none';
 
-                    // Coloca o telefone na modal.
-                    document
-                        .getElementById('modalTelefone')
-                        .textContent = telefone || 'Não informado';
-
-
-                    // Coloca o e-mail na modal.
-                    document
-                        .getElementById('modalEmail')
-                        .textContent = email || 'Não informado';
-
-
-                    // ====================================================
-                    // MONTA O LINK DE REATIVAÇÃO
-                    // ====================================================
-
-                    // Localiza o botão de confirmação.
-                    document
-                        .getElementById('btnConfirmarReativacao')
-
-                        // Monta o endereço utilizado para reativar.
-                        .href =
-                            'fornecedor_reativar.php?id='
-                            + encodeURIComponent(id);
+                if (corresponde) {
+                    encontrados++;
                 }
-            );
+            });
 
-    </script>
+            contador.textContent = encontrados;
 
+            resultadoTexto.textContent =
+                encontrados +
+                (
+                    encontrados === 1
+                        ? ' registro encontrado'
+                        : ' registros encontrados'
+                );
+        });
+    }
+
+
+    // =========================================================
+    // MODAL DE REATIVAÇÃO
+    // Mantém o mesmo fluxo original de reativação.
+    // =========================================================
+
+    document
+        .getElementById('modalReativar')
+        .addEventListener('show.bs.modal', function (event) {
+
+            const botao = event.relatedTarget;
+
+            const id = botao.getAttribute('data-id');
+            const nome = botao.getAttribute('data-nome');
+            const cnpj = botao.getAttribute('data-cnpj');
+            const telefone = botao.getAttribute('data-telefone');
+            const email = botao.getAttribute('data-email');
+
+
+            // Preenche os dados apresentados na confirmação.
+            document.getElementById('modalNome').textContent =
+                nome || 'Não informado';
+
+            document.getElementById('modalCnpj').textContent =
+                cnpj || 'Não informado';
+
+            document.getElementById('modalTelefone').textContent =
+                telefone || 'Não informado';
+
+            document.getElementById('modalEmail').textContent =
+                email || 'Não informado';
+
+
+            // Mantém o endereço original de reativação.
+            document.getElementById('btnConfirmarReativacao').href =
+                'fornecedor_reativar.php?id=' +
+                encodeURIComponent(id);
+        });
+
+</script>
 
 </body>
-
 </html>
