@@ -1,49 +1,38 @@
 <?php
 
-// Inclui o arquivo responsável pela autenticação do usuário.
-// Essa proteção impede que pessoas não autorizadas acessem a página.
+// ==========================================================
+// IMPORTAÇÃO DOS ARQUIVOS NECESSÁRIOS
+// ==========================================================
+
+// Verifica se o usuário está autenticado no sistema.
 require_once '../includes/auth.php';
 
-// Inclui o arquivo que contém a conexão com o banco de dados.
+// Carrega a conexão com o banco de dados.
 require_once '../config/database.php';
 
 ?>
 
 <!DOCTYPE html>
-
-<!-- Informa ao navegador que o documento utiliza HTML5 -->
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
 
-    <!-- Define a codificação dos caracteres.
-// O UTF-8 permite utilizar acentos e caracteres especiais. -->
+    <!-- Define a codificação dos caracteres da página. -->
     <meta charset="UTF-8">
 
-    <!-- Faz a página se adaptar a celulares, tablets e computadores -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Faz a página se adaptar a celulares, tablets e computadores. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Título que aparece na aba do navegador -->
-    <title>Novo Funcionário</title>
+    <!-- Define o título exibido na aba do navegador. -->
+    <title>Novo Funcionário - Controle Hospitalar</title>
 
-    <!-- ======================================================
-         BOOTSTRAP
-         Biblioteca utilizada para facilitar a criação
-         do layout responsivo.
-    ======================================================= -->
-
-    <!-- Carrega o CSS do Bootstrap -->
+    <!-- Importa o Bootstrap 5.3.3 para auxiliar na construção da página. -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-    <!-- ======================================================
-         BOOTSTRAP ICONS
-         Biblioteca utilizada para os ícones da página.
-    ======================================================= -->
-
-    <!-- Carrega a biblioteca Bootstrap Icons -->
+    <!-- Importa os ícones do Bootstrap Icons. -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
@@ -51,540 +40,367 @@ require_once '../config/database.php';
 
     <style>
 
-        /* ======================================================
+        /* ==========================================================
            VARIÁVEIS DE CORES
-        ======================================================= */
+           ========================================================== */
 
-        /* Define variáveis que podem ser reutilizadas no CSS */
         :root {
-
-            /* Azul principal utilizado no sistema */
             --azul-principal: #2F80ED;
-
-            /* Azul claro utilizado em alguns elementos */
             --azul-claro: #56CCF2;
-
-            /* Verde definido para possíveis elementos do sistema */
             --verde: #198754;
+            --cinza-texto: #495057;
+            --cinza-borda: #ced4da;
         }
 
-        /* Faz com que o tamanho dos elementos considere
-           também padding e bordas */
+
+        /* ==========================================================
+           CONFIGURAÇÕES GERAIS DA PÁGINA
+           ========================================================== */
+
         * {
             box-sizing: border-box;
         }
 
-        /* ======================================================
-           CONFIGURAÇÕES GERAIS DA PÁGINA
-        ======================================================= */
-
         body {
-
-            /* Remove a margem padrão do navegador */
             margin: 0;
-
-            /* Faz o corpo ocupar pelo menos toda a altura da tela */
             min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
 
-            /* Cria um fundo com degradê em tons de azul */
-            background:
-                linear-gradient(
-                    135deg,
-                    #eef5ff,
-                    #dbeeff
-                );
+            background: linear-gradient(
+                135deg,
+                #eef5ff,
+                #dbeeff
+            );
 
-            /* Define a fonte utilizada na página */
-            font-family: 'Segoe UI', sans-serif;
-
-            /* Define a cor padrão dos textos */
-            color: #2c3e50;
-
-            /* Cria espaçamento interno nas laterais e no topo */
-            padding: 30px 15px;
+            color: #212529;
         }
 
-        /* ======================================================
-           CONTAINER
-        ======================================================= */
 
-        /* Define a área máxima ocupada pelo conteúdo */
+        /* ==========================================================
+           CONTAINER PRINCIPAL
+           ========================================================== */
+
         .container-principal {
-
-            /* Limita a largura máxima */
+            width: 100%;
             max-width: 1050px;
-
-            /* Centraliza o container horizontalmente */
-            margin: 0 auto;
+            margin: 40px auto;
+            padding: 0 20px;
         }
 
-        /* Cartão principal que envolve o formulário */
+
+        /* ==========================================================
+           CARD PRINCIPAL
+           ========================================================== */
+
         .card-principal {
-
-            /* Define o fundo branco */
             background: #ffffff;
-
-            /* Arredonda os cantos */
             border-radius: 25px;
-
-            /* Cria uma sombra ao redor do cartão */
-            box-shadow:
-                0 15px 40px rgba(47, 128, 237, 0.12);
-
-            /* Cria espaço interno */
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.10);
             padding: 35px;
         }
 
-        /* ======================================================
+
+        /* ==========================================================
            CABEÇALHO
-        ======================================================= */
+           ========================================================== */
 
-        /* Organiza o ícone e os textos do cabeçalho */
         .cabecalho {
-
-            /* Utiliza Flexbox */
             display: flex;
-
-            /* Centraliza os elementos verticalmente */
             align-items: center;
-
-            /* Define o espaço entre os elementos */
             gap: 18px;
-
-            /* Espaço abaixo do cabeçalho */
             margin-bottom: 30px;
         }
 
-        /* Caixa que contém o ícone principal */
-        .icone-titulo {
+        .icone-cabecalho {
+            width: 65px;
+            height: 65px;
 
-            /* Largura do ícone */
-            width: 62px;
-
-            /* Altura do ícone */
-            height: 62px;
-
-            /* Arredonda os cantos */
-            border-radius: 18px;
-
-            /* Cor do fundo */
-            background: #e8f3ff;
-
-            /* Utiliza a cor azul principal */
-            color: var(--azul-principal);
-
-            /* Centraliza o ícone */
             display: flex;
             align-items: center;
             justify-content: center;
 
-            /* Tamanho do ícone */
-            font-size: 30px;
+            border-radius: 18px;
 
-            /* Impede que o elemento seja reduzido */
-            flex-shrink: 0;
+            background: linear-gradient(
+                135deg,
+                var(--azul-principal),
+                var(--azul-claro)
+            );
+
+            color: white;
+            font-size: 32px;
         }
 
-        /* Título principal */
-        .titulo {
-
-            /* Remove a margem padrão */
+        .cabecalho h1 {
             margin: 0;
-
-            /* Define a cor azul */
-            color: var(--azul-principal);
-
-            /* Define o tamanho do título */
-            font-size: 30px;
-
-            /* Deixa o título em negrito */
+            font-size: 28px;
             font-weight: 700;
         }
 
-        /* Texto abaixo do título */
-        .subtitulo {
-
-            /* Define uma pequena distância do título */
-            margin: 4px 0 0;
-
-            /* Cor cinza */
+        .cabecalho p {
+            margin: 5px 0 0;
             color: #6c757d;
-
-            /* Tamanho do texto */
-            font-size: 15px;
         }
 
-        /* ======================================================
-           SEÇÕES
-        ======================================================= */
 
-        /* Blocos que dividem o formulário em partes */
+        /* ==========================================================
+           SEÇÕES DO FORMULÁRIO
+           ========================================================== */
+
         .secao {
-
-            /* Espaço acima da seção */
             margin-top: 30px;
-
-            /* Espaçamento interno */
             padding: 25px;
 
-            /* Cor de fundo */
-            background: #f8fbff;
-
-            /* Borda da seção */
-            border: 1px solid #e5edf8;
-
-            /* Cantos arredondados */
+            border: 1px solid #e5e7eb;
             border-radius: 18px;
+
+            background: #fafcff;
         }
 
-        /* Título das seções */
         .titulo-secao {
-
-            /* Utiliza Flexbox */
             display: flex;
-
-            /* Centraliza o texto e o ícone */
             align-items: center;
-
-            /* Espaço entre o ícone e o texto */
             gap: 10px;
 
-            /* Cor do texto */
-            color: #34495e;
-
-            /* Tamanho da fonte */
-            font-size: 18px;
-
-            /* Deixa o título em negrito */
-            font-weight: 700;
-
-            /* Espaço abaixo do título */
             margin-bottom: 22px;
-        }
 
-        /* Estilo dos ícones dos títulos das seções */
-        .titulo-secao i {
-
-            /* Cor azul */
             color: var(--azul-principal);
-
-            /* Tamanho do ícone */
-            font-size: 20px;
+            font-size: 19px;
+            font-weight: 700;
         }
 
-        /* ======================================================
-           CAMPOS
-        ======================================================= */
+        .titulo-secao i {
+            font-size: 22px;
+        }
 
-        /* Espaçamento de cada campo do formulário */
+
+        /* ==========================================================
+           CAMPOS
+           ========================================================== */
+
         .campo {
             margin-bottom: 18px;
         }
 
-        /* Estilo dos textos que identificam os campos */
         .campo label {
-
-            /* Faz o label ocupar sua própria linha */
             display: block;
 
-            /* Tamanho da fonte */
-            font-size: 14px;
-
-            /* Deixa o texto em negrito */
-            font-weight: 600;
-
-            /* Cor do texto */
-            color: #34495e;
-
-            /* Espaço entre o label e o campo */
             margin-bottom: 7px;
+
+            color: var(--cinza-texto);
+            font-weight: 600;
         }
 
-        /* Cor do asterisco que identifica campos obrigatórios */
-        .campo-obrigatorio {
+        .campo label .obrigatorio {
             color: #dc3545;
         }
 
-        /* Permite posicionar os ícones dentro dos inputs */
-        .input-wrapper {
-            position: relative;
-        }
-
-        /* Estiliza os ícones que ficam dentro dos campos */
-        .input-wrapper > i {
-
-            /* Posicionamento absoluto */
-            position: absolute;
-
-            /* Distância da esquerda */
-            left: 14px;
-
-            /* Posiciona verticalmente no centro */
-            top: 50%;
-
-            /* Ajusta o posicionamento vertical */
-            transform: translateY(-50%);
-
-            /* Cor do ícone */
-            color: #7c8da5;
-
-            /* Tamanho do ícone */
-            font-size: 17px;
-
-            /* Impede que o ícone receba cliques */
-            pointer-events: none;
-
-            /* Mantém o ícone sobre o campo */
-            z-index: 2;
-        }
-
-        /* Estilo dos inputs e selects */
-        .form-control,
-        .form-select {
-
-            /* Altura mínima */
-            min-height: 46px;
-
-            /* Cor e espessura da borda */
-            border: 1px solid #dbe7f5;
-
-            /* Arredonda os cantos */
-            border-radius: 11px;
-
-            /* Tamanho do texto */
-            font-size: 14px;
-
-            /* Cor do texto */
-            color: #34495e;
-
-            /* Fundo branco */
-            background-color: #ffffff;
-
-            /* Cria uma transição suave */
-            transition: .2s;
-        }
-
-        /* Adiciona espaço à esquerda dos campos
-           para não sobrepor o ícone */
-        .form-control {
-            padding-left: 42px;
-        }
-
-        /*
-         * Espaço extra à direita para a seta do select.
-         * Isso evita que a seta fique sobre o texto.
-         */
-        .form-select {
-
-            /* Espaço para o ícone da esquerda */
-            padding-left: 42px;
-
-            /* Espaço para a seta do select */
-            padding-right: 48px;
-
-            /* Mostra que o campo pode ser selecionado */
-            cursor: pointer;
-
-            /* Posiciona a seta */
-            background-position: right 16px center;
-        }
-
-        /* ======================================================
-           EFEITO DE FOCO
-        ======================================================= */
-
-        /* Altera a aparência do campo quando o usuário clica nele */
-        .form-control:focus,
-        .form-select:focus {
-
-            /* Muda a cor da borda para azul */
-            border-color: var(--azul-principal);
-
-            /* Cria uma sombra azul suave */
-            box-shadow:
-                0 0 0 .2rem rgba(47, 128, 237, .12);
-        }
-
-        /* Cor dos textos de exemplo dos inputs */
-        .form-control::placeholder {
-            color: #a0acbb;
-        }
-
-        /* ======================================================
-           SELECT
-        ======================================================= */
-
-        /* Permite posicionar o ícone dentro do select */
+        .input-wrapper,
         .select-wrapper {
             position: relative;
         }
 
-        /* Ícone que aparece dentro dos selects */
-        .select-wrapper > i {
-
-            /* Posicionamento absoluto */
+        .input-wrapper i,
+        .select-wrapper i {
             position: absolute;
 
-            /* Distância da esquerda */
             left: 14px;
-
-            /* Posição vertical */
             top: 50%;
 
-            /* Centraliza verticalmente */
             transform: translateY(-50%);
 
-            /* Cor azul */
             color: var(--azul-principal);
 
-            /* Tamanho do ícone */
-            font-size: 17px;
+            pointer-events: none;
 
-            /* Mantém o ícone sobre o campo */
             z-index: 2;
+        }
 
-            /* Permite clicar normalmente no select */
+        .input-wrapper input,
+        .select-wrapper select,
+        .campo textarea {
+            width: 100%;
+
+            min-height: 46px;
+
+            border: 1px solid var(--cinza-borda);
+            border-radius: 10px;
+
+            padding: 10px 14px 10px 42px;
+
+            outline: none;
+
+            transition: 0.2s;
+        }
+
+        .campo textarea {
+            padding-left: 14px;
+            resize: vertical;
+        }
+
+        .input-wrapper input:focus,
+        .select-wrapper select:focus,
+        .campo textarea:focus {
+            border-color: var(--azul-principal);
+
+            box-shadow:
+                0 0 0 3px rgba(47, 128, 237, 0.12);
+        }
+
+        .select-wrapper select {
+            appearance: none;
+            background-color: #ffffff;
+        }
+
+        .select-wrapper::after {
+            content: "\F282";
+
+            font-family: "bootstrap-icons";
+
+            position: absolute;
+
+            right: 15px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            color: #6c757d;
+
             pointer-events: none;
         }
 
-        /* ======================================================
-           BOTÕES
-        ======================================================= */
 
-        /* Área onde ficam os botões */
-        .acoes {
+        /* ==========================================================
+           CAMPOS PREENCHIDOS AUTOMATICAMENTE PELO CEP
+           ========================================================== */
 
-            /* Ativa Flexbox */
+        .campo-carregado {
+            background-color: #f0fdf4 !important;
+            border-color: #86efac !important;
+        }
+
+
+        /* ==========================================================
+           TEXTO DE AJUDA
+           ========================================================== */
+
+        .texto-ajuda {
+            display: block;
+
+            margin-top: 5px;
+
+            color: #6c757d;
+            font-size: 13px;
+        }
+
+
+        /* ==========================================================
+           ÁREA DE BOTÕES
+           ========================================================== */
+
+        .botoes {
             display: flex;
-
-            /* Coloca os botões no lado direito */
             justify-content: flex-end;
-
-            /* Espaço entre os botões */
             gap: 12px;
 
-            /* Espaço acima dos botões */
             margin-top: 30px;
-
-            /* Espaço interno acima */
-            padding-top: 25px;
-
-            /* Cria uma linha separadora */
-            border-top: 1px solid #e9eef5;
         }
 
-        /* Estilo do botão Voltar */
         .btn-voltar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
 
-            /* Altura mínima */
-            min-height: 46px;
+            padding: 11px 22px;
 
-            /* Cantos arredondados */
-            border-radius: 11px;
+            border: 1px solid #adb5bd;
+            border-radius: 10px;
 
-            /* Espaçamento interno */
-            padding: 10px 20px;
+            background: #ffffff;
+            color: #495057;
 
-            /* Texto em negrito */
+            text-decoration: none;
+
             font-weight: 600;
 
-            /* Remove a borda */
-            border: none;
+            transition: 0.2s;
         }
 
-        /* Estilo do botão Cadastrar */
-        .btn-cadastrar {
+        .btn-voltar:hover {
+            background: #f1f3f5;
+            color: #212529;
+        }
 
-            /* Altura mínima */
-            min-height: 46px;
+        .btn-salvar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
 
-            /* Remove a borda */
+            padding: 11px 22px;
+
             border: none;
+            border-radius: 10px;
 
-            /* Arredonda os cantos */
-            border-radius: 11px;
-
-            /* Espaçamento interno */
-            padding: 10px 24px;
-
-            /* Cor azul */
             background: var(--azul-principal);
-
-            /* Texto branco */
             color: white;
 
-            /* Texto em negrito */
             font-weight: 600;
 
-            /* Transição para o efeito hover */
-            transition: .25s;
+            transition: 0.2s;
         }
 
-        /* ======================================================
-           EFEITO AO PASSAR O MOUSE
-        ======================================================= */
-
-        .btn-cadastrar:hover {
-
-            /* Escurece um pouco o botão */
-            background: #1c6ad6;
-
-            /* Mantém o texto branco */
-            color: white;
-
-            /* Move o botão levemente para cima */
-            transform: translateY(-1px);
+        .btn-salvar:hover {
+            background: #1366c2;
         }
 
-        /* ======================================================
-            CAMPOS PREENCHIDOS AUTOMATICAMENTE PELO CEP
-        ====================================================== */
 
-/*
-   Destaca suavemente os campos que foram preenchidos
-   automaticamente pela consulta do CEP.
-*/
-.campo-carregado {
-    background-color: #eef7ff !important;
-}
+        /* ==========================================================
+           CAMPO DE REGISTRO PROFISSIONAL
+           ========================================================== */
+
+        #grupoRegistro {
+            display: none;
+        }
 
 
-        /* ======================================================
+        /* ==========================================================
            RESPONSIVIDADE
-        ======================================================= */
+           ========================================================== */
 
-        /* Aplica estas regras em telas de até 768 pixels */
         @media (max-width: 768px) {
 
-            /* Diminui o espaçamento da página */
-            body {
-                padding: 15px 10px;
+            .container-principal {
+                margin: 20px auto;
+                padding: 0 12px;
             }
 
-            /* Diminui o espaçamento interno do cartão */
             .card-principal {
                 padding: 22px;
                 border-radius: 18px;
             }
 
-            /* Diminui o espaçamento das seções */
+            .cabecalho h1 {
+                font-size: 22px;
+            }
+
+            .icone-cabecalho {
+                width: 55px;
+                height: 55px;
+                font-size: 26px;
+            }
+
             .secao {
                 padding: 18px;
             }
 
-            /* Diminui o tamanho do título */
-            .titulo {
-                font-size: 25px;
+            .botoes {
+                flex-direction: column;
             }
 
-            /* Coloca os botões um abaixo do outro */
-            .acoes {
-                flex-direction: column-reverse;
-            }
-
-            /* Faz os botões ocuparem toda a largura */
-            .acoes a,
-            .acoes button {
+            .btn-voltar,
+            .btn-salvar {
                 width: 100%;
             }
         }
@@ -595,1067 +411,1206 @@ require_once '../config/database.php';
 
 <body>
 
-<!-- ==========================================================
-     CONTAINER PRINCIPAL
-=========================================================== -->
+    <!-- ==========================================================
+         CONTAINER PRINCIPAL
+         ========================================================== -->
 
-<!-- Container que limita a largura do conteúdo -->
-<div class="container-principal">
+    <div class="container-principal">
 
-    <!-- Cartão branco principal -->
-    <div class="card-principal">
+        <div class="card-principal">
 
-        <!-- ======================================================
-             CABEÇALHO
-        ======================================================= -->
 
-        <div class="cabecalho">
+            <!-- ======================================================
+                 CABEÇALHO
+                 ====================================================== -->
 
-            <!-- Área que contém o ícone -->
-            <div class="icone-titulo">
+            <div class="cabecalho">
 
-                <!-- Ícone de adicionar pessoa -->
-                <i class="bi bi-person-plus-fill"></i>
+                <div class="icone-cabecalho">
 
-            </div>
+                    <!-- Ícone de pessoa. -->
+                    <i class="bi bi-person-plus-fill"></i>
 
-            <!-- Área dos textos -->
-            <div>
+                </div>
 
-                <!-- Título da página -->
-                <h1 class="titulo">
-                    Novo Funcionário
-                </h1>
+                <div>
 
-                <!-- Texto explicativo abaixo do título -->
-                <p class="subtitulo">
-                    Cadastre um novo profissional no sistema hospitalar.
-                </p>
+                    <!-- Título da página. -->
+                    <h1>Novo Funcionário</h1>
+
+                    <!-- Descrição da página. -->
+                    <p>
+                        Cadastre um novo funcionário no sistema hospitalar.
+                    </p>
+
+                </div>
 
             </div>
+
+
+            <!-- ======================================================
+                 FORMULÁRIO
+                 ====================================================== -->
+
+            <form
+                action="funcionario_cadastrar.php"
+                method="POST"
+                autocomplete="off"
+            >
+
+
+                <!-- ==================================================
+                     SEÇÃO: DADOS PROFISSIONAIS
+                     ================================================== -->
+
+                <div class="secao">
+
+                    <div class="titulo-secao">
+
+                        <i class="bi bi-person-badge"></i>
+
+                        <span>Dados profissionais</span>
+
+                    </div>
+
+
+                    <div class="row">
+
+
+                        <!-- ==========================================
+                             NOME
+                             ========================================== -->
+
+                        <div class="col-md-7">
+
+                            <div class="campo">
+
+                                <label for="nome">
+
+                                    Nome completo
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-person"></i>
+
+                                    <input
+                                        type="text"
+                                        id="nome"
+                                        name="nome"
+                                        maxlength="150"
+                                        required
+                                        placeholder="Digite o nome completo"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             FUNÇÃO
+                             ========================================== -->
+
+                        <div class="col-md-5">
+
+                            <div class="campo">
+
+                                <label for="funcao">
+
+                                    Função
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="select-wrapper">
+
+                                    <i class="bi bi-briefcase"></i>
+
+                                    <select
+                                        id="funcao"
+                                        name="funcao"
+                                        required
+                                    >
+
+                                        <option value="">
+                                            Selecione a função
+                                        </option>
+
+                                        <option value="Médico">
+                                            Médico
+                                        </option>
+
+                                        <option value="Enfermeiro">
+                                            Enfermeiro
+                                        </option>
+
+                                        <option value="Farmacêutico">
+                                            Farmacêutico
+                                        </option>
+
+                                        <option value="Cirurgião">
+                                            Cirurgião
+                                        </option>
+
+                                        <option value="Anestesista">
+                                            Anestesista
+                                        </option>
+
+                                        <option value="Recepcionista">
+                                            Recepcionista
+                                        </option>
+
+                                        <option value="Faturista">
+                                            Faturista
+                                        </option>
+
+                                        <option value="Comprador de Almoxarifado">
+                                            Comprador de Almoxarifado
+                                        </option>
+
+                                        <option value="Gerente Financeiro">
+                                            Gerente Financeiro
+                                        </option>
+
+                                        <option value="Diretor do Hospital">
+                                            Diretor do Hospital
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             REGISTRO PROFISSIONAL
+                             ========================================== -->
+
+                        <div
+                            class="col-md-4"
+                            id="grupoRegistro"
+                        >
+
+                            <div class="campo">
+
+                                <label for="registro">
+
+                                    <span id="labelRegistro">
+                                        Registro profissional
+                                    </span>
+
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-card-text"></i>
+
+                                    <input
+                                        type="text"
+                                        id="registro"
+                                        name="registro"
+                                        maxlength="6"
+                                        inputmode="numeric"
+                                        placeholder="Digite o registro"
+                                    >
+
+                                </div>
+
+                                <span class="texto-ajuda">
+                                    Informe somente os 6 números do registro.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             TELEFONE
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="telefone">
+
+                                    Telefone
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-telephone"></i>
+
+                                    <input
+                                        type="text"
+                                        id="telefone"
+                                        name="telefone"
+                                        maxlength="15"
+                                        inputmode="numeric"
+                                        required
+                                        placeholder="(00) 00000-0000"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             E-MAIL
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="email">
+
+                                    E-mail
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-envelope"></i>
+
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        maxlength="120"
+                                        required
+                                        placeholder="funcionario@email.com"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             CPF
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="cpf">
+
+                                    CPF
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-person-vcard"></i>
+
+                                    <input
+                                        type="text"
+                                        id="cpf"
+                                        name="cpf"
+                                        maxlength="14"
+                                        inputmode="numeric"
+                                        required
+                                        placeholder="000.000.000-00"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             DATA DE NASCIMENTO
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="data_nascimento">
+
+                                    Data de nascimento
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-calendar-event"></i>
+
+                                    <input
+                                        type="date"
+                                        id="data_nascimento"
+                                        name="data_nascimento"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             SEXO
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="sexo">
+
+                                    Sexo
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="select-wrapper">
+
+                                    <i class="bi bi-gender-ambiguous"></i>
+
+                                    <select
+                                        id="sexo"
+                                        name="sexo"
+                                        required
+                                    >
+
+                                        <option value="">
+                                            Selecione
+                                        </option>
+
+                                        <option value="Feminino">
+                                            Feminino
+                                        </option>
+
+                                        <option value="Masculino">
+                                            Masculino
+                                        </option>
+
+                                        <option value="Outro">
+                                            Outro
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             STATUS
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="status">
+
+                                    Status
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="select-wrapper">
+
+                                    <i class="bi bi-toggle-on"></i>
+
+                                    <select
+                                        id="status"
+                                        name="status"
+                                        required
+                                    >
+
+                                        <option value="Ativo" selected>
+                                            Ativo
+                                        </option>
+
+                                        <option value="Inativo">
+                                            Inativo
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==================================================
+                     SEÇÃO: ENDEREÇO
+                     ================================================== -->
+
+                <div class="secao">
+
+                    <div class="titulo-secao">
+
+                        <i class="bi bi-geo-alt"></i>
+
+                        <span>Endereço</span>
+
+                    </div>
+
+
+                    <div class="row">
+
+
+                        <!-- ==========================================
+                             CEP
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="cep">
+
+                                    CEP
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-mailbox"></i>
+
+                                    <input
+                                        type="text"
+                                        id="cep"
+                                        name="cep"
+                                        maxlength="9"
+                                        inputmode="numeric"
+                                        required
+                                        placeholder="00000-000"
+                                    >
+
+                                </div>
+
+                                <span class="texto-ajuda">
+                                    O endereço será preenchido automaticamente quando o CEP for encontrado.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             RUA
+                             ========================================== -->
+
+                        <div class="col-md-8">
+
+                            <div class="campo">
+
+                                <label for="rua">
+
+                                    Rua
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-signpost"></i>
+
+                                    <input
+                                        type="text"
+                                        id="rua"
+                                        name="rua"
+                                        maxlength="150"
+                                        required
+                                        placeholder="Digite a rua"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             NÚMERO
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="numero">
+
+                                    Número
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-hash"></i>
+
+                                    <input
+                                        type="text"
+                                        id="numero"
+                                        name="numero"
+                                        maxlength="20"
+                                        required
+                                        placeholder="Número"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             CIDADE
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="cidade">
+
+                                    Cidade
+                                    <span class="obrigatorio">*</span>
+
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-buildings"></i>
+
+                                    <input
+                                        type="text"
+                                        id="cidade"
+                                        name="cidade"
+                                        maxlength="100"
+                                        required
+                                        placeholder="Digite a cidade"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==========================================
+                             COMPLEMENTO
+                             ========================================== -->
+
+                        <div class="col-md-4">
+
+                            <div class="campo">
+
+                                <label for="complemento">
+                                    Complemento
+                                </label>
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-house-add"></i>
+
+                                    <input
+                                        type="text"
+                                        id="complemento"
+                                        name="complemento"
+                                        maxlength="150"
+                                        placeholder="Apartamento, bloco, etc."
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==================================================
+                     BOTÕES
+                     ================================================== -->
+
+                <div class="botoes">
+
+                    <!-- Botão para retornar à lista de funcionários. -->
+                    <a
+                        href="funcionarios.php"
+                        class="btn-voltar"
+                    >
+
+                        <i class="bi bi-arrow-left"></i>
+
+                        Cancelar
+
+                    </a>
+
+
+                    <!-- Botão responsável pelo envio do formulário. -->
+                    <button
+                        type="submit"
+                        class="btn-salvar"
+                    >
+
+                        <i class="bi bi-check-lg"></i>
+
+                        Cadastrar funcionário
+
+                    </button>
+
+                </div>
+
+            </form>
 
         </div>
 
-
-        <!-- ======================================================
-             FORMULÁRIO
-        ======================================================= -->
-
-        <!--
-            O formulário envia os dados digitados pelo usuário
-            para o arquivo funcionario_cadastrar.php.
-
-            O método POST é utilizado para enviar os dados.
-        -->
-        <form action="funcionario_cadastrar.php" method="POST">
-
-
-            <!-- ==================================================
-                 DADOS DO FUNCIONÁRIO
-            =================================================== -->
-
-            <!-- Seção com os dados pessoais e profissionais -->
-            <div class="secao">
-
-                <!-- Título da seção -->
-                <div class="titulo-secao">
-
-                    <!-- Ícone de identificação -->
-                    <i class="bi bi-person-vcard"></i>
-
-                    Dados do Funcionário
-
-                </div>
-
-
-                <!-- Linha do sistema de grid do Bootstrap -->
-                <div class="row">
-
-
-                    <!-- ==================================================
-                         NOME
-                    =================================================== -->
-
-                    <!-- Ocupa 8 das 12 colunas em telas médias ou maiores -->
-                    <div class="col-md-8 campo">
-
-                        <!-- Identificação do campo -->
-                        <label for="nome">
-
-                            Nome completo
-
-                            <!-- Asterisco indica que o campo é obrigatório -->
-                            <span class="campo-obrigatorio">*</span>
-
-                        </label>
-
-                        <!-- Container do input e seu ícone -->
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de pessoa -->
-                            <i class="bi bi-person"></i>
-
-                            <!-- Campo para digitar o nome -->
-                            <input
-                                type="text"
-                                name="nome"
-                                id="nome"
-                                class="form-control"
-                                maxlength="150"
-                                placeholder="Digite o nome completo"
-                                required
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         FUNÇÃO
-                    =================================================== -->
-
-                    <!-- Ocupa 4 das 12 colunas -->
-                    <div class="col-md-4 campo">
-
-                        <!-- Identificação do campo -->
-                        <label for="funcao">
-
-                            Função
-
-                            <!-- Campo obrigatório -->
-                            <span class="campo-obrigatorio">*</span>
-
-                        </label>
-
-                        <!-- Container do select e do ícone -->
-                        <div class="select-wrapper">
-
-                            <!-- Ícone de função profissional -->
-                            <i class="bi bi-briefcase"></i>
-
-                            <!-- Campo para escolher a função -->
-                            <select
-                                name="funcao"
-                                id="funcao"
-                                class="form-select"
-                                required
-                            >
-
-                                <!-- Opção inicial -->
-                                <option value="">
-                                    Selecione a função
-                                </option>
-
-                                <!-- Opção Médico -->
-                                <option value="Médico">
-                                    Médico
-                                </option>
-
-                                <!-- Opção Enfermeiro -->
-                                <option value="Enfermeiro">
-                                    Enfermeiro
-                                </option>
-
-                                <!-- Opção Farmacêutico -->
-                                <option value="Farmacêutico">
-                                    Farmacêutico
-                                </option>
-
-                                <!-- Opção Cirurgião -->
-                                <option value="Cirurgião">
-                                    Cirurgião
-                                </option>
-
-                                <!-- Opção Anestesista -->
-                                <option value="Anestesista">
-                                    Anestesista
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         REGISTRO PROFISSIONAL
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <!-- Identificação do campo -->
-                        <label for="registro">
-
-                            Registro profissional
-
-                            <!-- Campo obrigatório -->
-                            <span class="campo-obrigatorio">*</span>
-
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de documento -->
-                            <i class="bi bi-card-text"></i>
-
-                            <!-- Campo para CRM, COREN ou CRF -->
-                            <input
-                                type="text"
-                                name="registro"
-                                id="registro"
-                                class="form-control"
-                                maxlength="20"
-                                placeholder="CRM, COREN, CRF..."
-                                required
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         TELEFONE
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <!-- Campo opcional -->
-                        <label for="telefone">
-                            Telefone
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de telefone -->
-                            <i class="bi bi-telephone"></i>
-
-                            <!-- Campo do telefone -->
-                            <input
-                                type="text"
-                                name="telefone"
-                                id="telefone"
-                                class="form-control"
-                                maxlength="15"
-                                placeholder="(00) 00000-0000"
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         E-MAIL
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <!-- Campo opcional -->
-                        <label for="email">
-                            E-mail
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de e-mail -->
-                            <i class="bi bi-envelope"></i>
-
-                            <!-- Campo de e-mail -->
-                            <input
-                                type="email"
-                                name="email"
-                                id="email"
-                                class="form-control"
-                                maxlength="120"
-                                placeholder="exemplo@email.com"
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         CPF
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <!-- Campo opcional -->
-                        <label for="cpf">
-                            CPF
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de identificação -->
-                            <i class="bi bi-person-vcard"></i>
-
-                            <!-- Campo do CPF -->
-                            <input
-                                type="text"
-                                name="cpf"
-                                id="cpf"
-                                class="form-control"
-                                maxlength="14"
-                                placeholder="000.000.000-00"
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         DATA DE NASCIMENTO
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <!-- Campo opcional -->
-                        <label for="data_nascimento">
-                            Data de nascimento
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de calendário -->
-                            <i class="bi bi-calendar3"></i>
-
-                            <!-- Campo para selecionar a data -->
-                            <input
-                                type="date"
-                                name="data_nascimento"
-                                id="data_nascimento"
-                                class="form-control"
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         SEXO
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <!-- Campo opcional -->
-                        <label for="sexo">
-                            Sexo
-                        </label>
-
-                        <div class="select-wrapper">
-
-                            <!-- Ícone de gênero -->
-                            <i class="bi bi-gender-ambiguous"></i>
-
-                            <!-- Select para escolher o sexo -->
-                            <select
-                                name="sexo"
-                                id="sexo"
-                                class="form-select"
-                            >
-
-                                <!-- Opção inicial -->
-                                <option value="">
-                                    Selecione
-                                </option>
-
-                                <!-- Opção Masculino -->
-                                <option value="Masculino">
-                                    Masculino
-                                </option>
-
-                                <!-- Opção Feminino -->
-                                <option value="Feminino">
-                                    Feminino
-                                </option>
-
-                                <!-- Opção Outro -->
-                                <option value="Outro">
-                                    Outro
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         STATUS
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <!-- Campo obrigatório -->
-                        <label for="status">
-
-                            Status
-
-                            <span class="campo-obrigatorio">*</span>
-
-                        </label>
-
-                        <div class="select-wrapper">
-
-                            <!-- Ícone de status -->
-                            <i class="bi bi-toggle-on"></i>
-
-                            <!-- Select para definir o status -->
-                            <select
-                                name="status"
-                                id="status"
-                                class="form-select"
-                                required
-                            >
-
-                                <!-- Opção inicial -->
-                                <option value="">
-                                    Selecione
-                                </option>
-
-                                <!-- Funcionário ativo -->
-                                <option value="Ativo">
-                                    Ativo
-                                </option>
-
-                                <!-- Funcionário inativo -->
-                                <option value="Inativo">
-                                    Inativo
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- ==================================================
-                 ENDEREÇO
-            =================================================== -->
-
-            <!-- Seção destinada aos dados do endereço -->
-            <div class="secao">
-
-                <!-- Título da seção -->
-                <div class="titulo-secao">
-
-                    <!-- Ícone de localização -->
-                    <i class="bi bi-geo-alt"></i>
-
-                    Endereço
-
-                </div>
-
-
-                <!-- Linha do sistema de grid -->
-                <div class="row">
-
-
-                    <!-- ==================================================
-                         RUA
-                    =================================================== -->
-
-                    <div class="col-md-8 campo">
-
-                        <!-- Identificação do campo -->
-                        <label for="rua">
-
-                            Rua
-
-                            <!-- Campo obrigatório -->
-                            <span class="campo-obrigatorio">*</span>
-
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de endereço -->
-                            <i class="bi bi-signpost-2"></i>
-
-                            <!-- Campo da rua -->
-                            <input
-                                type="text"
-                                name="rua"
-                                id="rua"
-                                class="form-control"
-                                maxlength="150"
-                                placeholder="Digite o nome da rua"
-                                required
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         NÚMERO
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <label for="numero">
-
-                            Número
-
-                            <!-- Campo obrigatório -->
-                            <span class="campo-obrigatorio">*</span>
-
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de número -->
-                            <i class="bi bi-hash"></i>
-
-                            <!-- Campo do número do endereço -->
-                            <input
-                                type="text"
-                                name="numero"
-                                id="numero"
-                                class="form-control"
-                                maxlength="20"
-                                placeholder="Número"
-                                required
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                                            CEP
-                    =================================================== -->
-
-<!-- Campo utilizado para informar o CEP do funcionário -->
-<div class="col-md-4 campo">
-
-<!-- Identificação do campo -->
-<label for="cep">
-
-    CEP
-
-    <!-- Asterisco indica que o campo é obrigatório -->
-    <span class="campo-obrigatorio">*</span>
-
-</label>
-
-<!-- Container do input e seu ícone -->
-<div class="input-wrapper">
-
-    <!-- Ícone de CEP -->
-    <i class="bi bi-mailbox"></i>
-
-    <!-- Campo do CEP -->
-    <input
-        type="text"
-        name="cep"
-        id="cep"
-        class="form-control"
-        maxlength="9"
-        placeholder="00000-000"
-        autocomplete="postal-code"
-        required
-    >
-
-</div>
-
-<!--
-    Área onde será exibida uma mensagem durante
-    a consulta do CEP.
--->
-<small
-    id="mensagemCep"
-    class="text-muted"
-    style="display: block; margin-top: 5px;"
-></small>
-
-</div>
-
-
-                    <!-- ==================================================
-                         CIDADE
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <label for="cidade">
-
-                            Cidade
-
-                            <!-- Campo obrigatório -->
-                            <span class="campo-obrigatorio">*</span>
-
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de cidade -->
-                            <i class="bi bi-buildings"></i>
-
-                            <!-- Campo da cidade -->
-                            <input
-                                type="text"
-                                name="cidade"
-                                id="cidade"
-                                class="form-control"
-                                maxlength="100"
-                                placeholder="Digite a cidade"
-                                required
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==================================================
-                         COMPLEMENTO
-                    =================================================== -->
-
-                    <div class="col-md-4 campo">
-
-                        <!-- Campo opcional -->
-                        <label for="complemento">
-                            Complemento
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <!-- Ícone de complemento -->
-                            <i class="bi bi-house-add"></i>
-
-                            <!-- Campo para complemento do endereço -->
-                            <input
-                                type="text"
-                                name="complemento"
-                                id="complemento"
-                                class="form-control"
-                                maxlength="150"
-                                placeholder="Apto, bloco, etc."
-                            >
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- ==================================================
-                 BOTÕES
-            =================================================== -->
-
-            <div class="acoes">
-
-                <!--
-                    Link que retorna para a página
-                    de listagem dos funcionários.
-                -->
-                <a
-                    href="funcionarios.php"
-                    class="btn btn-secondary btn-voltar"
-                >
-
-                    <!-- Ícone de voltar -->
-                    <i class="bi bi-arrow-left"></i>
-
-                    Voltar
-
-                </a>
-
-
-                <!--
-                    Botão responsável por enviar
-                    os dados do formulário.
-                -->
-                <button
-                    type="submit"
-                    class="btn btn-cadastrar"
-                >
-
-                    <!-- Ícone de adicionar funcionário -->
-                    <i class="bi bi-person-plus"></i>
-
-                    Cadastrar Funcionário
-
-                </button>
-
-            </div>
-
-        </form>
-
     </div>
 
-</div>
+
+    <!-- ==========================================================
+         JAVASCRIPT
+         ========================================================== -->
+
+    <script>
+
+        // ==========================================================
+        // ELEMENTOS DO FORMULÁRIO
+        // ==========================================================
+
+        // Obtém o campo responsável pela seleção da função.
+        const campoFuncao = document.getElementById('funcao');
+
+        // Obtém o grupo que contém o registro profissional.
+        const grupoRegistro = document.getElementById('grupoRegistro');
+
+        // Obtém o campo de registro profissional.
+        const campoRegistro = document.getElementById('registro');
+
+        // Obtém o texto utilizado como nome do registro.
+        const labelRegistro = document.getElementById('labelRegistro');
+
+        // Obtém o campo de CEP.
+        const campoCep = document.getElementById('cep');
+
+        // Obtém o campo de rua.
+        const campoRua = document.getElementById('rua');
+
+        // Obtém o campo de cidade.
+        const campoCidade = document.getElementById('cidade');
+
+        // Obtém o campo de CPF.
+        const campoCpf = document.getElementById('cpf');
+
+        // Obtém o campo de telefone.
+        const campoTelefone = document.getElementById('telefone');
 
 
-<!-- ==========================================================
-     MÁSCARAS DOS CAMPOS
-=========================================================== -->
+        // ==========================================================
+        // FUNÇÕES QUE POSSUEM REGISTRO PROFISSIONAL
+        // ==========================================================
 
-<script>
+        // Estas são as funções que possuem CRM, COREN ou CRF.
+        const funcoesComRegistro = {
 
+            'Médico': 'CRM',
 
-/* ==========================================================
-   MÁSCARA E PREENCHIMENTO AUTOMÁTICO DO CEP
-========================================================== */
+            'Enfermeiro': 'COREN',
 
-// Localiza o campo de CEP pelo seu ID
-const campoCep = document.getElementById('cep');
+            'Farmacêutico': 'CRF',
 
-// Localiza o campo da rua pelo seu ID
-const campoRua = document.getElementById('rua');
+            'Cirurgião': 'CRM',
 
-// Localiza o campo da cidade pelo seu ID
-const campoCidade = document.getElementById('cidade');
+            'Anestesista': 'CRM'
 
-// Localiza o espaço onde será mostrada a mensagem do CEP
-const mensagemCep = document.getElementById('mensagemCep');
+        };
 
 
-/*
-    Adiciona um evento que é executado sempre que
-    o usuário digita alguma coisa no campo CEP.
-*/
-campoCep.addEventListener('input', function () {
+        // ==========================================================
+        // MOSTRAR OU OCULTAR REGISTRO
+        // ==========================================================
 
-    // Remove todos os caracteres que não sejam números.
-    let cep = this.value.replace(/\D/g, '');
+        function atualizarRegistro() {
 
-    // Limita o CEP a exatamente 8 números no máximo.
-    cep = cep.substring(0, 8);
+            // Obtém a função selecionada pelo usuário.
+            const funcaoSelecionada = campoFuncao.value;
 
-    /*
-        Se o CEP tiver mais de 5 números,
-        adiciona automaticamente o hífen.
+            // Verifica se a função possui registro profissional.
+            if (funcoesComRegistro[funcaoSelecionada]) {
 
-        Exemplo:
-        13000000
-        vira:
-        13000-000
-    */
-    if (cep.length > 5) {
+                // Mostra o campo de registro.
+                grupoRegistro.style.display = 'block';
 
-        cep =
-            cep.substring(0, 5)
-            + '-'
-            + cep.substring(5);
+                // Torna o registro obrigatório.
+                campoRegistro.required = true;
 
-    }
+                // Altera o nome do campo conforme a profissão.
+                labelRegistro.textContent =
+                    funcoesComRegistro[funcaoSelecionada];
 
-    // Atualiza o valor do campo com a máscara.
-    this.value = cep;
+                // Altera o texto de ajuda.
+                campoRegistro.placeholder =
+                    'Digite o ' +
+                    funcoesComRegistro[funcaoSelecionada];
 
+            } else {
 
-    /*
-        Enquanto o CEP ainda não estiver completo,
-        limpa a mensagem e permite que os campos
-        sejam preenchidos manualmente.
-    */
-    if (cep.length < 9) {
+                // Oculta o campo quando a função não possui registro.
+                grupoRegistro.style.display = 'none';
 
-        mensagemCep.textContent = '';
+                // Retira a obrigatoriedade.
+                campoRegistro.required = false;
 
-        campoRua.readOnly = false;
-        campoCidade.readOnly = false;
+                // Limpa o valor do campo.
+                campoRegistro.value = '';
 
-        campoRua.classList.remove('campo-carregado');
-        campoCidade.classList.remove('campo-carregado');
+                // Retorna o texto padrão.
+                labelRegistro.textContent =
+                    'Registro profissional';
 
-        return;
-    }
+                // Retorna o placeholder padrão.
+                campoRegistro.placeholder =
+                    'Digite o registro';
+            }
+        }
 
 
-    /*
-        Remove o hífen para realizar a consulta.
-    */
-    const cepNumeros = cep.replace(/\D/g, '');
+        // Executa a função sempre que a função profissional for alterada.
+        campoFuncao.addEventListener(
+            'change',
+            atualizarRegistro
+        );
 
 
-    /*
-        Verifica se o CEP possui exatamente 8 números.
-    */
-    if (cepNumeros.length !== 8) {
-
-        return;
-    }
+        // Executa uma vez quando a página é carregada.
+        atualizarRegistro();
 
 
-    /*
-        Informa ao usuário que o sistema está
-        consultando o CEP.
-    */
-    mensagemCep.textContent = 'Consultando CEP...';
+        // ==========================================================
+        // REGISTRO PROFISSIONAL - SOMENTE NÚMEROS
+        // ==========================================================
 
-    mensagemCep.className = 'text-primary';
+        campoRegistro.addEventListener(
+            'input',
+            function () {
 
+                // Remove qualquer caractere que não seja número.
+                this.value = this.value.replace(/\D/g, '');
 
-    /*
-        Consulta o serviço ViaCEP.
-
-        O CEP é enviado para a API e o sistema
-        recebe os dados do endereço.
-    */
-    fetch(`https://viacep.com.br/ws/${cepNumeros}/json/`)
-
-        /*
-            Converte a resposta recebida para JSON.
-        */
-        .then(response => {
-
-            // Verifica se a resposta foi recebida corretamente.
-            if (!response.ok) {
-
-                throw new Error('Erro ao consultar o CEP.');
+                // Limita o campo a 6 números.
+                this.value = this.value.substring(0, 6);
 
             }
+        );
 
-            // Converte a resposta para JSON.
-            return response.json();
 
-        })
+        // ==========================================================
+        // MÁSCARA DE CPF
+        // ==========================================================
 
-        /*
-            Recebe os dados do endereço.
-        */
-        .then(dados => {
+        campoCpf.addEventListener(
+            'input',
+            function () {
 
-            /*
-                Verifica se o CEP não foi encontrado.
-            */
-            if (dados.erro) {
+                // Remove tudo que não for número.
+                let valor = this.value.replace(/\D/g, '');
 
-                mensagemCep.textContent =
-                    'CEP não encontrado. Preencha o endereço manualmente.';
+                // Limita o CPF a 11 números.
+                valor = valor.substring(0, 11);
 
-                mensagemCep.className = 'text-danger';
+                // Adiciona o primeiro ponto.
+                if (valor.length > 3) {
 
-                // Limpa os campos que poderiam ter sido preenchidos.
-                campoRua.value = '';
-                campoCidade.value = '';
+                    valor =
+                        valor.substring(0, 3) +
+                        '.' +
+                        valor.substring(3);
 
-                // Permite digitação manual.
+                }
+
+                // Adiciona o segundo ponto.
+                if (valor.length > 7) {
+
+                    valor =
+                        valor.substring(0, 7) +
+                        '.' +
+                        valor.substring(7);
+
+                }
+
+                // Adiciona o hífen.
+                if (valor.length > 11) {
+
+                    valor =
+                        valor.substring(0, 11) +
+                        '-' +
+                        valor.substring(11);
+
+                }
+
+                // Atualiza o campo.
+                this.value = valor;
+
+            }
+        );
+
+
+        // ==========================================================
+        // MÁSCARA DE TELEFONE
+        // ==========================================================
+
+        campoTelefone.addEventListener(
+            'input',
+            function () {
+
+                // Remove tudo que não for número.
+                let valor = this.value.replace(/\D/g, '');
+
+                // Limita o telefone a 11 números.
+                valor = valor.substring(0, 11);
+
+                // Telefone celular com 11 números.
+                if (valor.length >= 11) {
+
+                    this.value =
+                        '(' +
+                        valor.substring(0, 2) +
+                        ') ' +
+                        valor.substring(2, 7) +
+                        '-' +
+                        valor.substring(7, 11);
+
+                }
+
+                // Telefone fixo com 10 números.
+                else if (valor.length >= 10) {
+
+                    this.value =
+                        '(' +
+                        valor.substring(0, 2) +
+                        ') ' +
+                        valor.substring(2, 6) +
+                        '-' +
+                        valor.substring(6, 10);
+
+                }
+
+                // Telefone ainda incompleto.
+                else {
+
+                    this.value = valor;
+
+                }
+
+            }
+        );
+
+
+        // ==========================================================
+        // MÁSCARA DE CEP
+        // ==========================================================
+
+        campoCep.addEventListener(
+            'input',
+            function () {
+
+                // Remove tudo que não for número.
+                let valor = this.value.replace(/\D/g, '');
+
+                // Limita o CEP a 8 números.
+                valor = valor.substring(0, 8);
+
+                // Adiciona o hífen depois dos cinco primeiros números.
+                if (valor.length > 5) {
+
+                    valor =
+                        valor.substring(0, 5) +
+                        '-' +
+                        valor.substring(5);
+
+                }
+
+                // Atualiza o campo.
+                this.value = valor;
+
+            }
+        );
+
+
+        // ==========================================================
+        // CONSULTA DO CEP NA API VIACEP
+        // ==========================================================
+
+        campoCep.addEventListener(
+            'blur',
+            function () {
+
+                // Retira a máscara do CEP.
+                const cep = this.value.replace(/\D/g, '');
+
+                // Verifica se o CEP possui exatamente 8 números.
+                if (cep.length !== 8) {
+
+                    return;
+
+                }
+
+                // Consulta o endereço através da API ViaCEP.
+                fetch(
+                    `https://viacep.com.br/ws/${cep}/json/`
+                )
+
+                    // Converte a resposta para JSON.
+                    .then(
+                        resposta => resposta.json()
+                    )
+
+                    // Processa os dados recebidos.
+                    .then(
+                        dados => {
+
+                            // Verifica se o CEP não foi encontrado.
+                            if (dados.erro) {
+
+                                alert(
+                                    'CEP não encontrado. Digite o endereço manualmente.'
+                                );
+
+                                // Permite novamente a edição dos campos.
+                                campoRua.readOnly = false;
+                                campoCidade.readOnly = false;
+
+                                campoRua.classList.remove(
+                                    'campo-carregado'
+                                );
+
+                                campoCidade.classList.remove(
+                                    'campo-carregado'
+                                );
+
+                                return;
+                            }
+
+
+                            // Preenche automaticamente a rua.
+                            campoRua.value =
+                                dados.logradouro || '';
+
+
+                            // Preenche automaticamente a cidade.
+                            campoCidade.value =
+                                dados.localidade || '';
+
+
+                            // Impede alterações acidentais nos campos
+                            // preenchidos automaticamente.
+                            campoRua.readOnly = true;
+                            campoCidade.readOnly = true;
+
+
+                            // Destaca visualmente os campos preenchidos.
+                            campoRua.classList.add(
+                                'campo-carregado'
+                            );
+
+                            campoCidade.classList.add(
+                                'campo-carregado'
+                            );
+
+                        }
+                    )
+
+                    // Trata erros de conexão.
+                    .catch(
+                        erro => {
+
+                            console.error(
+                                'Erro ao consultar o CEP:',
+                                erro
+                            );
+
+                            alert(
+                                'Não foi possível consultar o CEP. Digite o endereço manualmente.'
+                            );
+
+                            // Permite o preenchimento manual.
+                            campoRua.readOnly = false;
+                            campoCidade.readOnly = false;
+
+                        }
+                    );
+
+            }
+        );
+
+
+        // ==========================================================
+        // LIMPAR CAMPOS AUTOMÁTICOS QUANDO O CEP FOR ALTERADO
+        // ==========================================================
+
+        campoCep.addEventListener(
+            'input',
+            function () {
+
+                // Quando o usuário altera o CEP,
+                // os campos voltam a ser editáveis.
                 campoRua.readOnly = false;
                 campoCidade.readOnly = false;
 
                 // Remove o destaque dos campos.
-                campoRua.classList.remove('campo-carregado');
-                campoCidade.classList.remove('campo-carregado');
+                campoRua.classList.remove(
+                    'campo-carregado'
+                );
 
-                return;
+                campoCidade.classList.remove(
+                    'campo-carregado'
+                );
+
             }
+        );
 
 
-            /*
-                Preenche automaticamente a rua
-                utilizando o logradouro retornado pelo CEP.
-            */
-            campoRua.value = dados.logradouro || '';
+        // ==========================================================
+        // IMPEDIR DATA DE NASCIMENTO NO FUTURO
+        // ==========================================================
+
+        const campoDataNascimento =
+            document.getElementById('data_nascimento');
+
+        // Obtém a data atual do computador.
+        const hoje =
+            new Date().toISOString().split('T')[0];
+
+        // Define a data atual como limite máximo.
+        campoDataNascimento.max = hoje;
 
 
-            /*
-                Preenche automaticamente a cidade
-                utilizando a localidade retornada pelo CEP.
-            */
-            campoCidade.value = dados.localidade || '';
+        // ==========================================================
+        // VALIDAÇÃO DO FORMULÁRIO
+        // ==========================================================
+
+        document.querySelector('form').addEventListener(
+            'submit',
+            function (evento) {
+
+                // Retira os caracteres de formatação do CPF.
+                const cpfNumeros =
+                    campoCpf.value.replace(/\D/g, '');
+
+                // Verifica se o CPF possui 11 números.
+                if (cpfNumeros.length !== 11) {
+
+                    alert(
+                        'Digite um CPF válido com 11 números.'
+                    );
+
+                    campoCpf.focus();
+
+                    evento.preventDefault();
+
+                    return;
+                }
 
 
-            /*
-                Coloca os campos como somente leitura
-                porque foram preenchidos automaticamente.
-            */
-            campoRua.readOnly = true;
-            campoCidade.readOnly = true;
+                // Retira os caracteres de formatação do telefone.
+                const telefoneNumeros =
+                    campoTelefone.value.replace(/\D/g, '');
+
+                // O telefone deve possuir 10 ou 11 números.
+                if (
+                    telefoneNumeros.length !== 10 &&
+                    telefoneNumeros.length !== 11
+                ) {
+
+                    alert(
+                        'Digite um telefone válido com 10 ou 11 números.'
+                    );
+
+                    campoTelefone.focus();
+
+                    evento.preventDefault();
+
+                    return;
+                }
 
 
-            /*
-                Adiciona uma aparência diferente aos campos
-                preenchidos automaticamente.
-            */
-            campoRua.classList.add('campo-carregado');
-            campoCidade.classList.add('campo-carregado');
+                // Verifica se a função selecionada possui registro.
+                if (
+                    funcoesComRegistro[campoFuncao.value]
+                ) {
+
+                    // Verifica se o registro possui exatamente 6 números.
+                    if (
+                        campoRegistro.value.length !== 6
+                    ) {
+
+                        alert(
+                            'O registro profissional deve possuir exatamente 6 números.'
+                        );
+
+                        campoRegistro.focus();
+
+                        evento.preventDefault();
+
+                        return;
+                    }
+
+                }
+
+            }
+        );
+
+    </script>
 
 
-            /*
-                Mostra uma mensagem informando que
-                o endereço foi localizado.
-            */
-            mensagemCep.textContent =
-                'Endereço preenchido automaticamente.';
+    <!-- ==========================================================
+         BOOTSTRAP JAVASCRIPT
+         ========================================================== -->
 
-            mensagemCep.className = 'text-success';
-
-        })
-
-        /*
-            Caso aconteça algum problema na consulta.
-        */
-        .catch(erro => {
-
-            /*
-                Mostra uma mensagem para o usuário.
-            */
-            mensagemCep.textContent =
-                'Não foi possível consultar o CEP. Preencha o endereço manualmente.';
-
-            mensagemCep.className = 'text-danger';
-
-
-            /*
-                Permite que o usuário preencha
-                o endereço manualmente.
-            */
-            campoRua.readOnly = false;
-            campoCidade.readOnly = false;
-
-
-            /*
-                Remove o destaque dos campos.
-            */
-            campoRua.classList.remove('campo-carregado');
-            campoCidade.classList.remove('campo-carregado');
-
-        });
-
-});
-
-
-/* ==========================================================
-   MÁSCARA DO CPF
-========================================================== */
-
-// Localiza o campo CPF pelo ID
-document.getElementById('cpf').addEventListener('input', function () {
-
-    // Remove todos os caracteres que não são números
-    let cpf = this.value.replace(/\D/g, '');
-
-    // Limita o CPF a 11 números
-    cpf = cpf.substring(0, 11);
-
-
-    // Quando existem mais de 9 números,
-    // aplica a máscara completa:
-    // 000.000.000-00
-    if (cpf.length > 9) {
-
-        cpf =
-            cpf.substring(0, 3)
-            + '.'
-            + cpf.substring(3, 6)
-            + '.'
-            + cpf.substring(6, 9)
-            + '-'
-            + cpf.substring(9);
-    }
-
-
-    // Quando existem mais de 6 números,
-    // adiciona os dois primeiros pontos.
-    else if (cpf.length > 6) {
-
-        cpf =
-            cpf.substring(0, 3)
-            + '.'
-            + cpf.substring(3, 6)
-            + '.'
-            + cpf.substring(6);
-    }
-
-
-    // Quando existem mais de 3 números,
-    // adiciona somente o primeiro ponto.
-    else if (cpf.length > 3) {
-
-        cpf =
-            cpf.substring(0, 3)
-            + '.'
-            + cpf.substring(3);
-    }
-
-    // Atualiza o valor do campo com a máscara aplicada
-    this.value = cpf;
-
-});
-
-
-/* ==========================================================
-   MÁSCARA DO TELEFONE
-========================================================== */
-
-// Localiza o campo de telefone pelo ID
-document.getElementById('telefone').addEventListener('input', function () {
-
-    // Remove todos os caracteres que não são números
-    let telefone = this.value.replace(/\D/g, '');
-
-    // Limita o telefone a 11 números
-    telefone = telefone.substring(0, 11);
-
-
-    // Se houver 11 números,
-    // aplica a máscara de celular:
-    // (00) 00000-0000
-    if (telefone.length > 10) {
-
-        telefone =
-            '('
-            + telefone.substring(0, 2)
-            + ') '
-            + telefone.substring(2, 7)
-            + '-'
-            + telefone.substring(7);
-    }
-
-
-    // Se houver entre 7 e 10 números,
-    // aplica a máscara de telefone fixo.
-    else if (telefone.length > 6) {
-
-        telefone =
-            '('
-            + telefone.substring(0, 2)
-            + ') '
-            + telefone.substring(2, 6)
-            + '-'
-            + telefone.substring(6);
-    }
-
-
-    // Se houver entre 3 e 6 números,
-    // adiciona somente o DDD.
-    else if (telefone.length > 2) {
-
-        telefone =
-            '('
-            + telefone.substring(0, 2)
-            + ') '
-            + telefone.substring(2);
-    }
-
-    // Atualiza o valor do campo com a máscara
-    this.value = telefone;
-
-});
-
-</script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    ></script>
 
 </body>
 

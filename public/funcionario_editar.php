@@ -30,6 +30,11 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 // farmaceutico
 // cirurgiao
 // anestesista
+// recepcionista
+// faturista
+// comprador_almoxarifado
+// gerente_financeiro
+// diretor_hospital
 $tabela = $_GET['tabela'] ?? '';
 
 
@@ -40,14 +45,63 @@ $tabela = $_GET['tabela'] ?? '';
 // Define quais tabelas podem ser utilizadas
 // para editar funcionários.
 //
-// Além do nome da profissão, cada tabela possui
-// o campo utilizado para armazenar o registro profissional.
+// Cada tabela possui:
+// nome = nome da função exibida no sistema
+// registro = campo do registro profissional.
+//
+// As funções administrativas não possuem
+// registro profissional.
 $tabelasPermitidas = [
-    'medico'       => ['nome' => 'Médico',       'registro' => 'crm'],
-    'enfermeiro'   => ['nome' => 'Enfermeiro',   'registro' => 'coren'],
-    'farmaceutico' => ['nome' => 'Farmacêutico', 'registro' => 'crf'],
-    'cirurgiao'    => ['nome' => 'Cirurgião',    'registro' => 'crm'],
-    'anestesista'  => ['nome' => 'Anestesista',  'registro' => 'crm']
+
+    'medico' => [
+        'nome' => 'Médico',
+        'registro' => 'crm'
+    ],
+
+    'enfermeiro' => [
+        'nome' => 'Enfermeiro',
+        'registro' => 'coren'
+    ],
+
+    'farmaceutico' => [
+        'nome' => 'Farmacêutico',
+        'registro' => 'crf'
+    ],
+
+    'cirurgiao' => [
+        'nome' => 'Cirurgião',
+        'registro' => 'crm'
+    ],
+
+    'anestesista' => [
+        'nome' => 'Anestesista',
+        'registro' => 'crm'
+    ],
+
+    'recepcionista' => [
+        'nome' => 'Recepcionista',
+        'registro' => null
+    ],
+
+    'faturista' => [
+        'nome' => 'Faturista',
+        'registro' => null
+    ],
+
+    'comprador_almoxarifado' => [
+        'nome' => 'Comprador de Almoxarifado',
+        'registro' => null
+    ],
+
+    'gerente_financeiro' => [
+        'nome' => 'Gerente Financeiro',
+        'registro' => null
+    ],
+
+    'diretor_hospital' => [
+        'nome' => 'Diretor do Hospital',
+        'registro' => null
+    ]
 ];
 
 
@@ -60,7 +114,7 @@ $tabelasPermitidas = [
 if (!$id || !isset($tabelasPermitidas[$tabela])) {
 
     // Caso alguma informação seja inválida,
-// interrompe a execução.
+    // interrompe a execução.
     exit('Funcionário inválido.');
 }
 
@@ -69,16 +123,15 @@ if (!$id || !isset($tabelasPermitidas[$tabela])) {
 // IDENTIFICAR FUNÇÃO E CAMPO DE REGISTRO
 // ==========================================================
 
-// Obtém o nome da função profissional
-// correspondente à tabela escolhida.
+// Obtém o nome da função correspondente
+// à tabela escolhida.
 $funcao = $tabelasPermitidas[$tabela]['nome'];
 
-// Obtém o nome do campo que armazena o registro profissional.
+// Obtém o nome do campo que armazena
+// o registro profissional.
 //
-// Pode ser:
-// CRM para médico, cirurgião e anestesista;
-// COREN para enfermeiro;
-// CRF para farmacêutico.
+// Para as funções administrativas,
+// esse valor será NULL.
 $campoRegistro = $tabelasPermitidas[$tabela]['registro'];
 
 
@@ -93,33 +146,78 @@ $erro = '';
 
 try {
 
+    // ------------------------------------------------------
+    // DEFINIR CAMPO DE REGISTRO
+    // ------------------------------------------------------
+
+    // Caso a tabela possua registro profissional,
+    // utiliza o campo correspondente.
+    //
+    // Caso seja uma função administrativa,
+    // retorna NULL como registro.
+    if ($campoRegistro !== null) {
+
+        $campoRegistroSQL = "f.$campoRegistro AS registro";
+
+    } else {
+
+        $campoRegistroSQL = "NULL AS registro";
+    }
+
+
+    // ------------------------------------------------------
+    // CONSULTA DO FUNCIONÁRIO
+    // ------------------------------------------------------
+
     // Monta a consulta para buscar os dados do funcionário
     // e também os dados do endereço relacionado.
     //
     // O LEFT JOIN permite que o funcionário seja encontrado
     // mesmo que não possua um endereço relacionado.
     $sql = "
+
         SELECT
+
             f.id,
+
             f.nome,
-            f.$campoRegistro AS registro,
+
+            $campoRegistroSQL,
+
             f.telefone,
+
             f.email,
+
             f.cpf,
+
             f.data_nascimento,
+
             f.sexo,
+
             f.status,
+
             f.endereco_id,
+
             e.rua,
+
             e.numero,
+
             e.cep,
+
             e.cidade,
+
             e.complemento
-        FROM $tabela f
+
+        FROM `$tabela` f
+
         LEFT JOIN endereco e
+
             ON e.id = f.endereco_id
+
         WHERE f.id = ?
+
         LIMIT 1
+
     ";
 
     // Prepara a consulta SQL.
@@ -138,6 +236,7 @@ try {
         // Caso não exista, interrompe a execução.
         exit('Funcionário não encontrado.');
     }
+
 
 } catch (PDOException $e) {
 
@@ -162,6 +261,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome'] ?? '');
 
     // Recebe o registro profissional.
+    //
+    // Nas funções administrativas esse campo não existe
+    // e permanecerá vazio.
     $registro = trim($_POST['registro'] ?? '');
 
     // Recebe o telefone.
@@ -216,8 +318,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $erro = 'O nome é obrigatório.';
 
-    // Verifica se o registro profissional foi preenchido.
-    } elseif ($registro === '') {
+    // Verifica o registro profissional somente
+    // para as funções que possuem esse campo.
+    } elseif ($campoRegistro !== null && $registro === '') {
 
         $erro = 'O registro profissional é obrigatório.';
 
@@ -305,40 +408,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ATUALIZAR FUNCIONÁRIO
             // --------------------------------------------------
 
-            // Cria a consulta SQL para atualizar os dados
-            // pessoais e profissionais.
-            //
-            // O campo $campoRegistro pode ser:
-            // crm, coren ou crf.
-            $sql = "
-                UPDATE $tabela
-                SET
-                    nome = ?,
-                    $campoRegistro = ?,
-                    telefone = ?,
-                    email = ?,
-                    cpf = ?,
-                    data_nascimento = ?,
-                    sexo = ?,
-                    status = ?
-                WHERE id = ?
-            ";
+            // Caso a função possua registro profissional,
+            // atualiza também o campo CRM, COREN ou CRF.
+            if ($campoRegistro !== null) {
 
-            // Prepara a consulta.
-            $stmt = $pdo->prepare($sql);
+                $sql = "
 
-            // Executa a atualização com os valores recebidos.
-            $stmt->execute([
-                $nome,
-                $registro,
-                $telefone,
-                $email,
-                $cpf,
-                $data_nascimento,
-                $sexo,
-                $status,
-                $id
-            ]);
+                    UPDATE `$tabela`
+
+                    SET
+
+                        nome = ?,
+
+                        `$campoRegistro` = ?,
+
+                        telefone = ?,
+
+                        email = ?,
+
+                        cpf = ?,
+
+                        data_nascimento = ?,
+
+                        sexo = ?,
+
+                        status = ?
+
+                    WHERE id = ?
+
+                ";
+
+                // Prepara a consulta.
+                $stmt = $pdo->prepare($sql);
+
+                // Executa a atualização.
+                $stmt->execute([
+
+                    $nome,
+
+                    $registro,
+
+                    $telefone,
+
+                    $email,
+
+                    $cpf,
+
+                    $data_nascimento,
+
+                    $sexo,
+
+                    $status,
+
+                    $id
+
+                ]);
+
+            } else {
+
+                // --------------------------------------------------
+                // ATUALIZAR FUNCIONÁRIO ADMINISTRATIVO
+                // --------------------------------------------------
+
+                // As funções administrativas não possuem
+                // CRM, COREN ou CRF.
+                $sql = "
+
+                    UPDATE `$tabela`
+
+                    SET
+
+                        nome = ?,
+
+                        telefone = ?,
+
+                        email = ?,
+
+                        cpf = ?,
+
+                        data_nascimento = ?,
+
+                        sexo = ?,
+
+                        status = ?
+
+                    WHERE id = ?
+
+                ";
+
+                // Prepara a consulta.
+                $stmt = $pdo->prepare($sql);
+
+                // Executa a atualização.
+                $stmt->execute([
+
+                    $nome,
+
+                    $telefone,
+
+                    $email,
+
+                    $cpf,
+
+                    $data_nascimento,
+
+                    $sexo,
+
+                    $status,
+
+                    $id
+
+                ]);
+            }
 
 
             // --------------------------------------------------
@@ -352,24 +533,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Se existir endereço, atualiza os dados
                 // do endereço existente.
                 $stmtEndereco = $pdo->prepare("
+
                     UPDATE endereco
+
                     SET
+
                         rua = ?,
+
                         numero = ?,
+
                         cep = ?,
+
                         cidade = ?,
+
                         complemento = ?
+
                     WHERE id = ?
+
                 ");
 
                 // Executa a atualização do endereço.
                 $stmtEndereco->execute([
+
                     $rua,
+
                     $numero,
+
                     $cep,
+
                     $cidade,
+
                     $complemento,
+
                     $funcionario['endereco_id']
+
                 ]);
 
             } else {
@@ -381,24 +578,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Caso o funcionário não tenha um endereço,
                 // cria um novo registro na tabela endereco.
                 $stmtEndereco = $pdo->prepare("
+
                     INSERT INTO endereco
+
                     (
+
                         rua,
+
                         numero,
+
                         cep,
+
                         cidade,
+
                         complemento
+
                     )
+
                     VALUES (?, ?, ?, ?, ?)
+
                 ");
 
                 // Executa o cadastro do novo endereço.
                 $stmtEndereco->execute([
+
                     $rua,
+
                     $numero,
+
                     $cep,
+
                     $cidade,
+
                     $complemento
+
                 ]);
 
 
@@ -413,15 +626,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Atualiza o funcionário para armazenar
                 // o ID do endereço recém-criado.
                 $stmtEnderecoFuncionario = $pdo->prepare("
-                    UPDATE $tabela
+
+                    UPDATE `$tabela`
+
                     SET endereco_id = ?
+
                     WHERE id = ?
+
                 ");
 
                 // Executa a atualização do relacionamento.
                 $stmtEnderecoFuncionario->execute([
+
                     $enderecoId,
+
                     $id
+
                 ]);
             }
 
@@ -435,16 +655,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
             // ==================================================
-// REDIRECIONAR APÓS A ATUALIZAÇÃO
-// ==================================================
+            // REDIRECIONAR APÓS A ATUALIZAÇÃO
+            // ==================================================
 
-// Depois de salvar as alterações,
-// retorna para a página principal de funcionários.
+            // Depois de salvar as alterações,
+            // retorna para a página de visualização
+            // mantendo também a tabela de origem.
+            header(
+                'Location: funcionario_visualizar.php?id=' .
+                $id .
+                '&tabela=' .
+                urlencode($tabela)
+            );
 
-header('Location: funcionarios.php');
-
-// Encerra a execução.
-exit;
+            // Encerra a execução.
+            exit;
 
 
         } catch (PDOException $e) {
@@ -475,9 +700,8 @@ exit;
     // Caso exista algum erro de validação ou banco de dados,
     // os valores digitados pelo usuário são colocados novamente
     // no array $funcionario.
-    //
-    // Isso evita que o formulário fique vazio após um erro.
 
+    // Mantém o nome informado.
     $funcionario['nome'] = $nome;
 
     // Mantém o registro profissional informado.
@@ -518,245 +742,322 @@ exit;
 }
 
 ?>
+
 <!DOCTYPE html>
+
 <html lang="pt-br">
 
 <head>
 
-    <!-- Define a codificação dos caracteres da página. -->
-    <meta charset="UTF-8">
+<!-- Define a codificação dos caracteres da página. -->
+<meta charset="UTF-8">
 
-    <!-- Faz a página se adaptar a diferentes tamanhos de tela. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Faz a página se adaptar a diferentes tamanhos de tela. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Define o título exibido na aba do navegador. -->
-    <title>Editar Funcionário</title>
-
-
-    <!-- ======================================================
-         BOOTSTRAP
-         ====================================================== -->
-
-    <!-- Importa o CSS do Bootstrap 5.3.3. -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
-    <!-- Importa os ícones do Bootstrap Icons. -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
+<!-- Define o título exibido na aba do navegador. -->
+<title>Editar Funcionário</title>
 
 
-    <!-- ======================================================
-         ESTILOS PERSONALIZADOS
-         ====================================================== -->
+<!-- ======================================================
+     BOOTSTRAP
+     ====================================================== -->
 
-    <style>
+<!-- Importa o CSS do Bootstrap 5.3.3. -->
+<link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+>
 
-        /* Define o fundo geral da página. */
-        body {
-            background: linear-gradient(135deg, #eef5ff, #dbeeff);
-            font-family: 'Segoe UI', sans-serif;
-            min-height: 100vh;
-        }
+<!-- Importa os ícones do Bootstrap Icons. -->
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+>
 
-        /* Define o cartão principal que contém o formulário. */
-        .card-principal {
-            max-width: 1050px;
-            margin: 40px auto;
-            background: white;
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 15px 40px rgba(47,128,237,.12);
-        }
 
-        /* Define o cabeçalho azul da página. */
-        .cabecalho {
-            background: linear-gradient(135deg,#2F80ED,#56CCF2);
-            color: white;
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
+<!-- ======================================================
+     ESTILOS PERSONALIZADOS
+     ====================================================== -->
 
-        /* Estiliza o título do cabeçalho. */
-        .cabecalho h2 {
-            font-weight: 700;
-            margin: 0;
-        }
+<style>
 
-        /* Estiliza o texto abaixo do título. */
-        .cabecalho p {
-            margin: 5px 0 0;
-            opacity: .9;
-        }
+    /* Define o fundo geral da página. */
+    body {
 
-        /* Define o estilo dos títulos das seções. */
-        .secao {
-            color: #2F80ED;
-            font-weight: 700;
-            margin-top: 25px;
-            margin-bottom: 18px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e5edf7;
-        }
+        background: linear-gradient(135deg, #eef5ff, #dbeeff);
 
-        /* Define o formato dos campos de texto e selects. */
-        .form-control,
-        .form-select {
-            border-radius: 11px;
-            padding: 10px 13px;
-        }
+        font-family: 'Segoe UI', sans-serif;
 
-        /* Define o destaque dos campos quando recebem foco. */
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #2F80ED;
-            box-shadow: 0 0 0 .2rem rgba(47,128,237,.15);
-        }
+        min-height: 100vh;
+    }
 
-        /* Estilo do botão principal de salvar. */
-        .btn-principal {
-            background: #2F80ED;
-            color: white;
-            border: none;
-            border-radius: 11px;
-            padding: 10px 18px;
-            font-weight: 600;
-        }
 
-        /* Altera a cor do botão quando o mouse passa sobre ele. */
-        .btn-principal:hover {
-            background: #1c6ad6;
-            color: white;
-        }
+    /* Define o cartão principal que contém o formulário. */
+    .card-principal {
 
-        /* Estilo do botão de voltar/cancelar. */
-        .btn-voltar {
-            border-radius: 11px;
-            padding: 10px 18px;
-        }
+        max-width: 1050px;
 
-    </style>
+        margin: 40px auto;
+
+        background: white;
+
+        border-radius: 25px;
+
+        padding: 30px;
+
+        box-shadow: 0 15px 40px rgba(47,128,237,.12);
+    }
+
+
+    /* Define o cabeçalho azul da página. */
+    .cabecalho {
+
+        background: linear-gradient(135deg,#2F80ED,#56CCF2);
+
+        color: white;
+
+        border-radius: 20px;
+
+        padding: 25px;
+
+        margin-bottom: 30px;
+    }
+
+
+    /* Estiliza o título do cabeçalho. */
+    .cabecalho h2 {
+
+        font-weight: 700;
+
+        margin: 0;
+    }
+
+
+    /* Estiliza o texto abaixo do título. */
+    .cabecalho p {
+
+        margin: 5px 0 0;
+
+        opacity: .9;
+    }
+
+
+    /* Define o estilo dos títulos das seções. */
+    .secao {
+
+        color: #2F80ED;
+
+        font-weight: 700;
+
+        margin-top: 25px;
+
+        margin-bottom: 18px;
+
+        padding-bottom: 8px;
+
+        border-bottom: 1px solid #e5edf7;
+    }
+
+
+    /* Define o formato dos campos de texto e selects. */
+    .form-control,
+    .form-select {
+
+        border-radius: 11px;
+
+        padding: 10px 13px;
+    }
+
+
+    /* Define o destaque dos campos quando recebem foco. */
+    .form-control:focus,
+    .form-select:focus {
+
+        border-color: #2F80ED;
+
+        box-shadow: 0 0 0 .2rem rgba(47,128,237,.15);
+    }
+
+
+    /* Estilo do botão principal de salvar. */
+    .btn-principal {
+
+        background: #2F80ED;
+
+        color: white;
+
+        border: none;
+
+        border-radius: 11px;
+
+        padding: 10px 18px;
+
+        font-weight: 600;
+    }
+
+
+    /* Altera a cor do botão quando o mouse passa sobre ele. */
+    .btn-principal:hover {
+
+        background: #1c6ad6;
+
+        color: white;
+    }
+
+
+    /* Estilo do botão de voltar/cancelar. */
+    .btn-voltar {
+
+        border-radius: 11px;
+
+        padding: 10px 18px;
+    }
+
+</style>
 
 </head>
 
 <body>
+<!-- ======================================================
+     CARTÃO PRINCIPAL
+     ====================================================== -->
 
-    <!-- ======================================================
-         CARTÃO PRINCIPAL
-         ====================================================== -->
-
-    <div class="card-principal">
+<div class="card-principal">
 
 
-        <!-- ==================================================
-             CABEÇALHO
-             ================================================== -->
+    <!-- ==================================================
+         CABEÇALHO
+         ================================================== -->
 
-        <div class="cabecalho">
+    <div class="cabecalho">
 
-            <!-- Ícone e título da página. -->
-            <h2>
-                <i class="bi bi-pencil-square"></i>
-                Editar Funcionário
-            </h2>
+        <!-- Ícone e título da página. -->
+        <h2>
 
-            <!-- Descrição da finalidade da página. -->
-            <p>
-                Altere os dados cadastrais e profissionais.
-            </p>
+            <i class="bi bi-pencil-square"></i>
+
+            Editar Funcionário
+
+        </h2>
+
+        <!-- Descrição da finalidade da página. -->
+        <p>
+
+            Altere os dados cadastrais e profissionais.
+
+        </p>
+
+    </div>
+
+
+    <!-- ==================================================
+         MENSAGEM DE ERRO
+         ================================================== -->
+
+    <!-- Só exibe o alerta se a variável $erro possuir algum valor. -->
+    <?php if ($erro !== ''): ?>
+
+        <div class="alert alert-danger">
+
+            <!-- Ícone de aviso. -->
+            <i class="bi bi-exclamation-triangle"></i>
+
+            <!-- Exibe a mensagem de erro com segurança. -->
+            <?= htmlspecialchars($erro) ?>
 
         </div>
 
+    <?php endif; ?>
+
+
+    <!-- ==================================================
+         FORMULÁRIO
+         ================================================== -->
+
+    <!-- Formulário responsável por enviar os dados
+         atualizados através do método POST. -->
+    <form method="POST">
+
 
         <!-- ==================================================
-             MENSAGEM DE ERRO
+             DADOS DO FUNCIONÁRIO
              ================================================== -->
 
-        <!-- Só exibe o alerta se a variável $erro possuir algum valor. -->
-        <?php if ($erro !== ''): ?>
+        <h5 class="secao">
 
-            <div class="alert alert-danger">
+            <!-- Ícone de pessoa. -->
+            <i class="bi bi-person"></i>
 
-                <!-- Ícone de aviso. -->
-                <i class="bi bi-exclamation-triangle"></i>
+            Dados do Funcionário
 
-                <!-- Exibe a mensagem de erro com segurança. -->
-                <?= htmlspecialchars($erro) ?>
+        </h5>
+
+
+        <div class="row g-3">
+
+
+            <!-- Campo do nome. -->
+            <div class="col-md-8">
+
+                <label class="form-label">
+
+                    Nome *
+
+                </label>
+
+                <input
+                    type="text"
+                    name="nome"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['nome'] ?? '') ?>"
+                    required
+                >
 
             </div>
 
-        <?php endif; ?>
+
+            <!-- Campo da função. -->
+            <div class="col-md-4">
+
+                <label class="form-label">
+
+                    Função
+
+                </label>
+
+                <!-- A função é definida pela tabela de origem
+                     e não pode ser alterada nesta tela. -->
+                <input
+                    type="text"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcao) ?>"
+                    disabled
+                >
+
+            </div>
 
 
-        <!-- ==================================================
-             FORMULÁRIO
-             ================================================== -->
+            <!-- Campo do registro profissional. -->
+            <div class="col-md-4">
 
-        <!-- Formulário responsável por enviar os dados
-             atualizados através do método POST. -->
-        <form method="POST">
+                <label class="form-label">
 
+                    Registro profissional
 
-            <!-- ==================================================
-                 DADOS DO FUNCIONÁRIO
-                 ================================================== -->
+                    <?php if ($campoRegistro !== null): ?>
 
-            <h5 class="secao">
+                        *
 
-                <!-- Ícone de pessoa. -->
-                <i class="bi bi-person"></i>
+                    <?php endif; ?>
 
-                Dados do Funcionário
-
-            </h5>
+                </label>
 
 
-            <div class="row g-3">
+                <?php if ($campoRegistro !== null): ?>
 
-
-                <!-- Campo do nome. -->
-                <div class="col-md-8">
-
-                    <label class="form-label">Nome *</label>
-
-                    <input
-                        type="text"
-                        name="nome"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['nome'] ?? '') ?>"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Campo da função. -->
-                <div class="col-md-4">
-
-                    <label class="form-label">Função</label>
-
-                    <!-- O campo está disabled porque a função
-                         não pode ser alterada nesta tela. -->
-                    <input
-                        type="text"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcao) ?>"
-                        disabled
-                    >
-
-                </div>
-
-
-                <!-- Campo do registro profissional. -->
-                <div class="col-md-4">
-
-                    <label class="form-label">Registro profissional *</label>
-
+                    <!-- Exibe o campo somente para
+                         funções que possuem registro. -->
                     <input
                         type="text"
                         name="registro"
@@ -765,279 +1066,347 @@ exit;
                         required
                     >
 
-                </div>
+                <?php else: ?>
 
-
-                <!-- Campo do CPF. -->
-                <div class="col-md-4">
-
-                    <label class="form-label">CPF</label>
-
+                    <!-- Funções administrativas não possuem
+                         registro profissional. -->
                     <input
                         type="text"
-                        name="cpf"
                         class="form-control"
-                        value="<?= htmlspecialchars($funcionario['cpf'] ?? '') ?>"
+                        value="Não informado"
+                        disabled
                     >
 
-                </div>
-
-
-                <!-- Campo do telefone. -->
-                <div class="col-md-4">
-
-                    <label class="form-label">Telefone</label>
-
-                    <input
-                        type="text"
-                        name="telefone"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['telefone'] ?? '') ?>"
-                    >
-
-                </div>
-
-
-                <!-- Campo do e-mail. -->
-                <div class="col-md-6">
-
-                    <label class="form-label">E-mail</label>
-
-                    <input
-                        type="email"
-                        name="email"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['email'] ?? '') ?>"
-                    >
-
-                </div>
-
-
-                <!-- Campo da data de nascimento. -->
-                <div class="col-md-3">
-
-                    <label class="form-label">Data de nascimento</label>
-
-                    <input
-                        type="date"
-                        name="data_nascimento"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['data_nascimento'] ?? '') ?>"
-                    >
-
-                </div>
-
-
-                <!-- Campo do sexo. -->
-                <div class="col-md-3">
-
-                    <label class="form-label">Sexo</label>
-
-                    <select name="sexo" class="form-select">
-
-                        <!-- Opção padrão. -->
-                        <option value="">Selecione</option>
-
-                        <!-- Opção Masculino. -->
-                        <option
-                            value="Masculino"
-                            <?= ($funcionario['sexo'] ?? '') === 'Masculino' ? 'selected' : '' ?>
-                        >
-                            Masculino
-                        </option>
-
-                        <!-- Opção Feminino. -->
-                        <option
-                            value="Feminino"
-                            <?= ($funcionario['sexo'] ?? '') === 'Feminino' ? 'selected' : '' ?>
-                        >
-                            Feminino
-                        </option>
-
-                        <!-- Opção Outro. -->
-                        <option
-                            value="Outro"
-                            <?= ($funcionario['sexo'] ?? '') === 'Outro' ? 'selected' : '' ?>
-                        >
-                            Outro
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- Campo do status. -->
-                <div class="col-md-4">
-
-                    <label class="form-label">Status *</label>
-
-                    <select name="status" class="form-select" required>
-
-                        <!-- Opção de funcionário ativo. -->
-                        <option
-                            value="Ativo"
-                            <?= ($funcionario['status'] ?? '') === 'Ativo' ? 'selected' : '' ?>
-                        >
-                            Ativo
-                        </option>
-
-                        <!-- Opção de funcionário inativo. -->
-                        <option
-                            value="Inativo"
-                            <?= ($funcionario['status'] ?? '') === 'Inativo' ? 'selected' : '' ?>
-                        >
-                            Inativo
-                        </option>
-
-                    </select>
-
-                </div>
+                <?php endif; ?>
 
             </div>
 
 
-            <!-- ==================================================
-                 ENDEREÇO
-                 ================================================== -->
+            <!-- Campo do CPF. -->
+            <div class="col-md-4">
 
-            <h5 class="secao">
+                <label class="form-label">
 
-                <!-- Ícone de localização. -->
-                <i class="bi bi-geo-alt"></i>
+                    CPF
 
-                Endereço
+                </label>
 
-            </h5>
-
-
-            <div class="row g-3">
-
-
-                <!-- Campo da rua. -->
-                <div class="col-md-8">
-
-                    <label class="form-label">Rua *</label>
-
-                    <input
-                        type="text"
-                        name="rua"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['rua'] ?? '') ?>"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Campo do número. -->
-                <div class="col-md-4">
-
-                    <label class="form-label">Número *</label>
-
-                    <input
-                        type="text"
-                        name="numero"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['numero'] ?? '') ?>"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Campo do CEP. -->
-                <div class="col-md-4">
-
-                    <label class="form-label">CEP *</label>
-
-                    <input
-                        type="text"
-                        name="cep"
-                        class="form-control"
-                        maxlength="9"
-                        value="<?= htmlspecialchars($funcionario['cep'] ?? '') ?>"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Campo da cidade. -->
-                <div class="col-md-8">
-
-                    <label class="form-label">Cidade *</label>
-
-                    <input
-                        type="text"
-                        name="cidade"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['cidade'] ?? '') ?>"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Campo do complemento. -->
-                <div class="col-md-12">
-
-                    <label class="form-label">Complemento</label>
-
-                    <input
-                        type="text"
-                        name="complemento"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['complemento'] ?? '') ?>"
-                    >
-
-                </div>
-
-            </div>
-
-
-            <!-- ==================================================
-                 BOTÕES
-                 ================================================== -->
-
-            <div class="d-flex gap-2 mt-4">
-
-
-                <!-- Botão para cancelar a edição.
-                     Retorna para a tela de visualização. -->
-                <a
-                    href="funcionario_visualizar.php?id=<?= $id ?>&tabela=<?= urlencode($tabela) ?>"
-                    class="btn btn-secondary btn-voltar"
+                <input
+                    type="text"
+                    name="cpf"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['cpf'] ?? '') ?>"
                 >
 
-                    <!-- Ícone de seta para voltar. -->
-                    <i class="bi bi-arrow-left"></i>
-
-                    Cancelar
-
-                </a>
+            </div>
 
 
-                <!-- Botão responsável por enviar
-                     as alterações para o servidor. -->
-                <button
-                    type="submit"
-                    class="btn btn-principal"
+            <!-- Campo do telefone. -->
+            <div class="col-md-4">
+
+                <label class="form-label">
+
+                    Telefone
+
+                </label>
+
+                <input
+                    type="text"
+                    name="telefone"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['telefone'] ?? '') ?>"
                 >
-
-                    <!-- Ícone de confirmação. -->
-                    <i class="bi bi-check-circle"></i>
-
-                    Salvar alterações
-
-                </button>
 
             </div>
 
-        </form>
 
-    </div>
+            <!-- Campo do e-mail. -->
+            <div class="col-md-6">
+
+                <label class="form-label">
+
+                    E-mail
+
+                </label>
+
+                <input
+                    type="email"
+                    name="email"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['email'] ?? '') ?>"
+                >
+
+            </div>
+
+
+            <!-- Campo da data de nascimento. -->
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Data de nascimento
+
+                </label>
+
+                <input
+                    type="date"
+                    name="data_nascimento"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['data_nascimento'] ?? '') ?>"
+                >
+
+            </div>
+
+
+            <!-- Campo do sexo. -->
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Sexo
+
+                </label>
+
+                <select name="sexo" class="form-select">
+
+                    <!-- Opção padrão. -->
+                    <option value="">Selecione</option>
+
+                    <!-- Opção Masculino. -->
+                    <option
+                        value="Masculino"
+                        <?= ($funcionario['sexo'] ?? '') === 'Masculino' ? 'selected' : '' ?>
+                    >
+
+                        Masculino
+
+                    </option>
+
+                    <!-- Opção Feminino. -->
+                    <option
+                        value="Feminino"
+                        <?= ($funcionario['sexo'] ?? '') === 'Feminino' ? 'selected' : '' ?>
+                    >
+
+                        Feminino
+
+                    </option>
+
+                    <!-- Opção Outro. -->
+                    <option
+                        value="Outro"
+                        <?= ($funcionario['sexo'] ?? '') === 'Outro' ? 'selected' : '' ?>
+                    >
+
+                        Outro
+
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- Campo do status. -->
+            <div class="col-md-4">
+
+                <label class="form-label">
+
+                    Status *
+
+                </label>
+
+                <select name="status" class="form-select" required>
+
+                    <!-- Opção de funcionário ativo. -->
+                    <option
+                        value="Ativo"
+                        <?= ($funcionario['status'] ?? '') === 'Ativo' ? 'selected' : '' ?>
+                    >
+
+                        Ativo
+
+                    </option>
+
+                    <!-- Opção de funcionário inativo. -->
+                    <option
+                        value="Inativo"
+                        <?= ($funcionario['status'] ?? '') === 'Inativo' ? 'selected' : '' ?>
+                    >
+
+                        Inativo
+
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==================================================
+             ENDEREÇO
+             ================================================== -->
+
+        <h5 class="secao">
+
+            <!-- Ícone de localização. -->
+            <i class="bi bi-geo-alt"></i>
+
+            Endereço
+
+        </h5>
+
+
+        <div class="row g-3">
+
+
+            <!-- Campo da rua. -->
+            <div class="col-md-8">
+
+                <label class="form-label">
+
+                    Rua *
+
+                </label>
+
+                <input
+                    type="text"
+                    name="rua"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['rua'] ?? '') ?>"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Campo do número. -->
+            <div class="col-md-4">
+
+                <label class="form-label">
+
+                    Número *
+
+                </label>
+
+                <input
+                    type="text"
+                    name="numero"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['numero'] ?? '') ?>"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Campo do CEP. -->
+            <div class="col-md-4">
+
+                <label class="form-label">
+
+                    CEP *
+
+                </label>
+
+                <input
+                    type="text"
+                    name="cep"
+                    class="form-control"
+                    maxlength="9"
+                    value="<?= htmlspecialchars($funcionario['cep'] ?? '') ?>"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Campo da cidade. -->
+            <div class="col-md-8">
+
+                <label class="form-label">
+
+                    Cidade *
+
+                </label>
+
+                <input
+                    type="text"
+                    name="cidade"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['cidade'] ?? '') ?>"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Campo do complemento. -->
+            <div class="col-md-12">
+
+                <label class="form-label">
+
+                    Complemento
+
+                </label>
+
+                <input
+                    type="text"
+                    name="complemento"
+                    class="form-control"
+                    value="<?= htmlspecialchars($funcionario['complemento'] ?? '') ?>"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- ==================================================
+             BOTÕES
+             ================================================== -->
+
+        <div class="d-flex gap-2 mt-4">
+
+
+            <!-- Botão para cancelar a edição.
+                 Retorna para a tela de visualização. -->
+            <a
+                href="funcionario_visualizar.php?id=<?= $id ?>&tabela=<?= urlencode($tabela) ?>"
+                class="btn btn-secondary btn-voltar"
+            >
+
+                <!-- Ícone de seta para voltar. -->
+                <i class="bi bi-arrow-left"></i>
+
+                Cancelar
+
+            </a>
+
+
+            <!-- Botão responsável por enviar
+                 as alterações para o servidor. -->
+            <button
+                type="submit"
+                class="btn btn-principal"
+            >
+
+                <!-- Ícone de confirmação. -->
+                <i class="bi bi-check-circle"></i>
+
+                Salvar alterações
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
 
 </body>
 
 </html>
+

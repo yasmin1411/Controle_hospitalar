@@ -1,164 +1,369 @@
 <?php
 
-// Inclui o arquivo responsável pela autenticação do usuário.
-// Esse arquivo verifica se o usuário possui acesso ao sistema.
-require_once __DIR__ . '/../includes/auth.php';
+// Inclui o arquivo responsável pela autenticação e controle de acesso.
 
-// Inclui o arquivo responsável pela conexão com o banco de dados.
-// A variável $pdo é disponibilizada por esse arquivo.
-require_once __DIR__ . '/../config/database.php';
+// Isso garante que apenas usuários autorizados possam executar esta ação.
+
+require_once '../includes/auth.php';
+
+// Inclui a conexão com o banco de dados.
+
+// A variável $pdo será utilizada para executar as consultas SQL.
+
+require_once '../config/database.php';
 
 
-// =========================================================
-// VERIFICAÇÃO DO ID
-// =========================================================
 
-// Verifica se o parâmetro "id" foi enviado pela URL
-// e se o valor informado é numérico.
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+/*
 
-    // Caso o ID não seja informado ou seja inválido,
-// retorna para a página de funcionários desativados.
-    header('Location: funcionarios_desativados.php');
+|--------------------------------------------------------------------------
 
-    // Encerra a execução do código.
-    exit;
+| RECEBER DADOS
+
+|--------------------------------------------------------------------------
+
+*/
+
+// Recebe o ID do funcionário enviado pela URL.
+
+// FILTER_VALIDATE_INT garante que o valor seja um número inteiro válido.
+
+$id = filter_input(
+    INPUT_GET,
+    'id',
+    FILTER_VALIDATE_INT
+);
+
+// Recebe o nome da tabela enviado pela URL.
+
+// O operador ?? define uma string vazia caso "tabela" não exista.
+
+$tabela = $_GET['tabela'] ?? '';
+
+
+
+/*
+
+|--------------------------------------------------------------------------
+
+| VALIDAR ID
+
+|--------------------------------------------------------------------------
+
+*/
+
+// Verifica se o ID foi informado e é válido.
+
+// Se não for válido, interrompe a execução e mostra uma mensagem.
+
+if (!$id) {
+
+    exit('Funcionário inválido.');
+
 }
 
 
-// Converte o ID recebido pela URL para um número inteiro.
-$id = (int) $_GET['id'];
 
+/*
 
-// =========================================================
-// VERIFICAÇÃO DA TABELA
-// =========================================================
+|--------------------------------------------------------------------------
 
-// Verifica se o parâmetro "tabela" foi enviado pela URL.
-if (!isset($_GET['tabela']) || empty($_GET['tabela'])) {
+| TABELAS PERMITIDAS
 
-    // Caso a tabela não seja informada,
-// retorna para a página de funcionários desativados.
-    header('Location: funcionarios_desativados.php');
+|--------------------------------------------------------------------------
 
-    // Encerra a execução do código.
-    exit;
-}
+*/
 
+// Define quais tabelas do banco podem ser utilizadas nesta operação.
 
-// Recebe o nome da tabela enviado pela página anterior.
-$tabela = $_GET['tabela'];
+//
 
+// Cada tipo de funcionário possui sua própria tabela:
 
-// =========================================================
-// TABELAS PERMITIDAS
-// =========================================================
+// medico                  → médicos
 
-// Define as tabelas que podem ser utilizadas
-// para reativar funcionários.
+// enfermeiro              → enfermeiros
+
+// farmaceutico            → farmacêuticos
+
+// cirurgiao               → cirurgiões
+
+// anestesista             → anestesistas
+
+// recepcionista           → recepcionistas
+
+// faturista               → faturistas
+
+// comprador_almoxarifado  → compradores de almoxarifado
+
+// gerente_financeiro      → gerentes financeiros
+
+// diretor_hospital        → diretores do hospital
+
 $tabelasPermitidas = [
     'medico',
     'enfermeiro',
     'farmaceutico',
     'cirurgiao',
-    'anestesista'
+    'anestesista',
+    'recepcionista',
+    'faturista',
+    'comprador_almoxarifado',
+    'gerente_financeiro',
+    'diretor_hospital'
 ];
 
+// Verifica se a tabela recebida pela URL está na lista permitida.
 
-// Verifica se a tabela recebida está na lista permitida.
+//
+
+// O terceiro parâmetro "true" faz uma comparação estrita,
+
+// evitando que valores semelhantes sejam aceitos.
+
 if (!in_array($tabela, $tabelasPermitidas, true)) {
 
-    // Caso a tabela não seja permitida,
-// retorna para a página de funcionários desativados.
-    header('Location: funcionarios_desativados.php');
+    exit('Tabela inválida.');
 
-    // Encerra o código.
-    exit;
 }
 
 
-// =========================================================
-// REATIVAÇÃO DO FUNCIONÁRIO
-// =========================================================
+
+/*
+
+|--------------------------------------------------------------------------
+
+| REATIVAR FUNCIONÁRIO
+
+|--------------------------------------------------------------------------
+
+*/
+
+// Inicia um bloco de tratamento de erros.
+
+// Caso aconteça algum problema relacionado ao banco de dados,
+
+// o código será direcionado para o bloco catch.
 
 try {
 
-    // Busca o funcionário pelo ID.
-    // Essa consulta confirma que o funcionário existe.
-    $sqlNome = "
-        SELECT nome
-        FROM {$tabela}
+
+
+    /*
+
+    |--------------------------------------------------------------------------
+
+    | VERIFICAR SE O FUNCIONÁRIO EXISTE
+
+    |--------------------------------------------------------------------------
+
+    */
+
+    // Prepara uma consulta SQL para buscar o funcionário.
+
+    //
+
+    // A consulta procura:
+
+    // - id
+
+    // - nome
+
+    // - status
+
+    //
+
+    // A tabela é definida dinamicamente depois de passar pela
+
+    // lista de tabelas permitidas.
+
+    $sql = $pdo->prepare("
+        SELECT
+            id,
+            nome,
+            status
+        FROM $tabela
         WHERE id = ?
-        LIMIT 1
-    ";
+    ");
 
-    // Prepara a consulta.
-    $stmtNome = $pdo->prepare($sqlNome);
+    // Executa a consulta substituindo o "?" pelo ID recebido.
 
-    // Executa a consulta utilizando o ID.
-    $stmtNome->execute([$id]);
+    $sql->execute([
+        $id
+    ]);
 
-    // Obtém os dados encontrados.
-    $funcionario = $stmtNome->fetch(PDO::FETCH_ASSOC);
+    // Recupera os dados do funcionário encontrado.
+
+    //
+
+    // PDO::FETCH_ASSOC faz com que os resultados sejam retornados
+
+    // como um array associativo, usando o nome das colunas.
+
+    $funcionario = $sql->fetch(
+        PDO::FETCH_ASSOC
+    );
 
 
-    // Verifica se o funcionário foi encontrado.
+
+    /*
+
+    |--------------------------------------------------------------------------
+
+    | FUNCIONÁRIO NÃO ENCONTRADO
+
+    |--------------------------------------------------------------------------
+
+    */
+
+    // Verifica se nenhum funcionário foi encontrado.
+
+    //
+
+    // Se o resultado estiver vazio, interrompe a execução.
+
     if (!$funcionario) {
 
-        // Caso não seja encontrado,
-// retorna para a página de funcionários desativados.
-        header('Location: funcionarios_desativados.php');
+        exit('Funcionário não encontrado.');
 
-        // Encerra o código.
-        exit;
     }
 
 
-    // =========================================================
-    // ALTERAÇÃO DO STATUS
-    // =========================================================
 
-    // Altera o status do funcionário para Ativo.
-    $sql = "
-        UPDATE {$tabela}
+    /*
+
+    |--------------------------------------------------------------------------
+
+    | ALTERAR STATUS PARA ATIVO
+
+    |--------------------------------------------------------------------------
+
+    */
+
+    // Prepara o comando SQL responsável por alterar o status.
+
+    //
+
+    // O funcionário não é excluído do banco.
+
+    // Apenas seu status é alterado de "Inativo" para "Ativo".
+
+    $sql = $pdo->prepare("
+        UPDATE $tabela
         SET status = 'Ativo'
         WHERE id = ?
-    ";
+    ");
 
-    // Prepara o comando SQL.
-    $stmt = $pdo->prepare($sql);
+    // Executa o UPDATE utilizando o ID do funcionário.
 
-    // Executa o comando utilizando o ID.
-    $stmt->execute([$id]);
-
-
-    // =========================================================
-    // MENSAGEM DE SUCESSO
-    // =========================================================
-
-    // Guarda uma mensagem na sessão para ser exibida
-    // na página de funcionários desativados.
-    $_SESSION['mensagem_sucesso'] =
-        'O funcionário "' . $funcionario['nome'] . '" foi reativado com sucesso.';
+    $sql->execute([
+        $id
+    ]);
 
 
-    // Retorna para a página de funcionários desativados.
-    header('Location: funcionarios_desativados.php');
 
-    // Encerra a execução.
+    /*
+
+    |--------------------------------------------------------------------------
+
+    | VERIFICAR SE A ALTERAÇÃO ACONTECEU
+
+    |--------------------------------------------------------------------------
+
+    */
+
+    // rowCount() informa quantas linhas foram afetadas pelo UPDATE.
+
+    //
+
+    // Se nenhuma linha foi alterada e o status anterior não era "Ativo",
+
+    // significa que a reativação não aconteceu como esperado.
+
+    if (
+        $sql->rowCount() === 0
+        &&
+        $funcionario['status'] !== 'Ativo'
+    ) {
+
+        // Interrompe a execução informando que houve um problema.
+
+        exit(
+            'Não foi possível reativar o funcionário.'
+        );
+
+    }
+
+
+
+    /*
+
+    |--------------------------------------------------------------------------
+
+    | GUARDAR MENSAGEM DE SUCESSO NA SESSÃO
+
+    |--------------------------------------------------------------------------
+
+    |
+
+    | A mensagem não é exibida diretamente nesta página.
+
+    | Ela é armazenada na sessão para ser exibida posteriormente
+
+    | na página funcionarios_desativados.php.
+
+    |
+
+    */
+
+    // Cria uma variável de sessão chamada "sucesso_reativacao".
+
+    //
+
+    // Dentro dela, armazena o nome do funcionário que foi reativado.
+
+    $_SESSION['sucesso_reativacao'] = [
+        'nome' => $funcionario['nome']
+    ];
+
+
+
+    /*
+
+    |--------------------------------------------------------------------------
+
+    | VOLTAR PARA FUNCIONÁRIOS DESATIVADOS
+
+    |--------------------------------------------------------------------------
+
+    */
+
+    // Redireciona o usuário para a página que lista
+
+    // os funcionários atualmente desativados.
+
+    header(
+        'Location: funcionarios_desativados.php'
+    );
+
+    // Encerra a execução do arquivo após o redirecionamento.
+
     exit;
+
 
 
 } catch (PDOException $e) {
 
-    // Caso aconteça algum erro no banco de dados,
-    // exibe uma mensagem informando o problema.
+    // Caso ocorra algum erro relacionado ao banco de dados,
+
+    // interrompe a execução e mostra a mensagem de erro.
+
     die(
+
         'Erro ao reativar funcionário: ' .
-        htmlspecialchars(
-            $e->getMessage(),
-            ENT_QUOTES,
-            'UTF-8'
-        )
+
+        $e->getMessage()
+
     );
+
 }

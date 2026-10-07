@@ -226,6 +226,184 @@ try {
 
     /*
     |--------------------------------------------------------------------------
+    | RECEPCIONISTAS
+    |--------------------------------------------------------------------------
+    */
+
+    // Busca os recepcionistas que estão desativados.
+    //
+    // Como essa função não possui registro profissional,
+    // utiliza NULL como registro.
+    $sql = "
+        SELECT
+            id,
+            nome,
+            NULL AS registro,
+            telefone,
+            email,
+            cpf,
+            data_nascimento,
+            sexo,
+            status,
+            endereco_id,
+            'Recepcionista' AS funcao,
+            'recepcionista' AS tabela_origem
+        FROM recepcionista
+        WHERE status = 'Inativo'
+    ";
+
+    // Executa a consulta.
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    // Adiciona os recepcionistas ao array geral.
+    foreach ($resultados as $funcionario) {
+
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FATURISTAS
+    |--------------------------------------------------------------------------
+    */
+
+    // Busca os faturistas que estão desativados.
+    $sql = "
+        SELECT
+            id,
+            nome,
+            NULL AS registro,
+            telefone,
+            email,
+            cpf,
+            data_nascimento,
+            sexo,
+            status,
+            endereco_id,
+            'Faturista' AS funcao,
+            'faturista' AS tabela_origem
+        FROM faturista
+        WHERE status = 'Inativo'
+    ";
+
+    // Executa a consulta.
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    // Adiciona os faturistas ao array geral.
+    foreach ($resultados as $funcionario) {
+
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | COMPRADORES DE ALMOXARIFADO
+    |--------------------------------------------------------------------------
+    */
+
+    // Busca os compradores de almoxarifado que estão desativados.
+    $sql = "
+        SELECT
+            id,
+            nome,
+            NULL AS registro,
+            telefone,
+            email,
+            cpf,
+            data_nascimento,
+            sexo,
+            status,
+            endereco_id,
+            'Comprador de Almoxarifado' AS funcao,
+            'comprador_almoxarifado' AS tabela_origem
+        FROM comprador_almoxarifado
+        WHERE status = 'Inativo'
+    ";
+
+    // Executa a consulta.
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    // Adiciona os compradores ao array geral.
+    foreach ($resultados as $funcionario) {
+
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GERENTES FINANCEIROS
+    |--------------------------------------------------------------------------
+    */
+
+    // Busca os gerentes financeiros que estão desativados.
+    $sql = "
+        SELECT
+            id,
+            nome,
+            NULL AS registro,
+            telefone,
+            email,
+            cpf,
+            data_nascimento,
+            sexo,
+            status,
+            endereco_id,
+            'Gerente Financeiro' AS funcao,
+            'gerente_financeiro' AS tabela_origem
+        FROM gerente_financeiro
+        WHERE status = 'Inativo'
+    ";
+
+    // Executa a consulta.
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    // Adiciona os gerentes financeiros ao array geral.
+    foreach ($resultados as $funcionario) {
+
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DIRETORES DO HOSPITAL
+    |--------------------------------------------------------------------------
+    */
+
+    // Busca os diretores do hospital que estão desativados.
+    $sql = "
+        SELECT
+            id,
+            nome,
+            NULL AS registro,
+            telefone,
+            email,
+            cpf,
+            data_nascimento,
+            sexo,
+            status,
+            endereco_id,
+            'Diretor do Hospital' AS funcao,
+            'diretor_hospital' AS tabela_origem
+        FROM diretor_hospital
+        WHERE status = 'Inativo'
+    ";
+
+    // Executa a consulta.
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    // Adiciona os diretores ao array geral.
+    foreach ($resultados as $funcionario) {
+
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | PESQUISA
     |--------------------------------------------------------------------------
     */
@@ -1894,12 +2072,6 @@ try {
 
                 <?= count($funcionarios) ?>
 
-                <!--
-                    Se houver apenas um funcionário,
-                    exibe "registro".
-
-                    Caso contrário, exibe "registros".
-                -->
                 <?= count($funcionarios) == 1 ? 'registro' : 'registros' ?>
 
             </div>
@@ -2004,6 +2176,61 @@ try {
                         >
 
                             Anestesista
+
+                        </option>
+
+
+                        <!-- Opção Recepcionista. -->
+                        <option
+                            value="Recepcionista"
+                            <?= $funcao === 'Recepcionista' ? 'selected' : '' ?>
+                        >
+
+                            Recepcionista
+
+                        </option>
+
+
+                        <!-- Opção Faturista. -->
+                        <option
+                            value="Faturista"
+                            <?= $funcao === 'Faturista' ? 'selected' : '' ?>
+                        >
+
+                            Faturista
+
+                        </option>
+
+
+                        <!-- Opção Comprador de Almoxarifado. -->
+                        <option
+                            value="Comprador de Almoxarifado"
+                            <?= $funcao === 'Comprador de Almoxarifado' ? 'selected' : '' ?>
+                        >
+
+                            Comprador de Almoxarifado
+
+                        </option>
+
+
+                        <!-- Opção Gerente Financeiro. -->
+                        <option
+                            value="Gerente Financeiro"
+                            <?= $funcao === 'Gerente Financeiro' ? 'selected' : '' ?>
+                        >
+
+                            Gerente Financeiro
+
+                        </option>
+
+
+                        <!-- Opção Diretor do Hospital. -->
+                        <option
+                            value="Diretor do Hospital"
+                            <?= $funcao === 'Diretor do Hospital' ? 'selected' : '' ?>
+                        >
+
+                            Diretor do Hospital
 
                         </option>
 
@@ -2184,10 +2411,6 @@ try {
 
                             <td>
 
-                                <!--
-                                    Mostra visualmente que o funcionário
-                                    está desativado.
-                                -->
                                 <span class="badge-status">
 
                                     Desativado
@@ -2214,10 +2437,6 @@ try {
                                     ------------------------------------------
                                     -->
 
-                                    <!--
-                                        Abre a página de visualização
-                                        passando o ID e a tabela de origem.
-                                    -->
                                     <a
                                         href="funcionario_visualizar.php?id=<?= (int) $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
                                         class="btn-acao btn-visualizar"
@@ -2235,13 +2454,6 @@ try {
                                     ------------------------------------------
                                     -->
 
-                                    <!--
-                                        Abre o modal de confirmação.
-
-                                        Os atributos data-* armazenam os dados
-                                        do funcionário para que o JavaScript
-                                        possa utilizá-los posteriormente.
-                                    -->
                                     <button
                                         type="button"
                                         class="btn-acao btn-reativar"
@@ -2449,10 +2661,6 @@ MODAL DE REATIVAÇÃO
 
                             </span>
 
-                            <!--
-                                O JavaScript preencherá este elemento
-                                quando o modal for aberto.
-                            -->
                             <span
                                 class="info-valor"
                                 id="modalNome"

@@ -66,6 +66,8 @@ $nome = trim($_POST['nome'] ?? '');
 $funcao = trim($_POST['funcao'] ?? '');
 
 // Recebe o registro profissional e mantém somente os números.
+//
+// Para funções administrativas, este campo poderá ficar vazio.
 $registro = somenteNumeros($_POST['registro'] ?? '');
 
 // Recebe o telefone e mantém somente os números.
@@ -109,20 +111,184 @@ $complemento = trim($_POST['complemento'] ?? '');
 
 
 // ==========================================================
+// DEFINIÇÃO DA TABELA E DO CAMPO DE REGISTRO
+// ==========================================================
+
+// Variáveis que serão preenchidas de acordo com a função.
+$tabela = '';
+$campoRegistro = null;
+
+// Verifica qual função foi selecionada.
+//
+// Cada tipo de funcionário possui uma tabela própria
+// no banco de dados.
+//
+// As cinco primeiras funções possuem registro profissional.
+// As cinco últimas funções são administrativas e não possuem
+// CRM, COREN ou CRF.
+switch ($funcao) {
+
+    // ======================================================
+    // PROFISSIONAIS DA ÁREA DA SAÚDE
+    // ======================================================
+
+    // Caso a função seja Médico.
+    case 'Médico':
+
+        // Os dados serão armazenados na tabela medico.
+        $tabela = 'medico';
+
+        // O registro profissional será armazenado no campo CRM.
+        $campoRegistro = 'crm';
+
+        break;
+
+
+    // Caso a função seja Enfermeiro.
+    case 'Enfermeiro':
+
+        // Os dados serão armazenados na tabela enfermeiro.
+        $tabela = 'enfermeiro';
+
+        // O registro profissional será armazenado no campo COREN.
+        $campoRegistro = 'coren';
+
+        break;
+
+
+    // Caso a função seja Farmacêutico.
+    case 'Farmacêutico':
+
+        // Os dados serão armazenados na tabela farmaceutico.
+        $tabela = 'farmaceutico';
+
+        // O registro profissional será armazenado no campo CRF.
+        $campoRegistro = 'crf';
+
+        break;
+
+
+    // Caso a função seja Cirurgião.
+    case 'Cirurgião':
+
+        // Os dados serão armazenados na tabela cirurgiao.
+        $tabela = 'cirurgiao';
+
+        // Cirurgião utiliza o campo CRM.
+        $campoRegistro = 'crm';
+
+        break;
+
+
+    // Caso a função seja Anestesista.
+    case 'Anestesista':
+
+        // Os dados serão armazenados na tabela anestesista.
+        $tabela = 'anestesista';
+
+        // Anestesista utiliza o campo CRM.
+        $campoRegistro = 'crm';
+
+        break;
+
+
+    // ======================================================
+    // FUNCIONÁRIOS ADMINISTRATIVOS
+    // ======================================================
+
+    // Caso a função seja Recepcionista.
+    case 'Recepcionista':
+
+        // Os dados serão armazenados na tabela recepcionista.
+        $tabela = 'recepcionista';
+
+        // Recepcionista não possui registro profissional.
+        $campoRegistro = null;
+
+        break;
+
+
+    // Caso a função seja Faturista.
+    case 'Faturista':
+
+        // Os dados serão armazenados na tabela faturista.
+        $tabela = 'faturista';
+
+        // Faturista não possui registro profissional.
+        $campoRegistro = null;
+
+        break;
+
+
+    // Caso a função seja Comprador de Almoxarifado.
+    case 'Comprador de Almoxarifado':
+
+        // Os dados serão armazenados na tabela
+        // comprador_almoxarifado.
+        $tabela = 'comprador_almoxarifado';
+
+        // Comprador de Almoxarifado não possui
+        // registro profissional.
+        $campoRegistro = null;
+
+        break;
+
+
+    // Caso a função seja Gerente Financeiro.
+    case 'Gerente Financeiro':
+
+        // Os dados serão armazenados na tabela
+        // gerente_financeiro.
+        $tabela = 'gerente_financeiro';
+
+        // Gerente Financeiro não possui registro profissional.
+        $campoRegistro = null;
+
+        break;
+
+
+    // Caso a função seja Diretor do Hospital.
+    case 'Diretor do Hospital':
+
+        // Os dados serão armazenados na tabela
+        // diretor_hospital.
+        $tabela = 'diretor_hospital';
+
+        // Diretor do Hospital não possui registro profissional.
+        $campoRegistro = null;
+
+        break;
+
+
+    // ======================================================
+    // FUNÇÃO INVÁLIDA
+    // ======================================================
+
+    // Caso seja recebida uma função que não está cadastrada
+    // nas opções permitidas.
+    default:
+
+        // Interrompe o cadastro.
+        die('Função profissional inválida.');
+}
+
+
+// ==========================================================
 // VALIDAÇÕES BÁSICAS
 // ==========================================================
 
 // Verifica se todos os campos considerados obrigatórios
 // foram preenchidos.
 //
-// O operador || significa "OU".
-// Portanto, se qualquer um dos campos estiver vazio,
-// a condição será verdadeira.
+// O registro profissional somente será obrigatório
+// para as funções que possuem CRM, COREN ou CRF.
 if (
     empty($nome) ||
     empty($funcao) ||
-    empty($registro) ||
     empty($status) ||
+    empty($cpf) ||
+    empty($data_nascimento) ||
+    empty($sexo) ||
     empty($rua) ||
     empty($numero) ||
     empty($cep) ||
@@ -136,24 +302,44 @@ if (
 
 
 // ==========================================================
-// VALIDAÇÃO DO REGISTRO PROFISSIONAL
+// VERIFICAR NECESSIDADE DE REGISTRO PROFISSIONAL
 // ==========================================================
 
-// O sistema exige exatamente 6 números para o
+// Verifica se a função escolhida possui um campo de
 // registro profissional.
 //
-// A expressão regular:
-// ^\d{6}$
-//
-// significa:
-// ^ = início do valor
-// \d = número
-// {6} = exatamente seis números
-// $ = final do valor
-if (!preg_match('/^\d{6}$/', $registro)) {
+// Se $campoRegistro não for nulo, significa que a função
+// exige CRM, COREN ou CRF.
+if ($campoRegistro !== null) {
 
-    // Interrompe o cadastro caso o formato esteja incorreto.
-    die('O registro profissional deve conter exatamente 6 números.');
+    // Verifica se o registro profissional foi informado.
+    if (empty($registro)) {
+
+        // Interrompe o cadastro caso o registro esteja vazio.
+        die('Informe o registro profissional.');
+    }
+
+
+    // ======================================================
+    // VALIDAÇÃO DO REGISTRO PROFISSIONAL
+    // ======================================================
+
+    // O sistema exige exatamente 6 números para o
+    // registro profissional.
+    //
+    // A expressão regular:
+    // ^\d{6}$
+    //
+    // significa:
+    // ^ = início do valor
+    // \d = número
+    // {6} = exatamente seis números
+    // $ = final do valor
+    if (!preg_match('/^\d{6}$/', $registro)) {
+
+        // Interrompe o cadastro caso o formato esteja incorreto.
+        die('O registro profissional deve conter exatamente 6 números.');
+    }
 }
 
 
@@ -209,6 +395,7 @@ if (empty($data_nascimento)) {
     die('Informe a data de nascimento.');
 }
 
+
 // Tenta transformar a data recebida em um objeto DateTime.
 //
 // O formato esperado é:
@@ -217,6 +404,7 @@ if (empty($data_nascimento)) {
 // Exemplo:
 // 2000-05-20
 $data = DateTime::createFromFormat('Y-m-d', $data_nascimento);
+
 
 // Verifica se a data realmente foi criada corretamente
 // e se continua no formato esperado.
@@ -252,86 +440,13 @@ if ($data > $hoje) {
 // O "y" representa a quantidade de anos completos.
 $idade = $data->diff($hoje)->y;
 
+
 // Verifica se o funcionário possui menos de 18 anos.
 if ($idade < 18) {
 
     // O sistema não permite o cadastro de funcionário
     // com idade inferior a 18 anos.
     die('O funcionário precisa ter 18 anos ou mais para ser cadastrado.');
-}
-
-
-// ==========================================================
-// DEFINIÇÃO DA TABELA E DO CAMPO DE REGISTRO
-// ==========================================================
-
-// Verifica qual função profissional foi selecionada.
-//
-// Cada função possui uma tabela própria no banco de dados
-// e um campo específico para o registro profissional.
-switch ($funcao) {
-
-    // Caso a função seja Médico.
-    case 'Médico':
-
-        // Os dados serão armazenados na tabela medico.
-        $tabela = 'medico';
-
-        // O registro profissional será armazenado no campo CRM.
-        $campoRegistro = 'crm';
-
-        break;
-
-    // Caso a função seja Enfermeiro.
-    case 'Enfermeiro':
-
-        // Os dados serão armazenados na tabela enfermeiro.
-        $tabela = 'enfermeiro';
-
-        // O registro profissional será armazenado no campo COREN.
-        $campoRegistro = 'coren';
-
-        break;
-
-    // Caso a função seja Farmacêutico.
-    case 'Farmacêutico':
-
-        // Os dados serão armazenados na tabela farmaceutico.
-        $tabela = 'farmaceutico';
-
-        // O registro profissional será armazenado no campo CRF.
-        $campoRegistro = 'crf';
-
-        break;
-
-    // Caso a função seja Cirurgião.
-    case 'Cirurgião':
-
-        // Os dados serão armazenados na tabela cirurgiao.
-        $tabela = 'cirurgiao';
-
-        // Cirurgião utiliza o campo CRM.
-        $campoRegistro = 'crm';
-
-        break;
-
-    // Caso a função seja Anestesista.
-    case 'Anestesista':
-
-        // Os dados serão armazenados na tabela anestesista.
-        $tabela = 'anestesista';
-
-        // Anestesista utiliza o campo CRM.
-        $campoRegistro = 'crm';
-
-        break;
-
-    // Caso seja recebida uma função que não está cadastrada
-    // nas opções permitidas.
-    default:
-
-        // Interrompe o cadastro.
-        die('Função profissional inválida.');
 }
 
 
@@ -345,30 +460,36 @@ try {
     // VERIFICAR REGISTRO PROFISSIONAL
     // ======================================================
 
-    // Cria a consulta para procurar o registro profissional
-    // dentro da tabela correspondente à função escolhida.
-    //
-    // O campo utilizado pode ser:
-    // CRM, COREN ou CRF.
-    $sql = "SELECT id
-            FROM `$tabela`
-            WHERE `$campoRegistro` = :registro
-            LIMIT 1";
+    // A verificação do registro só será realizada
+    // para Médico, Enfermeiro, Farmacêutico, Cirurgião
+    // e Anestesista.
+    if ($campoRegistro !== null) {
 
-    // Prepara a consulta SQL.
-    $stmt = $pdo->prepare($sql);
+        // Cria a consulta para procurar o registro profissional
+        // dentro da tabela correspondente à função escolhida.
+        //
+        // O campo utilizado pode ser:
+        // CRM, COREN ou CRF.
+        $sql = "SELECT id
+                FROM `$tabela`
+                WHERE `$campoRegistro` = :registro
+                LIMIT 1";
 
-    // Executa a consulta enviando o registro profissional
-    // através de um parâmetro seguro.
-    $stmt->execute([
-        ':registro' => $registro
-    ]);
+        // Prepara a consulta SQL.
+        $stmt = $pdo->prepare($sql);
 
-    // Verifica se algum funcionário já possui esse registro.
-    if ($stmt->fetch()) {
+        // Executa a consulta enviando o registro profissional
+        // através de um parâmetro seguro.
+        $stmt->execute([
+            ':registro' => $registro
+        ]);
 
-        // Se encontrar, interrompe o cadastro para evitar duplicidade.
-        die('Este registro profissional já está cadastrado.');
+        // Verifica se algum funcionário já possui esse registro.
+        if ($stmt->fetch()) {
+
+            // Se encontrar, interrompe o cadastro para evitar duplicidade.
+            die('Este registro profissional já está cadastrado.');
+        }
     }
 
 
@@ -377,7 +498,7 @@ try {
     // ======================================================
 
     // Cria uma consulta para verificar se o CPF
-    // já está cadastrado na tabela da profissão.
+    // já está cadastrado na tabela da função escolhida.
     $sql = "SELECT id
             FROM `$tabela`
             WHERE cpf = :cpf
@@ -462,53 +583,112 @@ try {
     // CADASTRAR FUNCIONÁRIO
     // ======================================================
 
-    // Cria a consulta para inserir o funcionário
-    // na tabela correspondente à função escolhida.
-    //
-    // O campo $campoRegistro será:
-    // crm, coren ou crf.
-    $sqlFuncionario = "
-        INSERT INTO `$tabela`
-        (
-            nome,
-            `$campoRegistro`,
-            telefone,
-            email,
-            cpf,
-            data_nascimento,
-            sexo,
-            status,
-            endereco_id
-        )
-        VALUES
-        (
-            :nome,
-            :registro,
-            :telefone,
-            :email,
-            :cpf,
-            :data_nascimento,
-            :sexo,
-            :status,
-            :endereco_id
-        )
-    ";
+    // Verifica se a função possui registro profissional.
+    if ($campoRegistro !== null) {
 
-    // Prepara a consulta de cadastro do funcionário.
-    $stmtFuncionario = $pdo->prepare($sqlFuncionario);
+        // ==================================================
+        // CADASTRO DE PROFISSIONAL DA SAÚDE
+        // ==================================================
 
-    // Executa o INSERT com os dados recebidos do formulário.
-    $stmtFuncionario->execute([
-        ':nome' => $nome,
-        ':registro' => $registro,
-        ':telefone' => $telefone,
-        ':email' => $email,
-        ':cpf' => $cpf,
-        ':data_nascimento' => $data_nascimento,
-        ':sexo' => $sexo,
-        ':status' => $status,
-        ':endereco_id' => $endereco_id
-    ]);
+        // Cria a consulta para inserir o funcionário
+        // na tabela correspondente à função escolhida.
+        //
+        // O campo $campoRegistro será:
+        // crm, coren ou crf.
+        $sqlFuncionario = "
+            INSERT INTO `$tabela`
+            (
+                nome,
+                `$campoRegistro`,
+                telefone,
+                email,
+                cpf,
+                data_nascimento,
+                sexo,
+                status,
+                endereco_id
+            )
+            VALUES
+            (
+                :nome,
+                :registro,
+                :telefone,
+                :email,
+                :cpf,
+                :data_nascimento,
+                :sexo,
+                :status,
+                :endereco_id
+            )
+        ";
+
+        // Prepara a consulta de cadastro do funcionário.
+        $stmtFuncionario = $pdo->prepare($sqlFuncionario);
+
+        // Executa o INSERT com os dados recebidos do formulário.
+        $stmtFuncionario->execute([
+            ':nome' => $nome,
+            ':registro' => $registro,
+            ':telefone' => $telefone,
+            ':email' => $email,
+            ':cpf' => $cpf,
+            ':data_nascimento' => $data_nascimento,
+            ':sexo' => $sexo,
+            ':status' => $status,
+            ':endereco_id' => $endereco_id
+        ]);
+
+    } else {
+
+        // ==================================================
+        // CADASTRO DE FUNCIONÁRIO ADMINISTRATIVO
+        // ==================================================
+
+        // Os funcionários administrativos não possuem
+        // CRM, COREN ou CRF.
+        //
+        // Por isso, o INSERT não inclui nenhum campo
+        // de registro profissional.
+        $sqlFuncionario = "
+            INSERT INTO `$tabela`
+            (
+                nome,
+                cpf,
+                telefone,
+                email,
+                data_nascimento,
+                sexo,
+                status,
+                endereco_id
+            )
+            VALUES
+            (
+                :nome,
+                :cpf,
+                :telefone,
+                :email,
+                :data_nascimento,
+                :sexo,
+                :status,
+                :endereco_id
+            )
+        ";
+
+        // Prepara a consulta de cadastro do funcionário.
+        $stmtFuncionario = $pdo->prepare($sqlFuncionario);
+
+        // Executa o INSERT com os dados recebidos do formulário.
+        $stmtFuncionario->execute([
+            ':nome' => $nome,
+            ':cpf' => $cpf,
+            ':telefone' => $telefone,
+            ':email' => $email,
+            ':data_nascimento' => $data_nascimento,
+            ':sexo' => $sexo,
+            ':status' => $status,
+            ':endereco_id' => $endereco_id
+        ]);
+    }
 
 
     // ======================================================

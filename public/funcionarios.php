@@ -1,16 +1,20 @@
 <?php
 
 require_once __DIR__ . '/../includes/auth.php';
+
 require_once __DIR__ . '/../config/database.php';
 
 $mensagemSucesso = '';
 
 /* Desativa funcionário. */
+
 if (
     $_SERVER['REQUEST_METHOD'] === 'POST' &&
     isset($_POST['desativar_funcionario'])
 ) {
+
     $id = (int) ($_POST['id'] ?? 0);
+
     $tabela = $_POST['tabela'] ?? '';
 
     $tabelasPermitidas = [
@@ -18,54 +22,78 @@ if (
         'enfermeiro',
         'farmaceutico',
         'cirurgiao',
-        'anestesista'
+        'anestesista',
+
+        // Novas funções administrativas.
+        'recepcionista',
+        'faturista',
+        'comprador_almoxarifado',
+        'gerente_financeiro',
+        'diretor_hospital'
     ];
 
     if ($id > 0 && in_array($tabela, $tabelasPermitidas, true)) {
+
         try {
+
             $stmt = $pdo->prepare("
                 SELECT nome
                 FROM {$tabela}
                 WHERE id = ?
                 LIMIT 1
             ");
+
             $stmt->execute([$id]);
+
             $funcionario = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($funcionario) {
+
                 $stmt = $pdo->prepare("
                     UPDATE {$tabela}
                     SET status = 'Inativo'
                     WHERE id = ?
                 ");
+
                 $stmt->execute([$id]);
 
                 $mensagemSucesso =
                     'O funcionário "' .
                     $funcionario['nome'] .
                     '" foi desativado com sucesso.';
+
             } else {
+
                 $mensagemSucesso =
                     'Não foi possível encontrar o funcionário selecionado.';
             }
+
         } catch (PDOException $e) {
+
             $mensagemSucesso =
                 'Ocorreu um erro ao desativar o funcionário.';
         }
+
     } else {
+
         $mensagemSucesso =
             'Dados inválidos para desativação.';
     }
 }
 
+
 /* Filtros. */
+
 $pesquisa = trim($_GET['pesquisa'] ?? '');
+
 $funcao = trim($_GET['funcao'] ?? '');
+
 $funcionarios = [];
 
 try {
 
     /* Médicos. */
+
     $sql = "
         SELECT id, nome, crm AS registro, telefone, email, cpf,
                data_nascimento, sexo, status, endereco_id,
@@ -73,12 +101,16 @@ try {
         FROM medico
         WHERE status = 'Ativo'
     ";
+
     $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
     foreach ($resultados as $funcionario) {
         $funcionarios[] = $funcionario;
     }
 
+
     /* Enfermeiros. */
+
     $sql = "
         SELECT id, nome, coren AS registro, telefone, email, cpf,
                data_nascimento, sexo, status, endereco_id,
@@ -86,12 +118,16 @@ try {
         FROM enfermeiro
         WHERE status = 'Ativo'
     ";
+
     $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
     foreach ($resultados as $funcionario) {
         $funcionarios[] = $funcionario;
     }
 
+
     /* Farmacêuticos. */
+
     $sql = "
         SELECT id, nome, crf AS registro, telefone, email, cpf,
                data_nascimento, sexo, status, endereco_id,
@@ -99,12 +135,16 @@ try {
         FROM farmaceutico
         WHERE status = 'Ativo'
     ";
+
     $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
     foreach ($resultados as $funcionario) {
         $funcionarios[] = $funcionario;
     }
 
+
     /* Cirurgiões. */
+
     $sql = "
         SELECT id, nome, crm AS registro, telefone, email, cpf,
                data_nascimento, sexo, status, endereco_id,
@@ -112,12 +152,16 @@ try {
         FROM cirurgiao
         WHERE status = 'Ativo'
     ";
+
     $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
     foreach ($resultados as $funcionario) {
         $funcionarios[] = $funcionario;
     }
 
+
     /* Anestesistas. */
+
     $sql = "
         SELECT id, nome, crm AS registro, telefone, email, cpf,
                data_nascimento, sexo, status, endereco_id,
@@ -125,16 +169,114 @@ try {
         FROM anestesista
         WHERE status = 'Ativo'
     ";
+
     $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
     foreach ($resultados as $funcionario) {
         $funcionarios[] = $funcionario;
     }
 
+
+    /* ======================================================
+       NOVAS FUNÇÕES ADMINISTRATIVAS
+       ====================================================== */
+
+    /* Recepcionistas. */
+
+    $sql = "
+        SELECT id, nome, NULL AS registro, telefone, email, cpf,
+               data_nascimento, sexo, status, endereco_id,
+               'Recepcionista' AS funcao, 'recepcionista' AS tabela_origem
+        FROM recepcionista
+        WHERE status = 'Ativo'
+    ";
+
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($resultados as $funcionario) {
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /* Faturistas. */
+
+    $sql = "
+        SELECT id, nome, NULL AS registro, telefone, email, cpf,
+               data_nascimento, sexo, status, endereco_id,
+               'Faturista' AS funcao, 'faturista' AS tabela_origem
+        FROM faturista
+        WHERE status = 'Ativo'
+    ";
+
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($resultados as $funcionario) {
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /* Compradores de Almoxarifado. */
+
+    $sql = "
+        SELECT id, nome, NULL AS registro, telefone, email, cpf,
+               data_nascimento, sexo, status, endereco_id,
+               'Comprador de Almoxarifado' AS funcao,
+               'comprador_almoxarifado' AS tabela_origem
+        FROM comprador_almoxarifado
+        WHERE status = 'Ativo'
+    ";
+
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($resultados as $funcionario) {
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /* Gerentes Financeiros. */
+
+    $sql = "
+        SELECT id, nome, NULL AS registro, telefone, email, cpf,
+               data_nascimento, sexo, status, endereco_id,
+               'Gerente Financeiro' AS funcao,
+               'gerente_financeiro' AS tabela_origem
+        FROM gerente_financeiro
+        WHERE status = 'Ativo'
+    ";
+
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($resultados as $funcionario) {
+        $funcionarios[] = $funcionario;
+    }
+
+
+    /* Diretores do Hospital. */
+
+    $sql = "
+        SELECT id, nome, NULL AS registro, telefone, email, cpf,
+               data_nascimento, sexo, status, endereco_id,
+               'Diretor do Hospital' AS funcao,
+               'diretor_hospital' AS tabela_origem
+        FROM diretor_hospital
+        WHERE status = 'Ativo'
+    ";
+
+    $resultados = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($resultados as $funcionario) {
+        $funcionarios[] = $funcionario;
+    }
+
+
     /* Pesquisa. */
+
     if ($pesquisa !== '') {
+
         $funcionarios = array_filter(
             $funcionarios,
             function ($funcionario) use ($pesquisa) {
+
                 return
                     stripos($funcionario['nome'], $pesquisa) !== false ||
                     stripos($funcionario['registro'] ?? '', $pesquisa) !== false ||
@@ -145,35 +287,45 @@ try {
         );
     }
 
+
     /* Filtro por função. */
+
     if ($funcao !== '') {
+
         $funcionarios = array_filter(
             $funcionarios,
             fn($funcionario) => $funcionario['funcao'] === $funcao
         );
     }
 
+
     $funcionarios = array_values($funcionarios);
 
+
     /* Ordem alfabética. */
+
     usort(
         $funcionarios,
         fn($a, $b) => strcasecmp($a['nome'], $b['nome'])
     );
 
 } catch (PDOException $e) {
+
     die("Erro ao buscar funcionários: " . $e->getMessage());
 }
 
 ?>
 
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 
 <head>
 
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Funcionários</title>
 
     <link
@@ -220,6 +372,7 @@ try {
         }
 
         /* Cabeçalho principal. */
+
         .hero{
             position:relative;
             overflow:hidden;
@@ -248,6 +401,7 @@ try {
         }
 
         /* Título da página. */
+
         .topo{
             display:flex;
             align-items:center;
@@ -315,6 +469,7 @@ try {
         }
 
         /* Card de quantidade. */
+
         .contador{
             display:flex;
             align-items:center;
@@ -357,6 +512,7 @@ try {
         }
 
         /* Mensagem de sucesso. */
+
         .alerta{
             display:flex;
             align-items:center;
@@ -386,6 +542,7 @@ try {
         }
 
         /* Pesquisa e filtros. */
+
         .filtros{
             display:grid;
             grid-template-columns:1fr 300px 120px;
@@ -425,6 +582,7 @@ try {
         }
 
         /* Botões da página. */
+
         .area-acoes{
             display:flex;
             gap:9px;
@@ -465,6 +623,7 @@ try {
         }
 
         /* Tabela. */
+
         .tabela-container{
             overflow:hidden;
             border:1px solid var(--borda);
@@ -531,6 +690,7 @@ try {
         }
 
         /* Botões das ações. */
+
         .btn-acao{
             width:35px;
             height:35px;
@@ -573,6 +733,7 @@ try {
         }
 
         /* Lista vazia. */
+
         .estado-vazio{
             padding:40px 20px;
             text-align:center;
@@ -598,6 +759,7 @@ try {
         }
 
         /* Modal. */
+
         .modal-desativar .modal-content{
             overflow:hidden;
             border:0;
@@ -707,6 +869,7 @@ try {
         }
 
         @media(max-width:850px){
+
             .filtros{
                 grid-template-columns:1fr;
             }
@@ -723,6 +886,7 @@ try {
         }
 
         @media(max-width:600px){
+
             .pagina{
                 padding:18px 12px 35px;
             }
@@ -770,26 +934,44 @@ try {
 <div class="pagina">
 
     <!-- Cabeçalho -->
+
     <div class="hero">
+
         <h1>
+
             <i class="bi bi-people-fill"></i>
+
             Gestão de Funcionários
+
         </h1>
+
         <p>
+
             Cadastro, consulta e gerenciamento dos profissionais do hospital.
+
         </p>
+
     </div>
 
+
     <!-- Mensagem de sucesso -->
+
     <?php if ($mensagemSucesso !== ''): ?>
+
         <div class="alerta" id="alertaDesativacao">
+
             <i class="bi bi-check-circle-fill"></i>
 
             <div>
+
                 <strong>Funcionário desativado</strong><br>
+
                 <span>
+
                     <?= htmlspecialchars($mensagemSucesso, ENT_QUOTES, 'UTF-8') ?>
+
                 </span>
+
             </div>
 
             <button
@@ -797,52 +979,78 @@ try {
                 onclick="fecharAlerta()"
                 title="Fechar mensagem"
             >
+
                 <i class="bi bi-x-lg"></i>
+
             </button>
+
         </div>
+
     <?php endif; ?>
 
+
     <!-- Título -->
+
     <div class="topo">
 
         <div class="titulo-area">
+
             <div class="titulo-icone">
+
                 <i class="bi bi-person-badge"></i>
+
             </div>
 
             <div>
+
                 <span class="rotulo">Equipe hospitalar</span>
 
                 <h2 class="titulo">Funcionários</h2>
 
                 <p class="subtitulo">
+
                     Consulte e gerencie os profissionais ativos do hospital.
+
                 </p>
+
             </div>
+
         </div>
 
         <a href="dashboard.php" class="btn-voltar">
+
             <i class="bi bi-arrow-left"></i>
+
             Voltar ao Menu
+
         </a>
 
     </div>
 
+
     <!-- Contador -->
+
     <div class="contador">
 
         <div class="icone-contador">
+
             <i class="bi bi-people-fill"></i>
+
         </div>
 
         <div>
+
             <h2><?= count($funcionarios) ?></h2>
+
             <p>Funcionários ativos</p>
+
         </div>
 
     </div>
 
+
     <!-- Pesquisa e filtro -->
+
     <form method="GET" class="filtros">
 
         <input
@@ -892,44 +1100,103 @@ try {
                 Anestesista
             </option>
 
+            <!-- Novas funções administrativas -->
+
+            <option
+                value="Recepcionista"
+                <?= $funcao === 'Recepcionista' ? 'selected' : '' ?>
+            >
+                Recepcionista
+            </option>
+
+            <option
+                value="Faturista"
+                <?= $funcao === 'Faturista' ? 'selected' : '' ?>
+            >
+                Faturista
+            </option>
+
+            <option
+                value="Comprador de Almoxarifado"
+                <?= $funcao === 'Comprador de Almoxarifado' ? 'selected' : '' ?>
+            >
+                Comprador de Almoxarifado
+            </option>
+
+            <option
+                value="Gerente Financeiro"
+                <?= $funcao === 'Gerente Financeiro' ? 'selected' : '' ?>
+            >
+                Gerente Financeiro
+            </option>
+
+            <option
+                value="Diretor do Hospital"
+                <?= $funcao === 'Diretor do Hospital' ? 'selected' : '' ?>
+            >
+                Diretor do Hospital
+            </option>
+
         </select>
 
         <button type="submit" class="btn btn-principal">
+
             <i class="bi bi-search"></i>
+
             Buscar
+
         </button>
 
     </form>
 
+
     <!-- Ações -->
+
     <div class="area-acoes">
 
         <a href="funcionario_novo.php" class="btn-novo">
+
             <i class="bi bi-person-plus"></i>
+
             Novo Funcionário
+
         </a>
 
         <a href="funcionarios_desativados.php" class="btn-desativados">
+
             <i class="bi bi-person-x"></i>
+
             Funcionários Desativados
+
         </a>
 
     </div>
 
+
     <!-- Tabela -->
+
     <div class="table-responsive tabela-container">
 
         <table class="table table-hover align-middle mb-0">
 
             <thead>
+
                 <tr>
+
                     <th>Nome</th>
+
                     <th>Função</th>
+
                     <th>Registro</th>
+
                     <th>Telefone</th>
+
                     <th>E-mail</th>
+
                     <th width="160">Ações</th>
+
                 </tr>
+
             </thead>
 
             <tbody>
@@ -941,27 +1208,38 @@ try {
                     <tr>
 
                         <!-- Nome -->
+
                         <td>
+
                             <div class="nome-funcionario">
 
                                 <div class="icone-funcionario">
+
                                     <i class="bi bi-person"></i>
+
                                 </div>
 
                                 <strong>
+
                                     <?= htmlspecialchars(
                                         $f['nome'],
                                         ENT_QUOTES,
                                         'UTF-8'
                                     ) ?>
+
                                 </strong>
 
                             </div>
+
                         </td>
 
+
                         <!-- Função -->
+
                         <td>
+
                             <span class="badge-funcao">
+
                                 <i class="bi bi-briefcase"></i>
 
                                 <?= htmlspecialchars(
@@ -969,37 +1247,53 @@ try {
                                     ENT_QUOTES,
                                     'UTF-8'
                                 ) ?>
+
                             </span>
+
                         </td>
 
+
                         <!-- Registro -->
+
                         <td>
+
                             <?= htmlspecialchars(
                                 $f['registro'] ?? 'Não informado',
                                 ENT_QUOTES,
                                 'UTF-8'
                             ) ?>
+
                         </td>
 
+
                         <!-- Telefone -->
+
                         <td>
+
                             <?= htmlspecialchars(
                                 $f['telefone'] ?? 'Não informado',
                                 ENT_QUOTES,
                                 'UTF-8'
                             ) ?>
+
                         </td>
 
+
                         <!-- E-mail -->
+
                         <td>
+
                             <?= htmlspecialchars(
                                 $f['email'] ?? 'Não informado',
                                 ENT_QUOTES,
                                 'UTF-8'
                             ) ?>
+
                         </td>
 
+
                         <!-- Ações -->
+
                         <td>
 
                             <div class="d-flex gap-2">
@@ -1009,16 +1303,22 @@ try {
                                     class="btn-acao btn-visualizar"
                                     title="Visualizar funcionário"
                                 >
+
                                     <i class="bi bi-eye"></i>
+
                                 </a>
+
 
                                 <a
                                     href="funcionario_editar.php?id=<?= (int) $f['id'] ?>&tabela=<?= urlencode($f['tabela_origem']) ?>"
                                     class="btn-acao btn-editar"
                                     title="Editar funcionário"
                                 >
+
                                     <i class="bi bi-pencil-square"></i>
+
                                 </a>
+
 
                                 <button
                                     type="button"
@@ -1038,7 +1338,9 @@ try {
                                         'UTF-8'
                                     ) ?>"
                                 >
+
                                     <i class="bi bi-person-dash"></i>
+
                                 </button>
 
                             </div>
@@ -1052,23 +1354,29 @@ try {
             <?php else: ?>
 
                 <tr>
+
                     <td colspan="6">
 
                         <div class="estado-vazio">
 
                             <div class="icone-vazio">
+
                                 <i class="bi bi-people"></i>
+
                             </div>
 
                             <h4>Nenhum funcionário encontrado.</h4>
 
                             <p class="text-muted mb-0">
+
                                 Tente alterar os filtros ou realizar uma nova pesquisa.
+
                             </p>
 
                         </div>
 
                     </td>
+
                 </tr>
 
             <?php endif; ?>
@@ -1083,6 +1391,7 @@ try {
 
 
 <!-- Modal de desativação -->
+
 <div
     class="modal fade modal-desativar"
     id="modalDesativar"
@@ -1098,15 +1407,21 @@ try {
             <div class="modal-body">
 
                 <div class="icone-desativar">
+
                     <i class="bi bi-exclamation-triangle-fill"></i>
+
                 </div>
 
                 <h3 id="modalDesativarLabel">
+
                     Confirmar Desativação
+
                 </h3>
 
                 <div class="texto-aviso">
+
                     Deseja realmente desativar este funcionário?
+
                 </div>
 
                 <div class="dados-funcionario">
@@ -1116,11 +1431,13 @@ try {
                         <i class="bi bi-person-circle"></i>
 
                         <div>
+
                             <strong>Funcionário:</strong>
 
                             <span id="nomeFuncionarioDesativar">
                                 --
                             </span>
+
                         </div>
 
                     </div>
@@ -1128,11 +1445,15 @@ try {
                 </div>
 
                 <div class="aviso-desativacao">
+
                     <i class="bi bi-info-circle me-1"></i>
 
                     O funcionário será marcado como
+
                     <strong>Inativo</strong>
+
                     e deixará de aparecer entre os funcionários ativos.
+
                 </div>
 
                 <form method="POST" id="formDesativar">
@@ -1162,16 +1483,22 @@ try {
                         class="btn-cancelar-desativacao"
                         data-bs-dismiss="modal"
                     >
+
                         <i class="bi bi-x-circle"></i>
+
                         Cancelar
+
                     </button>
 
                     <button
                         type="submit"
                         class="btn-confirmar-desativacao"
                     >
+
                         <i class="bi bi-person-dash"></i>
+
                         Desativar Funcionário
+
                     </button>
 
                 </form>
@@ -1190,6 +1517,7 @@ try {
 <script>
 
 // Preenche a modal com os dados do funcionário selecionado.
+
 document.addEventListener('DOMContentLoaded', function () {
 
     const modalDesativar =
@@ -1224,14 +1552,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     botao.getAttribute('data-tabela');
 
                 idFuncionario.value = id;
+
                 nomeFuncionario.textContent = nome;
+
                 tabelaFuncionario.value = tabela;
             }
         );
     }
+
 });
 
+
 // Fecha o alerta de sucesso.
+
 function fecharAlerta() {
 
     const alerta =
@@ -1240,20 +1573,28 @@ function fecharAlerta() {
     if (alerta) {
 
         alerta.style.opacity = '0';
+
         alerta.style.transform = 'translateY(-10px)';
 
         setTimeout(function () {
+
             alerta.remove();
+
         }, 300);
     }
 }
 
+
 // Fecha automaticamente o alerta após 6 segundos.
+
 setTimeout(function () {
+
     fecharAlerta();
+
 }, 6000);
 
 </script>
 
 </body>
+
 </html>

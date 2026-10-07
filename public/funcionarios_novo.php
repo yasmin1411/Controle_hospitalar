@@ -9,6 +9,7 @@ require_once __DIR__ . '/../config/database.php';
 ?>
 
 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -24,6 +25,7 @@ require_once __DIR__ . '/../config/database.php';
     <title>Novo Funcionário</title>
 
 
+
     <!-- Importa o CSS do Bootstrap 5.3.3. -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -37,12 +39,14 @@ require_once __DIR__ . '/../config/database.php';
     >
 
 
+
     <style>
 
         /* Define a cor de fundo de toda a página. */
         body {
             background: #f5f7fb;
         }
+
 
 
         /* Define o tamanho, espaçamento e aparência do container principal. */
@@ -56,6 +60,7 @@ require_once __DIR__ . '/../config/database.php';
         }
 
 
+
         /* Define a aparência do título principal. */
         .titulo {
             color: #2F80ED;
@@ -63,11 +68,13 @@ require_once __DIR__ . '/../config/database.php';
         }
 
 
+
         /* Arredonda os campos de entrada e os campos de seleção. */
         .form-control,
         .form-select {
             border-radius: 10px;
         }
+
 
 
         /* Define a aparência do botão principal. */
@@ -79,11 +86,13 @@ require_once __DIR__ . '/../config/database.php';
         }
 
 
+
         /* Altera a aparência do botão quando o mouse passa sobre ele. */
         .btn-principal:hover {
             background: #1c6ad6;
             color: white;
         }
+
 
 
         /* Estiliza os títulos das seções do formulário. */
@@ -96,15 +105,26 @@ require_once __DIR__ . '/../config/database.php';
             margin-bottom: 20px;
         }
 
+
+
+        /* Pequeno texto explicativo abaixo do campo de registro. */
+        .texto-registro {
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
     </style>
 
 </head>
+
 
 
 <body>
 
 <!-- Container principal que envolve todo o formulário. -->
 <div class="container-principal">
+
 
 
     <!-- Cabeçalho da página com título e botão de voltar. -->
@@ -124,6 +144,7 @@ require_once __DIR__ . '/../config/database.php';
             </h2>
 
 
+
             <!-- Texto explicativo abaixo do título. -->
             <p class="text-muted mb-0">
 
@@ -132,6 +153,7 @@ require_once __DIR__ . '/../config/database.php';
             </p>
 
         </div>
+
 
 
         <!-- Botão que retorna para a lista de funcionários. -->
@@ -150,6 +172,7 @@ require_once __DIR__ . '/../config/database.php';
     </div>
 
 
+
     <!-- =====================================================
          FORMULÁRIO DE CADASTRO
     ====================================================== -->
@@ -162,6 +185,7 @@ require_once __DIR__ . '/../config/database.php';
         action="funcionario_cadastrar.php"
         method="POST"
     >
+
 
 
         <!-- =================================================
@@ -179,8 +203,10 @@ require_once __DIR__ . '/../config/database.php';
         </h5>
 
 
+
         <!-- Organiza os campos utilizando o sistema de grid do Bootstrap. -->
         <div class="row g-3">
+
 
 
             <!-- Campo para informar o nome do funcionário. -->
@@ -204,6 +230,7 @@ require_once __DIR__ . '/../config/database.php';
             </div>
 
 
+
             <!-- Campo para selecionar a função profissional. -->
             <div class="col-md-4">
 
@@ -213,6 +240,7 @@ require_once __DIR__ . '/../config/database.php';
 
                 <select
                     name="funcao"
+                    id="funcao"
                     class="form-select"
                     required
                 >
@@ -223,10 +251,12 @@ require_once __DIR__ . '/../config/database.php';
                     </option>
 
 
+
                     <!-- Opção para cadastrar um médico. -->
                     <option value="Médico">
                         Médico
                     </option>
+
 
 
                     <!-- Opção para cadastrar um enfermeiro. -->
@@ -235,10 +265,12 @@ require_once __DIR__ . '/../config/database.php';
                     </option>
 
 
+
                     <!-- Opção para cadastrar um farmacêutico. -->
                     <option value="Farmacêutico">
                         Farmacêutico
                     </option>
+
 
 
                     <!-- Opção para cadastrar um cirurgião. -->
@@ -247,9 +279,45 @@ require_once __DIR__ . '/../config/database.php';
                     </option>
 
 
+
                     <!-- Opção para cadastrar um anestesista. -->
                     <option value="Anestesista">
                         Anestesista
+                    </option>
+
+
+
+                    <!-- Opção para cadastrar um recepcionista. -->
+                    <option value="Recepcionista">
+                        Recepcionista
+                    </option>
+
+
+
+                    <!-- Opção para cadastrar um faturista. -->
+                    <option value="Faturista">
+                        Faturista
+                    </option>
+
+
+
+                    <!-- Opção para cadastrar um comprador de almoxarifado. -->
+                    <option value="Comprador de Almoxarifado">
+                        Comprador de Almoxarifado
+                    </option>
+
+
+
+                    <!-- Opção para cadastrar um gerente financeiro. -->
+                    <option value="Gerente Financeiro">
+                        Gerente Financeiro
+                    </option>
+
+
+
+                    <!-- Opção para cadastrar um diretor do hospital. -->
+                    <option value="Diretor do Hospital">
+                        Diretor do Hospital
                     </option>
 
                 </select>
@@ -257,37 +325,63 @@ require_once __DIR__ . '/../config/database.php';
             </div>
 
 
-            <!-- Campo para informar o registro profissional. -->
-            <div class="col-md-4">
 
-                <label class="form-label">
+            <!--
+                Campo para informar o registro profissional.
+
+                Este campo será utilizado somente pelas funções
+                que possuem registro profissional:
+                Médico, Enfermeiro, Farmacêutico, Cirurgião
+                e Anestesista.
+            -->
+            <div
+                class="col-md-4"
+                id="campoRegistro"
+            >
+
+                <label
+                    class="form-label"
+                    id="labelRegistro"
+                >
                     Registro profissional *
                 </label>
 
                 <input
                     type="text"
                     name="registro"
+                    id="registro"
                     class="form-control"
-                    required
+                    inputmode="numeric"
+                    maxlength="6"
                 >
 
+                <div class="texto-registro" id="textoRegistro">
+                    Informe os 6 números do registro profissional.
+                </div>
+
             </div>
+
 
 
             <!-- Campo para informar o CPF. -->
             <div class="col-md-4">
 
                 <label class="form-label">
-                    CPF
+                    CPF *
                 </label>
 
                 <input
                     type="text"
                     name="cpf"
                     class="form-control"
+                    inputmode="numeric"
+                    maxlength="14"
+                    placeholder="000.000.000-00"
+                    required
                 >
 
             </div>
+
 
 
             <!-- Campo para informar o telefone. -->
@@ -301,9 +395,13 @@ require_once __DIR__ . '/../config/database.php';
                     type="text"
                     name="telefone"
                     class="form-control"
+                    inputmode="numeric"
+                    maxlength="15"
+                    placeholder="(00) 00000-0000"
                 >
 
             </div>
+
 
 
             <!-- Campo para informar o e-mail. -->
@@ -322,32 +420,36 @@ require_once __DIR__ . '/../config/database.php';
             </div>
 
 
+
             <!-- Campo para informar a data de nascimento. -->
             <div class="col-md-3">
 
                 <label class="form-label">
-                    Data de nascimento
+                    Data de nascimento *
                 </label>
 
                 <input
                     type="date"
                     name="data_nascimento"
                     class="form-control"
+                    required
                 >
 
             </div>
+
 
 
             <!-- Campo para selecionar o sexo. -->
             <div class="col-md-3">
 
                 <label class="form-label">
-                    Sexo
+                    Sexo *
                 </label>
 
                 <select
                     name="sexo"
                     class="form-select"
+                    required
                 >
 
                     <!-- Opção inicial sem valor selecionado. -->
@@ -356,16 +458,19 @@ require_once __DIR__ . '/../config/database.php';
                     </option>
 
 
+
                     <!-- Opção Masculino. -->
                     <option value="Masculino">
                         Masculino
                     </option>
 
 
+
                     <!-- Opção Feminino. -->
                     <option value="Feminino">
                         Feminino
                     </option>
+
 
 
                     <!-- Opção Outro. -->
@@ -376,6 +481,7 @@ require_once __DIR__ . '/../config/database.php';
                 </select>
 
             </div>
+
 
 
             <!-- Campo para definir o status inicial do funcionário. -->
@@ -397,6 +503,7 @@ require_once __DIR__ . '/../config/database.php';
                     </option>
 
 
+
                     <!-- Permite cadastrar o funcionário inicialmente como inativo. -->
                     <option value="Inativo">
                         Inativo
@@ -407,6 +514,7 @@ require_once __DIR__ . '/../config/database.php';
             </div>
 
         </div>
+
 
 
         <!-- =================================================
@@ -424,8 +532,10 @@ require_once __DIR__ . '/../config/database.php';
         </h5>
 
 
+
         <!-- Organiza os campos do endereço em linhas e colunas. -->
         <div class="row g-3">
+
 
 
             <!-- Campo para informar a rua. -->
@@ -445,6 +555,7 @@ require_once __DIR__ . '/../config/database.php';
             </div>
 
 
+
             <!-- Campo para informar o número do endereço. -->
             <div class="col-md-4">
 
@@ -462,6 +573,7 @@ require_once __DIR__ . '/../config/database.php';
             </div>
 
 
+
             <!-- Campo para informar o CEP. -->
             <div class="col-md-4">
 
@@ -473,10 +585,14 @@ require_once __DIR__ . '/../config/database.php';
                     type="text"
                     name="cep"
                     class="form-control"
+                    inputmode="numeric"
+                    maxlength="9"
+                    placeholder="00000-000"
                     required
                 >
 
             </div>
+
 
 
             <!-- Campo para informar a cidade. -->
@@ -494,6 +610,7 @@ require_once __DIR__ . '/../config/database.php';
                 >
 
             </div>
+
 
 
             <!-- Campo opcional para informações adicionais do endereço. -->
@@ -514,8 +631,10 @@ require_once __DIR__ . '/../config/database.php';
         </div>
 
 
+
         <!-- Área que contém os botões de ação. -->
         <div class="mt-4 d-flex gap-2">
+
 
 
             <!--
@@ -535,6 +654,7 @@ require_once __DIR__ . '/../config/database.php';
             </button>
 
 
+
             <!-- Botão para cancelar o cadastro e voltar para a lista. -->
             <a
                 href="funcionarios.php"
@@ -551,6 +671,285 @@ require_once __DIR__ . '/../config/database.php';
 
 </div>
 
-</body>
 
+
+<!-- ==========================================================
+     JAVASCRIPT
+========================================================== -->
+
+<script>
+
+// ==========================================================
+// CONTROLE DO CAMPO DE REGISTRO PROFISSIONAL
+// ==========================================================
+
+// Lista das funções que possuem registro profissional.
+const funcoesComRegistro = [
+    'Médico',
+    'Enfermeiro',
+    'Farmacêutico',
+    'Cirurgião',
+    'Anestesista'
+];
+
+
+// Obtém o campo de seleção da função.
+const campoFuncao = document.getElementById('funcao');
+
+
+// Obtém a área que contém o campo de registro.
+const campoRegistro = document.getElementById('campoRegistro');
+
+
+// Obtém o campo de texto do registro.
+const registro = document.getElementById('registro');
+
+
+// Obtém o texto explicativo do registro.
+const textoRegistro = document.getElementById('textoRegistro');
+
+
+// ==========================================================
+// ATUALIZAR CAMPO DE REGISTRO
+// ==========================================================
+
+// Função responsável por mostrar ou esconder
+// o campo de registro profissional.
+function atualizarCampoRegistro() {
+
+    // Obtém a função atualmente selecionada.
+    const funcaoSelecionada = campoFuncao.value;
+
+
+    // Verifica se a função possui registro profissional.
+    if (funcoesComRegistro.includes(funcaoSelecionada)) {
+
+        // Mostra o campo de registro.
+        campoRegistro.style.display = 'block';
+
+        // Torna o registro obrigatório.
+        registro.required = true;
+
+        // Exibe a mensagem explicativa.
+        textoRegistro.style.display = 'block';
+
+    } else {
+
+        // Esconde o campo de registro.
+        campoRegistro.style.display = 'none';
+
+        // Retira a obrigatoriedade do registro.
+        registro.required = false;
+
+        // Limpa o valor do campo.
+        registro.value = '';
+
+        // Esconde o texto explicativo.
+        textoRegistro.style.display = 'none';
+    }
+}
+
+
+// ==========================================================
+// EXECUTAR QUANDO A FUNÇÃO FOR ALTERADA
+// ==========================================================
+
+// Quando o usuário selecionar uma função,
+// a função atualizarCampoRegistro será executada.
+campoFuncao.addEventListener(
+    'change',
+    atualizarCampoRegistro
+);
+
+
+// ==========================================================
+// EXECUTAR AO ABRIR A PÁGINA
+// ==========================================================
+
+// Executa a função assim que a página é carregada.
+// Dessa forma, o campo começa corretamente oculto.
+document.addEventListener(
+    'DOMContentLoaded',
+    atualizarCampoRegistro
+);
+
+
+// ==========================================================
+// FORMATAÇÃO DO CPF
+// ==========================================================
+
+// Obtém o campo CPF.
+const campoCpf = document.querySelector(
+    'input[name="cpf"]'
+);
+
+
+// Verifica se o campo CPF existe.
+if (campoCpf) {
+
+    // Executa sempre que o usuário digitar.
+    campoCpf.addEventListener(
+        'input',
+        function () {
+
+            // Remove tudo que não for número.
+            let valor = this.value.replace(/\D/g, '');
+
+            // Limita o CPF a 11 números.
+            valor = valor.substring(0, 11);
+
+            // Aplica a máscara do CPF.
+            if (valor.length > 9) {
+
+                valor =
+                    valor.replace(
+                        /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
+                        '$1.$2.$3-$4'
+                    );
+
+            } else if (valor.length > 6) {
+
+                valor =
+                    valor.replace(
+                        /^(\d{3})(\d{3})(\d+)/,
+                        '$1.$2.$3'
+                    );
+
+            } else if (valor.length > 3) {
+
+                valor =
+                    valor.replace(
+                        /^(\d{3})(\d+)/,
+                        '$1.$2'
+                    );
+            }
+
+            // Atualiza o campo com a máscara.
+            this.value = valor;
+        }
+    );
+}
+
+
+// ==========================================================
+// FORMATAÇÃO DO TELEFONE
+// ==========================================================
+
+// Obtém o campo telefone.
+const campoTelefone = document.querySelector(
+    'input[name="telefone"]'
+);
+
+
+// Verifica se o campo telefone existe.
+if (campoTelefone) {
+
+    // Executa sempre que o usuário digitar.
+    campoTelefone.addEventListener(
+        'input',
+        function () {
+
+            // Remove tudo que não for número.
+            let valor = this.value.replace(/\D/g, '');
+
+            // Limita o telefone a 11 números.
+            valor = valor.substring(0, 11);
+
+
+            // Telefone celular com 11 números.
+            if (valor.length > 10) {
+
+                valor =
+                    valor.replace(
+                        /^(\d{2})(\d{5})(\d{4})$/,
+                        '($1) $2-$3'
+                    );
+
+            // Telefone fixo com 10 números.
+            } else if (valor.length > 6) {
+
+                valor =
+                    valor.replace(
+                        /^(\d{2})(\d{4})(\d+)/,
+                        '($1) $2-$3'
+                    );
+
+            } else if (valor.length > 2) {
+
+                valor =
+                    valor.replace(
+                        /^(\d{2})(\d+)/,
+                        '($1) $2'
+                    );
+            }
+
+            // Atualiza o campo com a máscara.
+            this.value = valor;
+        }
+    );
+}
+
+
+// ==========================================================
+// FORMATAÇÃO DO CEP
+// ==========================================================
+
+// Obtém o campo CEP.
+const campoCep = document.querySelector(
+    'input[name="cep"]'
+);
+
+
+// Verifica se o campo CEP existe.
+if (campoCep) {
+
+    // Executa sempre que o usuário digitar.
+    campoCep.addEventListener(
+        'input',
+        function () {
+
+            // Remove tudo que não for número.
+            let valor = this.value.replace(/\D/g, '');
+
+            // Limita o CEP a 8 números.
+            valor = valor.substring(0, 8);
+
+
+            // Adiciona o hífen depois dos cinco primeiros números.
+            if (valor.length > 5) {
+
+                valor =
+                    valor.replace(
+                        /^(\d{5})(\d+)/,
+                        '$1-$2'
+                    );
+            }
+
+            // Atualiza o campo com a máscara.
+            this.value = valor;
+        }
+    );
+}
+
+
+// ==========================================================
+// LIMITAR O REGISTRO PROFISSIONAL A NÚMEROS
+// ==========================================================
+
+// Executa sempre que o usuário digitar no registro.
+registro.addEventListener(
+    'input',
+    function () {
+
+        // Remove qualquer caractere que não seja número.
+        this.value =
+            this.value
+                .replace(/\D/g, '')
+                .substring(0, 6);
+    }
+);
+
+</script>
+
+</body>
 </html>

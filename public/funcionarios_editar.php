@@ -1,4 +1,3 @@
-```php
 <?php
 
 // Inclui o arquivo responsável pela autenticação e controle de acesso.
@@ -974,4 +973,3 @@ try {
 </body>
 
 </html>
-```
