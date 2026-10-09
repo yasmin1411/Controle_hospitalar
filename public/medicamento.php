@@ -1,11 +1,27 @@
 <?php
 
 // =========================================================
-// AUTENTICAÇÃO E CONEXÃO COM O BANCO
+// AUTENTICAÇÃO DO USUARIO
 // =========================================================
 
 // Inclui o arquivo responsável pela autenticação do usuário.
 require_once '../includes/auth.php';
+
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE MEDICAMENTOS
+// ==========================================================
+//
+// Verifica se o usuário possui autorização para acessar
+// o módulo de medicamentos.
+//
+
+verificarModulo('medicamentos');
+
+
+// =========================================================
+// CONEXÃO COM O BANCO
+// =========================================================
 
 // Inclui o arquivo responsável pela conexão com o banco de dados.
 require_once '../config/database.php';

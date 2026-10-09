@@ -19,6 +19,23 @@ error_reporting(E_ALL);
 // Verifica se o usuário possui autorização para acessar o sistema.
 require_once '../includes/auth.php';
 
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE FUNCIONÁRIOS
+// ==========================================================
+//
+// Este arquivo realiza o processamento do cadastro
+// de funcionários.
+//
+// Como o cadastro pertence ao módulo de funcionários,
+// somente usuários autorizados podem executar esta ação.
+//
+// Atualmente possuem acesso:
+// - Administrador
+// - Diretor do Hospital
+//
+
+verificarModulo('funcionarios');
+
 // Carrega a conexão com o banco de dados.
 require_once '../config/database.php';
 
@@ -118,14 +135,19 @@ $complemento = trim($_POST['complemento'] ?? '');
 $tabela = '';
 $campoRegistro = null;
 
+// Define se o registro profissional será obrigatório.
+//
+// Para Médico, Enfermeiro, Farmacêutico, Cirurgião
+// e Anestesista, o registro será obrigatório.
+//
+// Para Diretor do Hospital, o CRM será opcional.
+$registroObrigatorio = false;
+
+
 // Verifica qual função foi selecionada.
 //
 // Cada tipo de funcionário possui uma tabela própria
 // no banco de dados.
-//
-// As cinco primeiras funções possuem registro profissional.
-// As cinco últimas funções são administrativas e não possuem
-// CRM, COREN ou CRF.
 switch ($funcao) {
 
     // ======================================================
@@ -141,6 +163,9 @@ switch ($funcao) {
         // O registro profissional será armazenado no campo CRM.
         $campoRegistro = 'crm';
 
+        // Para Médico, o CRM é obrigatório.
+        $registroObrigatorio = true;
+
         break;
 
 
@@ -152,6 +177,9 @@ switch ($funcao) {
 
         // O registro profissional será armazenado no campo COREN.
         $campoRegistro = 'coren';
+
+        // Para Enfermeiro, o COREN é obrigatório.
+        $registroObrigatorio = true;
 
         break;
 
@@ -165,6 +193,9 @@ switch ($funcao) {
         // O registro profissional será armazenado no campo CRF.
         $campoRegistro = 'crf';
 
+        // Para Farmacêutico, o CRF é obrigatório.
+        $registroObrigatorio = true;
+
         break;
 
 
@@ -177,6 +208,9 @@ switch ($funcao) {
         // Cirurgião utiliza o campo CRM.
         $campoRegistro = 'crm';
 
+        // Para Cirurgião, o CRM é obrigatório.
+        $registroObrigatorio = true;
+
         break;
 
 
@@ -188,6 +222,9 @@ switch ($funcao) {
 
         // Anestesista utiliza o campo CRM.
         $campoRegistro = 'crm';
+
+        // Para Anestesista, o CRM é obrigatório.
+        $registroObrigatorio = true;
 
         break;
 
@@ -205,6 +242,9 @@ switch ($funcao) {
         // Recepcionista não possui registro profissional.
         $campoRegistro = null;
 
+        // Registro não é necessário.
+        $registroObrigatorio = false;
+
         break;
 
 
@@ -217,19 +257,24 @@ switch ($funcao) {
         // Faturista não possui registro profissional.
         $campoRegistro = null;
 
+        // Registro não é necessário.
+        $registroObrigatorio = false;
+
         break;
 
 
     // Caso a função seja Comprador de Almoxarifado.
     case 'Comprador de Almoxarifado':
 
-        // Os dados serão armazenados na tabela
-        // comprador_almoxarifado.
+        // Os dados serão armazenados na tabela comprador_almoxarifado.
         $tabela = 'comprador_almoxarifado';
 
         // Comprador de Almoxarifado não possui
         // registro profissional.
         $campoRegistro = null;
+
+        // Registro não é necessário.
+        $registroObrigatorio = false;
 
         break;
 
@@ -237,12 +282,14 @@ switch ($funcao) {
     // Caso a função seja Gerente Financeiro.
     case 'Gerente Financeiro':
 
-        // Os dados serão armazenados na tabela
-        // gerente_financeiro.
+        // Os dados serão armazenados na tabela gerente_financeiro.
         $tabela = 'gerente_financeiro';
 
         // Gerente Financeiro não possui registro profissional.
         $campoRegistro = null;
+
+        // Registro não é necessário.
+        $registroObrigatorio = false;
 
         break;
 
@@ -250,12 +297,18 @@ switch ($funcao) {
     // Caso a função seja Diretor do Hospital.
     case 'Diretor do Hospital':
 
-        // Os dados serão armazenados na tabela
-        // diretor_hospital.
+        // Os dados serão armazenados na tabela diretor_hospital.
         $tabela = 'diretor_hospital';
 
-        // Diretor do Hospital não possui registro profissional.
-        $campoRegistro = null;
+        // O Diretor do Hospital pode possuir CRM.
+        $campoRegistro = 'crm';
+
+        // O CRM do Diretor do Hospital é OPCIONAL.
+        //
+        // Isso permite cadastrar:
+        // 1. Diretor que possui CRM.
+        // 2. Diretor que não possui CRM.
+        $registroObrigatorio = false;
 
         break;
 
@@ -280,8 +333,9 @@ switch ($funcao) {
 // Verifica se todos os campos considerados obrigatórios
 // foram preenchidos.
 //
-// O registro profissional somente será obrigatório
-// para as funções que possuem CRM, COREN ou CRF.
+// O registro profissional será tratado separadamente,
+// pois ele pode ser obrigatório ou opcional dependendo
+// da função escolhida.
 if (
     empty($nome) ||
     empty($funcao) ||
@@ -309,36 +363,55 @@ if (
 // registro profissional.
 //
 // Se $campoRegistro não for nulo, significa que a função
-// exige CRM, COREN ou CRF.
+// possui um campo para CRM, COREN ou CRF.
+//
+// Porém, somente algumas funções tornam esse campo
+// obrigatório.
+//
+// No caso do Diretor do Hospital, por exemplo:
+// $campoRegistro = 'crm'
+// $registroObrigatorio = false
 if ($campoRegistro !== null) {
 
-    // Verifica se o registro profissional foi informado.
-    if (empty($registro)) {
+    // ======================================================
+    // VERIFICAR SE O REGISTRO É OBRIGATÓRIO
+    // ======================================================
 
-        // Interrompe o cadastro caso o registro esteja vazio.
+    if ($registroObrigatorio && empty($registro)) {
+
+        // Interrompe o cadastro caso o registro obrigatório
+        // esteja vazio.
         die('Informe o registro profissional.');
     }
 
 
     // ======================================================
-    // VALIDAÇÃO DO REGISTRO PROFISSIONAL
+    // VALIDAR REGISTRO QUANDO INFORMADO
     // ======================================================
 
-    // O sistema exige exatamente 6 números para o
-    // registro profissional.
+    // A validação será realizada somente se o usuário
+    // tiver informado algum registro.
     //
-    // A expressão regular:
-    // ^\d{6}$
-    //
-    // significa:
-    // ^ = início do valor
-    // \d = número
-    // {6} = exatamente seis números
-    // $ = final do valor
-    if (!preg_match('/^\d{6}$/', $registro)) {
+    // Isso permite que o Diretor do Hospital seja cadastrado
+    // sem CRM.
+    if (!empty($registro)) {
 
-        // Interrompe o cadastro caso o formato esteja incorreto.
-        die('O registro profissional deve conter exatamente 6 números.');
+        // O sistema exige exatamente 6 números para o
+        // registro profissional.
+        //
+        // A expressão regular:
+        // ^\d{6}$
+        //
+        // significa:
+        // ^ = início do valor
+        // \d = número
+        // {6} = exatamente seis números
+        // $ = final do valor
+        if (!preg_match('/^\d{6}$/', $registro)) {
+
+            // Interrompe o cadastro caso o formato esteja incorreto.
+            die('O registro profissional deve conter exatamente 6 números.');
+        }
     }
 }
 
@@ -461,9 +534,11 @@ try {
     // ======================================================
 
     // A verificação do registro só será realizada
-    // para Médico, Enfermeiro, Farmacêutico, Cirurgião
-    // e Anestesista.
-    if ($campoRegistro !== null) {
+    // quando um registro tiver sido informado.
+    //
+    // Isso é importante para o Diretor do Hospital,
+    // pois o CRM é opcional.
+    if ($campoRegistro !== null && !empty($registro)) {
 
         // Cria a consulta para procurar o registro profissional
         // dentro da tabela correspondente à função escolhida.
@@ -572,6 +647,7 @@ try {
         ':complemento' => $complemento
     ]);
 
+
     // Recupera o ID gerado automaticamente para o novo endereço.
     //
     // Esse ID será utilizado para relacionar o funcionário
@@ -583,11 +659,12 @@ try {
     // CADASTRAR FUNCIONÁRIO
     // ======================================================
 
-    // Verifica se a função possui registro profissional.
+    // Verifica se a função possui campo para registro profissional.
     if ($campoRegistro !== null) {
 
         // ==================================================
         // CADASTRO DE PROFISSIONAL DA SAÚDE
+        // OU DIRETOR COM CRM
         // ==================================================
 
         // Cria a consulta para inserir o funcionário
@@ -595,6 +672,9 @@ try {
         //
         // O campo $campoRegistro será:
         // crm, coren ou crf.
+        //
+        // No caso do Diretor do Hospital, o campo será CRM.
+        // Como o CRM é opcional, ele poderá receber NULL.
         $sqlFuncionario = "
             INSERT INTO `$tabela`
             (
@@ -625,10 +705,18 @@ try {
         // Prepara a consulta de cadastro do funcionário.
         $stmtFuncionario = $pdo->prepare($sqlFuncionario);
 
+        // Define o valor que será enviado ao campo de registro.
+        //
+        // Se o registro estiver vazio, envia NULL.
+        //
+        // Isso é especialmente importante para o Diretor
+        // do Hospital, que pode não possuir CRM.
+        $registroBanco = !empty($registro) ? $registro : null;
+
         // Executa o INSERT com os dados recebidos do formulário.
         $stmtFuncionario->execute([
             ':nome' => $nome,
-            ':registro' => $registro,
+            ':registro' => $registroBanco,
             ':telefone' => $telefone,
             ':email' => $email,
             ':cpf' => $cpf,

@@ -1,11 +1,29 @@
 <?php
 // =========================================================
-// AUTENTICAÇÃO E CONEXÃO COM O BANCO
+// AUTENTICAÇÃO DO USUARIO 
 // =========================================================
 // Carrega a autenticação do sistema.
 require_once '../includes/auth.php';
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE PACIENTES
+// ==========================================================
+//
+// Verifica se a função do usuário possui autorização
+// para acessar o módulo de pacientes.
+//
+// Caso não possua permissão, o acesso à página será bloqueado.
+//
+
+verificarModulo('pacientes');
+
+// ========================================================
+// CONEXÃO COM O BANCO
+// =========================================================
 // Carrega a conexão com o banco de dados.
 require_once '../config/database.php';
+
+
 // =========================================================
 // PESQUISA
 // =========================================================

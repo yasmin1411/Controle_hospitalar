@@ -1,11 +1,27 @@
 <?php
 
 // =========================================================
-// AUTENTICAÇÃO E CONEXÃO COM O BANCO
+// AUTENTICAÇÃO DO USUARIO
 // =========================================================
 
 // Inclui o arquivo que verifica se o usuário está autenticado.
 require_once '../includes/auth.php';
+
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE ESTOQUE
+// ==========================================================
+//
+// Verifica se a função do usuário possui autorização
+// para acessar o módulo de estoque.
+//
+
+verificarModulo('estoque');
+
+
+// =========================================================
+// CONEXÃO COM O BANCO
+// =========================================================
 
 // Inclui o arquivo responsável pela conexão com o banco de dados.
 require_once '../config/database.php';

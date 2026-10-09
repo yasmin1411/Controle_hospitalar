@@ -7,10 +7,30 @@
 // Verifica se o usuário está autenticado no sistema.
 require_once '../includes/auth.php';
 
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE FUNCIONÁRIOS
+// ==========================================================
+//
+// Somente usuários autorizados ao módulo de funcionários
+// podem acessar a tela de cadastro.
+//
+// Atualmente:
+// - Administrador
+// - Diretor do Hospital
+//
+// possuem acesso a este módulo.
+//
+
+verificarModulo('funcionarios');
+
+
 // Carrega a conexão com o banco de dados.
 require_once '../config/database.php';
 
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -1148,72 +1168,116 @@ require_once '../config/database.php';
 
 
         // ==========================================================
-        // FUNÇÕES QUE POSSUEM REGISTRO PROFISSIONAL
+// FUNÇÕES QUE POSSUEM REGISTRO PROFISSIONAL
+// ==========================================================
+
+// Lista as funções que possuem CRM, COREN ou CRF.
+//
+// O segundo valor informa qual registro deve aparecer
+// no formulário.
+const funcoesComRegistro = {
+
+// Médico possui CRM.
+'Médico': 'CRM',
+
+// Enfermeiro possui COREN.
+'Enfermeiro': 'COREN',
+
+// Farmacêutico possui CRF.
+'Farmacêutico': 'CRF',
+
+// Cirurgião possui CRM.
+'Cirurgião': 'CRM',
+
+// Anestesista possui CRM.
+'Anestesista': 'CRM',
+
+// Diretor do Hospital pode possuir CRM.
+// Neste caso, o registro será opcional.
+'Diretor do Hospital': 'CRM'
+
+};
+
+
         // ==========================================================
+// MOSTRAR OU OCULTAR REGISTRO
+// ==========================================================
 
-        // Estas são as funções que possuem CRM, COREN ou CRF.
-        const funcoesComRegistro = {
+function atualizarRegistro() {
 
-            'Médico': 'CRM',
+// Obtém a função selecionada pelo usuário.
+const funcaoSelecionada = campoFuncao.value;
 
-            'Enfermeiro': 'COREN',
+// Verifica se a função possui registro profissional.
+if (funcoesComRegistro[funcaoSelecionada]) {
 
-            'Farmacêutico': 'CRF',
+    // Mostra o campo de registro.
+    grupoRegistro.style.display = 'block';
 
-            'Cirurgião': 'CRM',
+    // ==================================================
+    // DIRETOR DO HOSPITAL
+    // ==================================================
 
-            'Anestesista': 'CRM'
+    if (funcaoSelecionada === 'Diretor do Hospital') {
 
-        };
+        // O CRM do diretor é opcional.
+        campoRegistro.required = false;
 
+        // Altera o nome do campo.
+        labelRegistro.textContent =
+            'CRM (opcional)';
 
-        // ==========================================================
-        // MOSTRAR OU OCULTAR REGISTRO
-        // ==========================================================
+        // Altera o texto de ajuda.
+        campoRegistro.placeholder =
+            'Digite o CRM, se possuir';
 
-        function atualizarRegistro() {
+    }
 
-            // Obtém a função selecionada pelo usuário.
-            const funcaoSelecionada = campoFuncao.value;
+    // ==================================================
+    // OUTRAS PROFISSÕES
+    // ==================================================
 
-            // Verifica se a função possui registro profissional.
-            if (funcoesComRegistro[funcaoSelecionada]) {
+    else {
 
-                // Mostra o campo de registro.
-                grupoRegistro.style.display = 'block';
+        // Para Médico, Enfermeiro, Farmacêutico,
+        // Cirurgião e Anestesista, o registro é obrigatório.
+        campoRegistro.required = true;
 
-                // Torna o registro obrigatório.
-                campoRegistro.required = true;
+        // Altera o nome do campo conforme a função.
+        labelRegistro.textContent =
+            funcoesComRegistro[funcaoSelecionada];
 
-                // Altera o nome do campo conforme a profissão.
-                labelRegistro.textContent =
-                    funcoesComRegistro[funcaoSelecionada];
+        // Altera o placeholder.
+        campoRegistro.placeholder =
+            'Digite o ' +
+            funcoesComRegistro[funcaoSelecionada];
 
-                // Altera o texto de ajuda.
-                campoRegistro.placeholder =
-                    'Digite o ' +
-                    funcoesComRegistro[funcaoSelecionada];
+    }
 
-            } else {
+} else {
 
-                // Oculta o campo quando a função não possui registro.
-                grupoRegistro.style.display = 'none';
+    // ==================================================
+    // FUNÇÕES SEM REGISTRO PROFISSIONAL
+    // ==================================================
 
-                // Retira a obrigatoriedade.
-                campoRegistro.required = false;
+    // Oculta o campo.
+    grupoRegistro.style.display = 'none';
 
-                // Limpa o valor do campo.
-                campoRegistro.value = '';
+    // Retira a obrigatoriedade.
+    campoRegistro.required = false;
 
-                // Retorna o texto padrão.
-                labelRegistro.textContent =
-                    'Registro profissional';
+    // Limpa o valor digitado anteriormente.
+    campoRegistro.value = '';
 
-                // Retorna o placeholder padrão.
-                campoRegistro.placeholder =
-                    'Digite o registro';
-            }
-        }
+    // Retorna o texto padrão.
+    labelRegistro.textContent =
+        'Registro profissional';
+
+    // Retorna o placeholder padrão.
+    campoRegistro.placeholder =
+        'Digite o registro';
+}
+}
 
 
         // Executa a função sempre que a função profissional for alterada.
@@ -1575,28 +1639,55 @@ require_once '../config/database.php';
                 }
 
 
-                // Verifica se a função selecionada possui registro.
-                if (
-                    funcoesComRegistro[campoFuncao.value]
-                ) {
+                // ==========================================================
+// VALIDAÇÃO DO REGISTRO PROFISSIONAL
+// ==========================================================
 
-                    // Verifica se o registro possui exatamente 6 números.
-                    if (
-                        campoRegistro.value.length !== 6
-                    ) {
+// Verifica se a função selecionada possui registro.
+if (funcoesComRegistro[campoFuncao.value]) {
 
-                        alert(
-                            'O registro profissional deve possuir exatamente 6 números.'
-                        );
+// Verifica se é o Diretor do Hospital.
+if (campoFuncao.value === 'Diretor do Hospital') {
 
-                        campoRegistro.focus();
+    // O CRM do Diretor é opcional.
+    // Porém, se ele preencher o campo,
+    // deve informar exatamente 6 números.
+    if (
+        campoRegistro.value.length > 0 &&
+        campoRegistro.value.length !== 6
+    ) {
 
-                        evento.preventDefault();
+        alert(
+            'Se informar o CRM, ele deve possuir exatamente 6 números.'
+        );
 
-                        return;
-                    }
+        campoRegistro.focus();
 
-                }
+        evento.preventDefault();
+
+        return;
+    }
+
+} else {
+
+    // Para as demais profissões,
+    // o registro é obrigatório.
+    if (
+        campoRegistro.value.length !== 6
+    ) {
+
+        alert(
+            'O registro profissional deve possuir exatamente 6 números.'
+        );
+
+        campoRegistro.focus();
+
+        evento.preventDefault();
+
+        return;
+    }
+}
+}
 
             }
         );

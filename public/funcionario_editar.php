@@ -8,6 +8,25 @@
 // a página de edição de funcionários.
 require_once __DIR__ . '/../includes/auth.php';
 
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE FUNCIONÁRIOS
+// ==========================================================
+//
+// Esta página permite alterar os dados cadastrados
+// de um funcionário.
+//
+// Como a edição pertence ao módulo de funcionários,
+// somente usuários autorizados podem acessar esta página.
+//
+// Atualmente possuem acesso:
+// - Administrador
+// - Diretor do Hospital
+//
+
+verificarModulo('funcionarios');
+
+
 // Carrega a conexão com o banco de dados.
 require_once __DIR__ . '/../config/database.php';
 

@@ -1,8 +1,32 @@
 <?php
 
-require_once __DIR__ . '/../includes/auth.php';
+// ==========================================================
+// AUTENTICAÇÃO DO USUÁRIO
+// ==========================================================
 
-require_once __DIR__ . '/../config/database.php';
+// Inclui o arquivo responsável pela autenticação,
+// sessão e controle de permissões.
+require_once '../includes/auth.php';
+
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE FUNCIONÁRIOS
+// ==========================================================
+//
+// Somente o administrador e o diretor do hospital
+// possuem autorização para acessar este módulo.
+//
+
+verificarModulo('funcionarios');
+
+
+// ==========================================================
+// CONEXÃO COM O BANCO DE DADOS
+// ==========================================================
+
+require_once '../config/database.php';
+
+
 
 $mensagemSucesso = '';
 

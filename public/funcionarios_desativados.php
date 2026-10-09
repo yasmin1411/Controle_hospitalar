@@ -2841,7 +2841,7 @@ MODAL DE REATIVAÇÃO
                 -->
                 <form
                     method="GET"
-                    action="funcionarios_reativar.php"
+                    action="funcionario_reativar.php"
                     id="formReativar"
                 >
 

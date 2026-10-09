@@ -1,10 +1,30 @@
 <?php
 
-// Inclui o arquivo responsável pela autenticação e controle de acesso do sistema.
-require_once __DIR__ . '/../includes/auth.php';
+// ==========================================================
+// AUTENTICAÇÃO DO USUÁRIO
+// ==========================================================
 
-// Inclui o arquivo responsável pela conexão com o banco de dados.
-require_once __DIR__ . '/../config/database.php';
+// Inclui o arquivo responsável pela autenticação,
+// sessão e controle de permissões.
+require_once '../includes/auth.php';
+
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE RELATÓRIOS
+// ==========================================================
+//
+// Verifica se a função do usuário possui autorização
+// para acessar o módulo de relatórios.
+//
+
+verificarModulo('relatorios');
+
+
+// ==========================================================
+// CONEXÃO COM O BANCO DE DADOS
+// ==========================================================
+
+require_once '../config/database.php';
 
 
 /*

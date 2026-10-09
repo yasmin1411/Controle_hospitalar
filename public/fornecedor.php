@@ -1,11 +1,27 @@
 <?php
 
 // ==========================================================
-// AUTENTICAÇÃO E BANCO DE DADOS
+// AUTENTICAÇÃO DO USUARIO
 // ==========================================================
 
 // Verifica se o usuário está autenticado.
 require_once __DIR__ . '/../includes/auth.php';
+
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE FORNECEDORES
+// ==========================================================
+//
+// Verifica se a função do usuário possui autorização
+// para acessar o módulo de fornecedores.
+//
+
+verificarModulo('fornecedores');
+
+
+// ==========================================================
+// CONEXÃO COM O BANCO DE DADOS
+// ==========================================================
 
 // Conecta ao banco de dados.
 require_once __DIR__ . '/../config/database.php';

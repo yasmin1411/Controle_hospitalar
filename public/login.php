@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     */
 
     $sql = $pdo->prepare(
-        "SELECT * FROM usuarios WHERE email = ?"
+        "SELECT * FROM usuarios WHERE email = ? AND ativo = 1"
     );
 
 

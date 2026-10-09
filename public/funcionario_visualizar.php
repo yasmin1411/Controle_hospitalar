@@ -1,15 +1,28 @@
 <?php
 
 // Inclui o arquivo responsável pela autenticação e controle de acesso.
-
-// Isso garante que apenas usuários autorizados possam acessar esta página.
-
+// Isso garante que apenas usuários autenticados possam utilizar o sistema.
 require_once '../includes/auth.php';
 
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE FUNCIONÁRIOS
+// ==========================================================
+//
+// A página de visualização pertence ao módulo de funcionários.
+//
+// Somente usuários autorizados ao módulo podem visualizar
+// os dados cadastrados dos funcionários.
+//
+// Atualmente possuem acesso:
+// - Administrador
+// - Diretor do Hospital
+//
+// Essa verificação também protege o acesso direto pela URL.
+//
+verificarModulo('funcionarios');
+
 // Inclui a conexão com o banco de dados.
-
 // A variável $pdo será utilizada para realizar as consultas.
-
 require_once '../config/database.php';
 
 

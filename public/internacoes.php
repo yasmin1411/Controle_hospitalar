@@ -1,7 +1,31 @@
 <?php
-// Arquivos necessários: autenticação e conexão com o banco.
+
+// ==========================================================
+// AUTENTICAÇÃO DO USUÁRIO
+// ==========================================================
+
+// Inclui o arquivo responsável pela autenticação,
+// sessão e controle de permissões.
 require_once '../includes/auth.php';
+
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE INTERNAÇÕES
+// ==========================================================
+//
+// Verifica se a função do usuário possui autorização
+// para acessar o módulo de internações.
+//
+
+verificarModulo('internacoes');
+
+
+// ==========================================================
+// CONEXÃO COM O BANCO DE DADOS
+// ==========================================================
+
 require_once '../config/database.php';
+
 
 // Recebe o termo de pesquisa.
 $pesquisa = $_GET['pesquisa'] ?? '';

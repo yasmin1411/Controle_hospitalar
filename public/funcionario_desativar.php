@@ -1,16 +1,39 @@
-```php
 <?php
 
 // ==========================================================
 // IMPORTAÇÃO DOS ARQUIVOS NECESSÁRIOS
 // ==========================================================
 
-// Verifica se o usuário possui autorização para acessar
-// esta página do sistema.
+// Verifica se o usuário está autenticado no sistema
+// e carrega as funções de controle de acesso.
 require_once '../includes/auth.php';
+
+// ==========================================================
+// CONTROLE DE ACESSO AO MÓDULO DE FUNCIONÁRIOS
+// ==========================================================
+//
+// Somente usuários autorizados ao módulo de funcionários
+// podem realizar ações neste arquivo.
+//
+// Atualmente:
+//
+// - Administrador
+// - Diretor do Hospital
+//
+// possuem acesso ao módulo de funcionários.
+//
+// Essa verificação é feita diretamente no processamento,
+// e não somente na tela.
+//
+// Dessa forma, mesmo que alguém tente acessar diretamente
+// funcionario_desativar.php pela URL, a operação será
+// bloqueada caso não possua permissão.
+//
+verificarModulo('funcionarios');
 
 // Carrega a conexão com o banco de dados.
 require_once '../config/database.php';
+
 
 
 // ==========================================================
@@ -34,6 +57,7 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $tabela = $_GET['tabela'] ?? '';
 
 
+
 // ==========================================================
 // VALIDAR O ID DO FUNCIONÁRIO
 // ==========================================================
@@ -45,6 +69,7 @@ if (!$id) {
     // interrompe a execução.
     exit('Funcionário inválido.');
 }
+
 
 
 // ==========================================================
@@ -65,6 +90,11 @@ $tabelasPermitidas = [
 ];
 
 
+
+// ==========================================================
+// VALIDAR A TABELA RECEBIDA
+// ==========================================================
+
 // Verifica se a tabela recebida pela URL está
 // dentro da lista de tabelas permitidas.
 if (!in_array($tabela, $tabelasPermitidas, true)) {
@@ -73,6 +103,7 @@ if (!in_array($tabela, $tabelasPermitidas, true)) {
     // interrompe a execução.
     exit('Tabela inválida.');
 }
+
 
 
 // ==========================================================
@@ -90,6 +121,9 @@ try {
     //
     // O funcionário não é excluído do banco de dados.
     // Apenas seu status é alterado.
+    //
+    // A tabela utilizada nesta consulta já foi validada
+    // anteriormente pela lista de tabelas permitidas.
     $sql = $pdo->prepare("
         UPDATE $tabela
         SET status = 'Inativo'
@@ -98,6 +132,7 @@ try {
 
     // Executa a atualização utilizando o ID do funcionário.
     $sql->execute([$id]);
+
 
 
     // ------------------------------------------------------
@@ -118,6 +153,7 @@ try {
     exit;
 
 
+
 } catch (PDOException $e) {
 
     // ======================================================
@@ -131,6 +167,3 @@ try {
         $e->getMessage()
     );
 }
-```
-
-A lógica desse arquivo é simples: ele recebe o **ID** e a **tabela** do funcionário, verifica se ambos são válidos, altera o campo `status` para **`Inativo`** e retorna para `funcionarios.php`. O funcionário **não é apagado do banco**, o que permite manter seu histórico e seus dados cadastrados.
