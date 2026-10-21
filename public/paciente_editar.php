@@ -874,7 +874,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="campo full">
 
                         <label class="form-label" for="cartao_cidadao">
-                            Cartão do cidadão / Cartão do SUS
+                            Cartão do cidadão / SUS
                             <span style="font-weight:600;color:#8a9aab;text-transform:none;">
                                 (opcional)
                             </span>
