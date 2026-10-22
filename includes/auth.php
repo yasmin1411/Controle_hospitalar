@@ -1,44 +1,34 @@
 <?php
 
 // ==========================================================
-// AUTENTICAÇÃO DO USUÁRIO
+// AUTENTICAÇÃO DO SISTEMA
 // ==========================================================
 
-// Inicia ou continua a sessão do usuário.
-// A sessão permite armazenar informações como:
-// ID, nome e função do usuário logado.
-session_start();
+// Inicia a sessão para acessar os dados do usuário autenticado.
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-
-// ==========================================================
-// VERIFICAR SE O USUÁRIO ESTÁ LOGADO
-// ==========================================================
-
+// Verifica se o usuário está autenticado.
+// Caso não esteja, redireciona para a tela de login.
 if (!isset($_SESSION['usuario_id'])) {
-
-    // Redireciona o usuário para a página de login.
-    header("Location: login.php");
-
-    // Interrompe imediatamente a execução.
+    header('Location: login.php');
     exit;
 }
 
 
 // ==========================================================
-// MATRIZ DE PERMISSÕES DO SISTEMA
-// ==========================================================
-//
-// Define quais funções podem acessar cada módulo.
-//
-// Essa estrutura centraliza as permissões do sistema.
-// Dessa forma, não precisamos repetir listas de funções
-// em várias páginas.
-//
-// O nome dentro de cada módulo deve corresponder ao nome
-// utilizado posteriormente em verificarModulo().
-//
+// PERMISSÕES DE ACESSO AOS MÓDULOS
 // ==========================================================
 
+/**
+ * Retorna a lista de permissões de cada módulo do sistema.
+ *
+ * Cada módulo possui uma lista com as funções autorizadas
+ * a acessá-lo.
+ *
+ * O administrador possui acesso geral ao sistema.
+ */
 function obterPermissoesModulos()
 {
     return [
@@ -57,7 +47,6 @@ function obterPermissoesModulos()
             'diretor_hospital'
         ],
 
-
         // --------------------------------------------------
         // MÓDULO DE PACIENTES
         // --------------------------------------------------
@@ -74,7 +63,6 @@ function obterPermissoesModulos()
             'diretor_hospital'
         ],
 
-
         // --------------------------------------------------
         // MÓDULO DE ESTOQUE
         // --------------------------------------------------
@@ -86,7 +74,6 @@ function obterPermissoesModulos()
             'diretor_hospital'
         ],
 
-
         // --------------------------------------------------
         // MÓDULO DE FORNECEDORES
         // --------------------------------------------------
@@ -97,7 +84,6 @@ function obterPermissoesModulos()
             'gerente_financeiro',
             'diretor_hospital'
         ],
-
 
         // --------------------------------------------------
         // MÓDULO DE INTERNAÇÕES
@@ -114,6 +100,16 @@ function obterPermissoesModulos()
             'diretor_hospital'
         ],
 
+        // --------------------------------------------------
+        // HISTÓRICO CLÍNICO DO PACIENTE
+        // --------------------------------------------------
+        'historico_paciente' => [
+            'admin',
+            'medico',
+            'enfermeiro',
+            'cirurgiao',
+            'diretor_hospital'
+        ],
 
         // --------------------------------------------------
         // MÓDULO DE FUNCIONÁRIOS
@@ -122,7 +118,6 @@ function obterPermissoesModulos()
             'admin',
             'diretor_hospital'
         ],
-
 
         // --------------------------------------------------
         // MÓDULO DE RELATÓRIOS
@@ -139,197 +134,156 @@ function obterPermissoesModulos()
             'gerente_financeiro',
             'diretor_hospital'
         ]
-
     ];
 }
 
 
 // ==========================================================
-// FUNÇÃO PARA VERIFICAR PERMISSÃO DE ACESSO
+// VERIFICAÇÃO DE PERMISSÕES POR FUNÇÃO
 // ==========================================================
 
 /**
- * Verifica se o usuário possui uma das funções permitidas
- * para acessar determinada página.
+ * Verifica se o usuário possui uma das funções autorizadas.
  *
- * Essa função bloqueia completamente o acesso caso
- * o usuário não possua autorização.
- *
- * @param array|string $funcoesPermitidas
- */
-function verificarPermissao($funcoesPermitidas)
-{
-    // Verifica se a função do usuário está armazenada
-    // corretamente na sessão.
-    if (!isset($_SESSION['tipo'])) {
-
-        // Define o código HTTP 403:
-        // acesso proibido.
-        http_response_code(403);
-
-        // Exibe mensagem de acesso não autorizado.
-        exit('Acesso não autorizado.');
-    }
-
-
-    // Se apenas uma função foi informada,
-    // transforma o valor em um array.
-    if (!is_array($funcoesPermitidas)) {
-        $funcoesPermitidas = [$funcoesPermitidas];
-    }
-
-
-    // Verifica se a função do usuário está
-    // dentro da lista de funções autorizadas.
-    if (!in_array($_SESSION['tipo'], $funcoesPermitidas, true)) {
-
-        // Define o código HTTP 403:
-        // acesso proibido.
-        http_response_code(403);
-
-        // Bloqueia o acesso à página.
-        exit('Você não possui permissão para acessar esta página.');
-    }
-}
-
-
-// ==========================================================
-// FUNÇÃO PARA VERIFICAR PERMISSÃO SEM BLOQUEAR A PÁGINA
-// ==========================================================
-
-/**
- * Verifica se o usuário possui determinada permissão.
- *
- * Diferentemente de verificarPermissao(), esta função
- * NÃO bloqueia o usuário.
- *
- * true  = possui permissão
- * false = não possui permissão
- *
- * É utilizada principalmente no Dashboard para
- * mostrar ou esconder módulos.
- *
- * @param array|string $funcoesPermitidas
- * @return bool
- */
-function temPermissao($funcoesPermitidas)
-{
-    // Verifica se existe uma função armazenada na sessão.
-    if (!isset($_SESSION['tipo'])) {
-        return false;
-    }
-
-
-    // Se apenas uma função foi informada,
-    // transforma o valor em um array.
-    if (!is_array($funcoesPermitidas)) {
-        $funcoesPermitidas = [$funcoesPermitidas];
-    }
-
-
-    // Retorna true se o usuário possuir uma das funções.
-    return in_array($_SESSION['tipo'], $funcoesPermitidas, true);
-}
-
-
-// ==========================================================
-// VERIFICAR PERMISSÃO DE UM MÓDULO
-// ==========================================================
-
-/**
- * Verifica se o usuário possui acesso a um módulo específico.
+ * Esta função recebe uma função ou uma lista de funções.
  *
  * Exemplo:
+ * verificarFuncoesPermitidas(['admin', 'diretor_hospital']);
  *
- * verificarModulo('pacientes');
+ * Se o usuário não tiver autorização, o acesso será negado.
+ */
+function verificarFuncoesPermitidas($funcoesPermitidas)
+{
+    // Obtém a função do usuário autenticado.
+    $tipoUsuario = $_SESSION['tipo'] ?? '';
+
+    // Converte uma única função em uma lista.
+    if (!is_array($funcoesPermitidas)) {
+        $funcoesPermitidas = [$funcoesPermitidas];
+    }
+
+    // O administrador possui acesso geral.
+    if ($tipoUsuario === 'admin') {
+        return;
+    }
+
+    // Verifica se a função do usuário está autorizada.
+    if (!in_array($tipoUsuario, $funcoesPermitidas, true)) {
+        http_response_code(403);
+
+        exit(
+            'Acesso negado. Você não possui permissão para acessar esta página.'
+        );
+    }
+}
+
+
+// ==========================================================
+// VERIFICAÇÃO DE ACESSO A UM MÓDULO
+// ==========================================================
+
+/**
+ * Verifica se o usuário pode acessar determinado módulo.
  *
- * Se o usuário não possuir autorização, o acesso será bloqueado.
- *
- * @param string $modulo
+ * Exemplo:
+ * verificarModulo('historico_paciente');
  */
 function verificarModulo($modulo)
 {
-    // Obtém a matriz de permissões.
+    // Recupera a matriz de permissões.
     $permissoes = obterPermissoesModulos();
 
+    // Obtém a função do usuário autenticado.
+    $tipoUsuario = $_SESSION['tipo'] ?? '';
 
-    // Verifica se o módulo informado existe.
+    // O administrador possui acesso geral.
+    if ($tipoUsuario === 'admin') {
+        return;
+    }
+
+    // Bloqueia módulos que não estejam cadastrados.
     if (!isset($permissoes[$modulo])) {
-
-        // Código HTTP 403 = acesso proibido.
         http_response_code(403);
 
-        // Interrompe a execução.
-        exit('Módulo não configurado.');
+        exit(
+            'Acesso negado. O módulo solicitado não está cadastrado nas permissões.'
+        );
     }
 
-
-    // Verifica se o usuário possui uma função registrada
-    // na sessão.
-    if (!isset($_SESSION['tipo'])) {
-
-        // Código HTTP 403 = acesso proibido.
+    // Verifica se a função pode acessar o módulo.
+    if (!in_array($tipoUsuario, $permissoes[$modulo], true)) {
         http_response_code(403);
 
-        // Interrompe a execução.
-        exit('Acesso não autorizado.');
-    }
-
-
-    // Verifica se a função do usuário está autorizada
-    // para o módulo solicitado.
-    if (!in_array($_SESSION['tipo'], $permissoes[$modulo], true)) {
-
-        // Código HTTP 403 = acesso proibido.
-        http_response_code(403);
-
-        // Mensagem apresentada quando o usuário
-        // tenta acessar um módulo sem autorização.
-        exit('Você não possui permissão para acessar este módulo.');
+        exit(
+            'Acesso negado. Sua função não possui permissão para acessar este módulo.'
+        );
     }
 }
 
 
 // ==========================================================
-// VERIFICAR PERMISSÃO DE UM MÓDULO SEM BLOQUEAR
+// CONSULTA DE PERMISSÃO DE UM MÓDULO
 // ==========================================================
 
 /**
- * Verifica se o usuário pode visualizar determinado módulo.
+ * Retorna true se o usuário puder acessar o módulo.
+ * Retorna false caso contrário.
  *
  * Diferentemente de verificarModulo(), esta função
- * apenas retorna true ou false.
- *
- * Ela será útil para o Dashboard.
- *
- * Exemplo:
- *
- * if (temPermissaoModulo('pacientes')) {
- *     // Exibe o botão de pacientes.
- * }
- *
- * @param string $modulo
- * @return bool
+ * não encerra a execução da página.
  */
 function temPermissaoModulo($modulo)
 {
-    // Obtém a matriz de permissões.
+    // O administrador possui acesso geral.
+    if (($_SESSION['tipo'] ?? '') === 'admin') {
+        return true;
+    }
+
+    // Recupera a matriz de permissões.
     $permissoes = obterPermissoesModulos();
 
-
-    // Verifica se o módulo existe.
+    // Verifica se o módulo está cadastrado.
     if (!isset($permissoes[$modulo])) {
         return false;
     }
 
+    // Verifica se a função do usuário está autorizada.
+    return in_array(
+        $_SESSION['tipo'] ?? '',
+        $permissoes[$modulo],
+        true
+    );
+}
 
-    // Verifica se existe uma função na sessão.
-    if (!isset($_SESSION['tipo'])) {
-        return false;
+
+// ==========================================================
+// CONSULTA DE PERMISSÃO POR FUNÇÃO
+// ==========================================================
+
+/**
+ * Verifica se o usuário possui uma das funções informadas.
+ *
+ * Retorna true ou false, sem encerrar a execução.
+ */
+function temPermissao($funcoesPermitidas)
+{
+    // Obtém a função do usuário autenticado.
+    $tipoUsuario = $_SESSION['tipo'] ?? '';
+
+    // O administrador possui acesso geral.
+    if ($tipoUsuario === 'admin') {
+        return true;
     }
 
+    // Converte uma única função em uma lista.
+    if (!is_array($funcoesPermitidas)) {
+        $funcoesPermitidas = [$funcoesPermitidas];
+    }
 
-    // Retorna true se a função atual possuir
-    // acesso ao módulo.
-    return in_array($_SESSION['tipo'], $permissoes[$modulo], true);
+    // Retorna se a função do usuário está autorizada.
+    return in_array(
+        $tipoUsuario,
+        $funcoesPermitidas,
+        true
+    );
 }

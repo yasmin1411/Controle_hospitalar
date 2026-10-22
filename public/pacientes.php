@@ -286,6 +286,7 @@ body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;color:var(--tex
                         <th>Cartão</th>
                         <th>Cidade</th>
                         <th>Responsável</th>
+                        <th>Histórico</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -334,6 +335,20 @@ body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;color:var(--tex
                                     </span>
                                 <?php endif; ?>
                             </td>
+                            
+                            <!-- Abre o histórico do paciente selecionado. -->
+<td>
+    <a
+        href="historico_paciente.php?id=<?= (int) $p['id'] ?>"
+        class="btn btn-editar"
+        title="Consultar histórico do paciente"
+        aria-label="Consultar histórico de <?= htmlspecialchars($p['nome'], ENT_QUOTES, 'UTF-8') ?>"
+    >
+        <i class="bi bi-clock-history"></i>
+        Histórico
+    </a>
+</td>
+                            
                             <td>
                                 <div class="d-flex gap-2">
                                     <!-- Envia o ID para a página de edição. -->
@@ -440,7 +455,7 @@ body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;color:var(--tex
                 <?php else: ?>
                     <!-- Mostra um estado vazio quando nenhum paciente for encontrado. -->
                     <tr>
-                        <td colspan="7" class="vazio">
+                            <td colspan="8" class="vazio">
                             <div class="vazio-icone">
                                 <i class="bi bi-person-x"></i>
                             </div>

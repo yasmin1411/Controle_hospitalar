@@ -1,21 +1,16 @@
 <?php
 
-// ==========================================================
-// CONFIGURAÇÃO INICIAL
-// ==========================================================
-
-// Carrega a autenticação do sistema.
-require_once '../includes/auth.php';
-
-// Carrega o sistema de permissões.
-require_once '../includes/permissoes.php';
+// Verifica se o usuário está autenticado
+// e disponibiliza as funções de controle de acesso.
+require_once __DIR__ . '/../includes/auth.php';
 
 // Carrega a conexão com o banco de dados.
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
-// Verifica se o usuário possui permissão para consultar
-// o histórico hospitalar dos pacientes.
-verificarPermissao('historico_paciente');
+// Verifica se o usuário possui permissão
+// para acessar o histórico do paciente.
+verificarModulo('historico_paciente');
+
 
 
 // ==========================================================

@@ -1,9 +1,11 @@
-
 <?php
 
-// Inclui o arquivo de autenticação do sistema.
-// Esse arquivo verifica se o usuário está logado
-// e disponibiliza as funções de controle de acesso.
+// ==========================================================
+// AUTENTICAÇÃO DO SISTEMA
+// ==========================================================
+
+// Inclui o arquivo responsável por verificar se o usuário
+// está autenticado e disponibilizar as funções de acesso.
 require_once __DIR__ . '/../includes/auth.php';
 
 // ==========================================================
@@ -11,8 +13,8 @@ require_once __DIR__ . '/../includes/auth.php';
 // ==========================================================
 
 // Todas as funções cadastradas no sistema podem acessar
-// o Dashboard.
-verificarPermissao([
+// o Dashboard, desde que estejam autenticadas.
+verificarFuncoesPermitidas([
     'admin',
     'medico',
     'enfermeiro',
