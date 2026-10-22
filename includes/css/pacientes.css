@@ -1,0 +1,842 @@
+
+/* ==========================================================
+   CONTROLE HOSPITALAR — PACIENTES
+   Tema claro e escuro integrado à perfil.php
+========================================================== */
+
+/* ==========================================================
+   1. TEMA CLARO — PADRÃO
+========================================================== */
+:root {
+    color-scheme: light;
+
+    --azul: #2f80ed;
+    --azul-escuro: #174ea6;
+    --azul-claro: #56ccf2;
+
+    --texto: #203247;
+    --suave: #718096;
+    --verde: #27ae60;
+    --vermelho: #eb5757;
+
+    --fundo: #edf5ff;
+    --fundo-inicio: #f7fbff;
+    --fundo-fim: #e7f2ff;
+
+    --card: rgba(255, 255, 255, 0.96);
+    --campo: #ffffff;
+    --borda: #dce7f2;
+
+    --tabela-cabecalho: #f7faff;
+    --tabela-texto: #40536a;
+    --linha: #edf1f5;
+    --hover-linha: #f8fbff;
+
+    --etiqueta-fundo: #eef6ff;
+    --etiqueta-borda: #dcecff;
+    --icone-fundo: #edf5ff;
+
+    --contador-fundo: #f3f7fb;
+    --contador-texto: #587087;
+
+    --botao-limpar-fundo: #ffffff;
+    --botao-limpar-texto: #64778d;
+
+    --info-fundo: #f7f9fc;
+    --info-texto: #44576d;
+    --modal-fundo: #ffffff;
+
+    --sombra-card: 0 13px 30px rgba(28, 66, 108, 0.07);
+    --borda-card: rgba(221, 231, 242, 0.95);
+}
+
+/* ==========================================================
+   2. TEMA ESCURO
+========================================================== */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --azul: #66a6ff;
+    --azul-escuro: #9bc4ff;
+    --azul-claro: #56ccf2;
+
+    --texto: #e5edf8;
+    --suave: #a3b3c8;
+    --verde: #63d995;
+    --vermelho: #ff7b89;
+
+    --fundo: #111c2b;
+    --fundo-inicio: #111c2b;
+    --fundo-fim: #17263a;
+
+    --card: rgba(26, 39, 56, 0.98);
+    --campo: #1b2a3d;
+    --borda: #34465d;
+
+    --tabela-cabecalho: #202f43;
+    --tabela-texto: #d0dced;
+    --linha: #2b3b50;
+    --hover-linha: #223349;
+
+    --etiqueta-fundo: #203650;
+    --etiqueta-borda: #304c6d;
+    --icone-fundo: #203650;
+
+    --contador-fundo: #26384d;
+    --contador-texto: #d0dced;
+
+    --botao-limpar-fundo: #1b2a3d;
+    --botao-limpar-texto: #d0dced;
+
+    --info-fundo: #202f43;
+    --info-texto: #d0dced;
+    --modal-fundo: #1a2738;
+
+    --sombra-card: 0 13px 30px rgba(0, 0, 0, 0.18);
+    --borda-card: #34465d;
+}
+
+/* ==========================================================
+   3. BASE E FUNDO
+========================================================== */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: var(--texto);
+
+    background:
+        radial-gradient(
+            circle at 8% 10%,
+            rgba(86, 204, 242, 0.14),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 92% 18%,
+            rgba(47, 128, 237, 0.12),
+            transparent 27%
+        ),
+        linear-gradient(
+            135deg,
+            var(--fundo-inicio),
+            var(--fundo) 55%,
+            var(--fundo-fim)
+        );
+
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+a,
+button,
+input {
+    transition:
+        color 0.2s ease,
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* ==========================================================
+   4. BARRA SUPERIOR
+========================================================== */
+.navbar-custom {
+    min-height: 70px;
+    padding: 0 24px;
+
+    background: linear-gradient(
+        110deg,
+        #1767d1,
+        #2f80ed 55%,
+        #42b6df
+    );
+
+    box-shadow: 0 10px 30px rgba(31, 91, 160, 0.18);
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #ffffff;
+    font-size: 19px;
+}
+
+.navbar-brand:hover {
+    color: #ffffff;
+}
+
+.navbar-brand i {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.usuario-topo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 8px 12px;
+    border-radius: 13px;
+
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.btn-sair {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 15px;
+
+    background: #e94357;
+    color: #ffffff;
+    font-weight: 700;
+
+    transition: 0.25s;
+}
+
+.btn-sair:hover {
+    background: #cf3044;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* ==========================================================
+   5. CONTAINER E CABEÇALHO
+========================================================== */
+.pagina {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 38px 24px 50px;
+}
+
+.cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+
+    margin-bottom: 28px;
+}
+
+.etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 7px 11px;
+    margin-bottom: 10px;
+
+    border-radius: 999px;
+    background: var(--etiqueta-fundo);
+    border: 1px solid var(--etiqueta-borda);
+
+    color: var(--azul);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.titulo {
+    margin: 0;
+    color: var(--texto);
+
+    font-size: 33px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+}
+
+.subtitulo {
+    margin: 8px 0 0;
+    color: var(--suave);
+    font-size: 14px;
+}
+
+.btn-voltar {
+    border-radius: 13px;
+    padding: 11px 16px;
+    font-weight: 700;
+}
+
+/* ==========================================================
+   6. RESUMO
+========================================================== */
+.resumo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    padding: 20px 22px;
+    margin-bottom: 24px;
+
+    border-radius: 20px;
+    background: var(--card);
+    border: 1px solid var(--borda-card);
+    box-shadow: var(--sombra-card);
+}
+
+.resumo-icone {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    border-radius: 17px;
+    background: var(--icone-fundo);
+    color: var(--azul);
+    font-size: 26px;
+}
+
+.resumo-label {
+    display: block;
+    margin-bottom: 3px;
+
+    color: var(--suave);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.resumo-numero {
+    margin: 0;
+    color: var(--azul);
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.resumo-texto {
+    margin: 2px 0 0;
+    color: var(--suave);
+    font-size: 13px;
+}
+
+/* ==========================================================
+   7. PESQUISA
+========================================================== */
+.pesquisa-box {
+    padding: 22px;
+    margin-bottom: 22px;
+
+    border-radius: 20px;
+    background: var(--card);
+    border: 1px solid var(--borda-card);
+    box-shadow: var(--sombra-card);
+}
+
+.pesquisa-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 13px;
+}
+
+.pesquisa-titulo {
+    margin: 0;
+    color: var(--texto);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.pesquisa-ajuda {
+    margin: 3px 0 0;
+    color: var(--suave);
+    font-size: 12px;
+}
+
+.campo-pesquisa {
+    min-height: 50px;
+
+    border: 1px solid var(--borda);
+    border-radius: 13px;
+
+    background: var(--campo);
+    color: var(--texto);
+    font-size: 14px;
+}
+
+.campo-pesquisa::placeholder {
+    color: var(--suave);
+    opacity: 0.85;
+}
+
+.campo-pesquisa:focus {
+    background: var(--campo);
+    color: var(--texto);
+    border-color: var(--azul);
+
+    box-shadow: 0 0 0 0.2rem rgba(47, 128, 237, 0.16);
+}
+
+.btn-buscar {
+    min-height: 50px;
+    border: none;
+    border-radius: 13px;
+
+    background: var(--azul);
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.btn-buscar:hover {
+    background: var(--azul-escuro);
+    color: #10243b;
+}
+
+.btn-limpar {
+    min-height: 50px;
+
+    border-radius: 13px;
+    border: 1px solid var(--borda);
+
+    background: var(--botao-limpar-fundo);
+    color: var(--botao-limpar-texto);
+    font-weight: 700;
+}
+
+.btn-limpar:hover {
+    background: var(--hover-linha);
+    color: var(--texto);
+}
+
+/* ==========================================================
+   8. CABEÇALHO DA LISTA
+========================================================== */
+.lista-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 15px;
+
+    margin-bottom: 15px;
+}
+
+.lista-titulo {
+    margin: 0;
+    color: var(--texto);
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.lista-subtitulo {
+    margin: 4px 0 0;
+    color: var(--suave);
+    font-size: 12px;
+}
+
+.contador {
+    padding: 8px 12px;
+    border-radius: 10px;
+
+    background: var(--contador-fundo);
+    color: var(--contador-texto);
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.btn-novo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 13px;
+    padding: 11px 16px;
+
+    background: var(--azul);
+    color: #ffffff;
+
+    font-weight: 800;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.btn-novo:hover {
+    background: var(--azul-escuro);
+    color: #10243b;
+    transform: translateY(-2px);
+}
+
+/* ==========================================================
+   9. TABELA
+========================================================== */
+.tabela-card {
+    overflow: hidden;
+
+    border-radius: 22px;
+    background: var(--card);
+    border: 1px solid var(--borda-card);
+
+    box-shadow: 0 15px 35px rgba(28, 66, 108, 0.08);
+}
+
+.tabela {
+    min-width: 1050px;
+    margin: 0;
+
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--tabela-texto);
+    --bs-table-border-color: var(--linha);
+    --bs-table-hover-bg: var(--hover-linha);
+    --bs-table-hover-color: var(--texto);
+}
+
+.tabela thead th {
+    padding: 16px 17px;
+
+    background: var(--tabela-cabecalho);
+    color: var(--suave);
+    border-bottom: 1px solid var(--borda);
+
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    white-space: nowrap;
+}
+
+.tabela tbody td {
+    padding: 16px 17px;
+    vertical-align: middle;
+
+    border-bottom: 1px solid var(--linha);
+
+    font-size: 13px;
+    color: var(--tabela-texto);
+}
+
+.tabela tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.tabela tbody tr:hover {
+    background: var(--hover-linha);
+}
+
+.tabela tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.paciente-area {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 220px;
+}
+
+.paciente-icone {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--verde) 13%, var(--card));
+    color: var(--verde);
+    font-size: 18px;
+}
+
+.paciente-nome {
+    color: var(--texto);
+    font-weight: 800;
+}
+
+.paciente-sub {
+    margin-top: 2px;
+    color: var(--suave);
+    font-size: 11px;
+}
+
+.badge-cidade {
+    display: inline-flex;
+    padding: 7px 10px;
+
+    border-radius: 10px;
+    background: var(--etiqueta-fundo);
+    color: var(--azul);
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.responsavel {
+    color: var(--tabela-texto);
+    font-weight: 600;
+}
+
+.sem-responsavel {
+    color: var(--suave);
+    font-style: italic;
+}
+
+.btn-editar,
+.btn-excluir {
+    border: none;
+    border-radius: 10px;
+    padding: 8px 11px;
+
+    font-size: 12px;
+    font-weight: 700;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.btn-editar {
+    background: color-mix(in srgb, var(--azul) 14%, var(--card));
+    color: var(--azul);
+}
+
+.btn-editar:hover {
+    background: var(--azul);
+    color: #ffffff;
+}
+
+.btn-excluir {
+    background: color-mix(in srgb, var(--vermelho) 12%, var(--card));
+    color: var(--vermelho);
+}
+
+.btn-excluir:hover {
+    background: var(--vermelho);
+    color: #ffffff;
+}
+
+/* ==========================================================
+   10. ESTADO VAZIO
+========================================================== */
+.vazio {
+    padding: 65px 20px !important;
+    text-align: center;
+}
+
+.vazio-icone {
+    width: 72px;
+    height: 72px;
+
+    margin: 0 auto 14px;
+    border-radius: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--icone-fundo);
+    color: var(--suave);
+    font-size: 29px;
+}
+
+.vazio-titulo {
+    margin: 0 0 6px;
+    color: var(--texto);
+    font-weight: 800;
+}
+
+.vazio-texto {
+    margin: 0;
+    color: var(--suave);
+    font-size: 13px;
+}
+
+/* ==========================================================
+   11. MODAL DE EXCLUSÃO
+========================================================== */
+.modal-content {
+    border: 1px solid var(--borda);
+    border-radius: 24px;
+
+    background: var(--modal-fundo);
+    color: var(--texto);
+
+    box-shadow: 0 20px 55px rgba(24, 63, 105, 0.18);
+}
+
+.modal-alerta {
+    width: 82px;
+    height: 82px;
+
+    margin: 8px auto 16px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff3cd;
+    color: #856404;
+    font-size: 36px;
+}
+
+.modal-title {
+    color: var(--vermelho);
+    font-weight: 800;
+}
+
+.texto-modal {
+    color: var(--suave);
+}
+
+.info-paciente {
+    padding: 16px;
+    border-radius: 15px;
+
+    background: var(--info-fundo);
+    color: var(--info-texto);
+}
+
+.info-paciente p {
+    margin-bottom: 9px;
+    color: var(--info-texto);
+    font-size: 14px;
+}
+
+.info-paciente strong {
+    color: var(--texto);
+}
+
+.btn-modal-excluir,
+.btn-modal-cancelar {
+    border-radius: 11px;
+    padding: 10px 16px;
+    font-weight: 700;
+}
+
+.btn-modal-excluir {
+    background: var(--vermelho);
+    border: none;
+    color: #ffffff;
+}
+
+.btn-modal-excluir:hover {
+    background: #c83c4d;
+    color: #ffffff;
+}
+
+/* ==========================================================
+   12. AJUSTES DO BOOTSTRAP NO TEMA ESCURO
+========================================================== */
+:root[data-theme="dark"] .text-muted {
+    color: var(--suave) !important;
+}
+
+:root[data-theme="dark"] .btn-secondary {
+    background: #40536b;
+    border-color: #40536b;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .btn-secondary:hover {
+    background: #506783;
+    border-color: #506783;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.modal-backdrop.show {
+    opacity: 0.65;
+}
+
+/* ==========================================================
+   13. RESPONSIVIDADE
+========================================================== */
+@media (max-width: 767px) {
+    .navbar-custom {
+        padding: 0 14px;
+    }
+
+    .navbar-brand {
+        font-size: 16px;
+    }
+
+    .usuario-topo {
+        display: none;
+    }
+
+    .pagina {
+        padding: 24px 14px 40px;
+    }
+
+    .cabecalho,
+    .lista-topo {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .titulo {
+        font-size: 28px;
+    }
+
+    .btn-voltar,
+    .btn-novo {
+        width: 100%;
+        text-align: center;
+    }
+
+    .pesquisa-topo {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .resumo {
+        padding: 17px;
+    }
+
+    .pesquisa-box {
+        padding: 17px;
+    }
+
+    .lista-topo > .d-flex {
+        width: 100%;
+    }
+
+    .contador {
+        flex: 1;
+        text-align: center;
+    }
+
+    .modal-dialog {
+        margin: 12px;
+    }
+}
+
+/* ==========================================================
+   14. ACESSIBILIDADE
+========================================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

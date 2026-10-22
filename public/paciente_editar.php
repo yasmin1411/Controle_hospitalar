@@ -5,11 +5,10 @@
 // AUTENTICAÇÃO E CONEXÃO COM O BANCO
 // =========================================================
 
-// Ativa o sistema de autenticação para garantir que somente usuários
-// autorizados possam acessar esta página.
+// Garante que somente usuários autorizados possam acessar a página.
 require_once '../includes/auth.php';
 
-// Carrega a conexão com o banco de dados através da variável $pdo.
+// Carrega a conexão com o banco através da variável $pdo.
 require_once '../config/database.php';
 
 
@@ -18,115 +17,72 @@ require_once '../config/database.php';
 // =========================================================
 
 // Recupera o ID do paciente enviado pela URL.
-// Exemplo: paciente_editar.php?id=5
 $id = $_GET['id'] ?? null;
 
-
-// Se nenhum ID foi informado, volta para a lista de pacientes.
+// Se nenhum ID foi informado, retorna para a lista.
 if (!$id) {
     header("Location: pacientes.php");
     exit;
 }
 
 
-/*
-==================================================
-BUSCAR PACIENTE + ENDEREÇOS + RESPONSÁVEL
-==================================================
+// =========================================================
+// BUSCA DO PACIENTE
+// =========================================================
 
-Nesta consulta são buscadas todas as informações
-necessárias para preencher o formulário de edição:
-
-- Dados do paciente;
-- Endereço do paciente;
-- Dados do responsável;
-- Endereço do responsável.
-*/
-
-// Prepara a consulta SQL para buscar o paciente pelo ID.
+// Busca os dados do paciente, endereço, responsável e endereço do responsável.
 $sql = $pdo->prepare("
     SELECT
         p.*,
-
-        -- Dados do endereço do paciente
-        e.rua,
-        e.numero,
-        e.cep,
-        e.cidade,
-        e.complemento,
-
-        -- Dados do responsável
+        e.rua, e.numero, e.cep, e.cidade, e.complemento,
         r.nome AS responsavel_nome,
         r.cpf AS responsavel_cpf,
         r.telefone AS responsavel_telefone,
         r.grau_de_parentesco,
         r.data_de_nascimento AS responsavel_data,
-
-        -- Dados do endereço do responsável
         er.rua AS r_rua,
         er.numero AS r_numero,
         er.cep AS r_cep,
         er.cidade AS r_cidade,
         er.complemento AS r_complemento
-
     FROM pacientes p
-
-    -- Relaciona o paciente com seu endereço.
-    INNER JOIN endereco e
-        ON p.endereco_id = e.id
-
-    -- Relaciona o paciente com o responsável.
-    -- O LEFT JOIN permite que o paciente continue sendo encontrado
-    -- mesmo que não possua responsável cadastrado.
-    LEFT JOIN responsavel r
-        ON p.responsavel_id = r.id
-
-    -- Relaciona o responsável ao endereço dele.
-    LEFT JOIN endereco er
-        ON r.endereco_id = er.id
-
-    -- Seleciona somente o paciente correspondente ao ID recebido.
+    INNER JOIN endereco e ON p.endereco_id = e.id
+    LEFT JOIN responsavel r ON p.responsavel_id = r.id
+    LEFT JOIN endereco er ON r.endereco_id = er.id
     WHERE p.id = ?
 ");
 
-// Executa a consulta utilizando o ID como parâmetro.
+// Executa a consulta utilizando o ID recebido.
 $sql->execute([$id]);
 
-// Recupera os dados encontrados como um array associativo.
+// Recupera os dados encontrados.
 $paciente = $sql->fetch(PDO::FETCH_ASSOC);
 
-// Caso nenhum paciente seja encontrado, interrompe a execução
-// e informa o usuário.
+// Interrompe a página caso o paciente não exista.
 if (!$paciente) {
     die("Paciente não encontrado.");
 }
 
 
-/*
-==================================================
-ATUALIZAR DADOS
-==================================================
+// =========================================================
+// ATUALIZAÇÃO DOS DADOS
+// =========================================================
 
-Verifica se o formulário foi enviado através do método POST.
-Quando o usuário clicar em "Salvar Alterações", esta parte
-será executada.
-*/
-
+// Verifica se o formulário foi enviado.
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
     try {
 
-        // Inicia uma transação no banco de dados.
-        // Isso permite que todas as alterações sejam confirmadas
-        // juntas ou desfeitas caso aconteça algum erro.
+        // Inicia uma transação para garantir que as alterações
+        // sejam realizadas juntas.
         $pdo->beginTransaction();
 
 
-        /*
-        ==============================
-        PACIENTE
-        ==============================
-        */
+        // -------------------------
+        // PACIENTE
+        // -------------------------
 
+        // Atualiza os dados principais do paciente.
         $sql = $pdo->prepare("
             UPDATE pacientes SET
                 nome=?,
@@ -147,12 +103,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ]);
 
 
-        /*
-        ==============================
-        ENDEREÇO PACIENTE
-        ==============================
-        */
+        // -------------------------
+        // ENDEREÇO DO PACIENTE
+        // -------------------------
 
+        // Atualiza o endereço relacionado ao paciente.
         $sql = $pdo->prepare("
             UPDATE endereco SET
                 rua=?,
@@ -173,12 +128,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ]);
 
 
-        /*
-        ==============================
-        RESPONSÁVEL
-        ==============================
-        */
+        // -------------------------
+        // RESPONSÁVEL
+        // -------------------------
 
+        // Atualiza o responsável somente quando existe um
+        // responsável relacionado ao paciente.
         if (!empty($paciente['responsavel_id'])) {
 
             $sql = $pdo->prepare("
@@ -201,6 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ]);
 
 
+            // Atualiza o endereço relacionado ao responsável.
             $sql = $pdo->prepare("
                 UPDATE endereco SET
                     rua=?,
@@ -226,62 +182,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
 
-        // Confirma todas as alterações realizadas.
+        // Confirma todas as alterações.
         $pdo->commit();
 
         // Retorna para a lista de pacientes.
         header("Location: pacientes.php");
         exit;
 
+
     } catch (Exception $e) {
 
-        // Desfaz as alterações caso ocorra algum erro.
+        // Desfaz as alterações caso aconteça algum erro.
         $pdo->rollBack();
 
+        // Exibe o erro durante o desenvolvimento.
         die("Erro ao atualizar: " . $e->getMessage());
     }
 }
 
 ?>
 
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
 
+    <!-- Define a codificação e adapta a página para diferentes telas. -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Editar Paciente</title>
 
-    <!-- Bootstrap utilizado pela página. -->
+    <!-- Importa Bootstrap e Bootstrap Icons. -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Ícones utilizados nos campos e botões. -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
 
-        /* =========================================================
-           CORES PRINCIPAIS
-           ========================================================= */
-
         :root{
             --azul:#2F80ED;
-            --azul2:#56CCF2;
             --azule:#174ea6;
             --texto:#203247;
             --suave:#708198;
-            --borda:#dce7f2;
+            --borda:#dce7f2
         }
 
+        *{box-sizing:border-box}
 
-        *{
-            box-sizing:border-box;
-        }
-
-
-        /* Fundo geral da página. */
+        /* Mantém o mesmo fundo e identidade visual do editar medicamento. */
         body{
             margin:0;
             min-height:100vh;
@@ -290,22 +239,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background:
                 radial-gradient(circle at 7% 12%,rgba(86,204,242,.17),transparent 24%),
                 radial-gradient(circle at 94% 20%,rgba(47,128,237,.14),transparent 25%),
-                linear-gradient(135deg,#f7fbff,#edf5ff 52%,#e7f2ff);
+                linear-gradient(135deg,#f7fbff,#edf5ff 52%,#e7f2ff)
         }
 
-
-        /* Área principal. */
         .pagina{
             max-width:1050px;
             margin:auto;
-            padding:26px 26px 50px;
+            padding:26px 26px 50px
         }
 
-
-        /* =========================================================
-           CABEÇALHO PRINCIPAL
-           ========================================================= */
-
+        /* Cabeçalho principal da página. */
         .hero{
             position:relative;
             overflow:hidden;
@@ -314,37 +257,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius:26px;
             color:#fff;
             background:linear-gradient(110deg,#1767d1,#2F80ED 55%,#42b6df);
-            box-shadow:0 20px 45px rgba(31,91,160,.16);
+            box-shadow:0 20px 45px rgba(31,91,160,.16)
         }
 
-        .hero:before,
-        .hero:after{
-            content:"";
-            position:absolute;
-            border-radius:50%;
-            border:1px solid rgba(255,255,255,.1);
-            pointer-events:none;
-        }
-
-        .hero:before{
-            width:250px;
-            height:250px;
-            right:-90px;
-            top:-135px;
-            background:rgba(255,255,255,.06);
-        }
-
-        .hero:after{
-            width:105px;
-            height:105px;
-            right:170px;
-            bottom:-65px;
-        }
-
-        .hero-content{
-            position:relative;
-            z-index:1;
-        }
+        .hero-content{position:relative;z-index:1}
 
         .hero-tag{
             display:inline-flex;
@@ -358,40 +274,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-size:10px;
             font-weight:800;
             letter-spacing:.8px;
-            text-transform:uppercase;
+            text-transform:uppercase
         }
 
         .hero h1{
             margin:0;
             font-size:31px;
             font-weight:850;
-            letter-spacing:-.6px;
+            letter-spacing:-.6px
         }
 
         .hero p{
             margin:6px 0 0;
             color:rgba(255,255,255,.88);
-            font-size:14px;
+            font-size:14px
         }
 
-
-        /* =========================================================
-           TÍTULO DA PÁGINA
-           ========================================================= */
-
+        /* Área do título e botão de retorno. */
         .topo{
             display:flex;
             align-items:center;
             justify-content:space-between;
             gap:20px;
             margin-bottom:18px;
-            padding:0 4px;
+            padding:0 4px
         }
 
         .titulo-area{
             display:flex;
             align-items:center;
-            gap:14px;
+            gap:14px
         }
 
         .titulo-icone{
@@ -404,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background:#edf5ff;
             color:var(--azul);
             font-size:27px;
-            box-shadow:0 9px 22px rgba(47,128,237,.08);
+            box-shadow:0 9px 22px rgba(47,128,237,.08)
         }
 
         .rotulo{
@@ -414,20 +326,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-size:10px;
             font-weight:850;
             letter-spacing:1.1px;
-            text-transform:uppercase;
+            text-transform:uppercase
         }
 
         .titulo{
             margin:0;
             font-size:28px;
             font-weight:850;
-            letter-spacing:-.6px;
+            letter-spacing:-.6px
         }
 
         .subtitulo{
             margin:4px 0 0;
             color:var(--suave);
-            font-size:13px;
+            font-size:13px
         }
 
         .btn-voltar{
@@ -436,89 +348,72 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             gap:7px;
             padding:11px 16px;
             border-radius:12px;
-            font-weight:750;
+            font-weight:750
         }
 
-
-        /* =========================================================
-           CARD PRINCIPAL DO FORMULÁRIO
-           ========================================================= */
-
+        /* Painel principal do formulário. */
         .form-card{
             padding:28px;
             border:1px solid var(--borda);
             border-radius:22px;
             background:rgba(255,255,255,.94);
-            box-shadow:0 16px 38px rgba(39,89,145,.08);
+            box-shadow:0 16px 38px rgba(39,89,145,.08)
         }
 
-
-        /* =========================================================
-           SEÇÕES DO CADASTRO
-           ========================================================= */
-
+        /* Cada grupo utiliza o mesmo padrão de formulário. */
         .secao{
-            padding:0;
+            margin-bottom:22px;
+            padding:21px;
+            border:1px solid var(--borda);
+            border-radius:18px;
+            background:#fff
         }
 
-        .secao + .secao{
-            margin-top:24px;
-            padding-top:24px;
-            border-top:1px solid #edf2f7;
-        }
-
-        /*
-        Destaque visual para identificar melhor onde começa
-        cada grupo de informações do cadastro.
-        */
         .secao-titulo{
             display:flex;
             align-items:center;
             gap:10px;
-            margin-bottom:17px;
-            color:#1767d1;
-            font-size:17px;
-            font-weight:850;
-            letter-spacing:-.2px;
+            margin-bottom:20px;
+            padding-bottom:12px;
+            border-bottom:1px solid #edf2f7
         }
 
-        .secao-titulo i{
-            width:42px;
-            height:42px;
+        .secao-icone{
+            width:38px;
+            height:38px;
             display:flex;
             align-items:center;
             justify-content:center;
-            border-radius:13px;
+            border-radius:11px;
             background:#edf5ff;
-            color:#2F80ED;
-            font-size:19px;
+            color:var(--azul);
+            font-size:17px
         }
 
-        .secao-subtitulo{
-            margin:-10px 0 17px 52px;
-            color:#708198;
-            font-size:12px;
+        .secao-titulo strong{
+            display:block;
+            font-size:15px;
+            font-weight:800
         }
 
+        .secao-titulo span{
+            display:block;
+            margin-top:2px;
+            color:var(--suave);
+            font-size:11px
+        }
 
-        /* =========================================================
-           CAMPOS
-           ========================================================= */
-
+        /* Organiza os campos em duas colunas. */
         .form-grid{
             display:grid;
             grid-template-columns:1fr 1fr;
-            gap:0 18px;
+            gap:0 18px
         }
 
-        .campo{
-            margin-bottom:18px;
-        }
+        .campo{margin-bottom:18px}
+        .campo.full{grid-column:1/-1}
 
-        .campo.full{
-            grid-column:1/-1;
-        }
-
+        /* Visual dos rótulos. */
         .form-label{
             display:block;
             margin-bottom:8px;
@@ -526,14 +421,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-size:12px;
             font-weight:850;
             text-transform:uppercase;
-            letter-spacing:.45px;
+            letter-spacing:.45px
         }
 
-        .campo-box{
-            position:relative;
-        }
-
-        .campo-box > i{
+        /* Posiciona os ícones dentro dos campos. */
+        .campo-box{position:relative}
+        .campo-box>i{
             position:absolute;
             left:15px;
             top:50%;
@@ -541,11 +434,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color:#8193a7;
             font-size:16px;
             pointer-events:none;
-            z-index:2;
+            z-index:2
         }
 
-        .form-control,
-        .form-select{
+        /* Mantém o padrão dos campos do editar medicamento. */
+        .form-control,.form-select{
             min-height:50px;
             border:1px solid var(--borda);
             border-radius:13px;
@@ -553,21 +446,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color:var(--texto);
             font-size:14px;
             background:#fbfdff;
-            transition:.2s;
+            transition:.2s
         }
 
-        .form-control:focus,
-        .form-select:focus{
+        .form-control:focus,.form-select:focus{
             border-color:var(--azul);
             box-shadow:0 0 0 .2rem rgba(47,128,237,.1);
-            background:#fff;
+            background:#fff
         }
 
+        .opcional{
+            color:#8998a9;
+            font-size:10px;
+            font-weight:600;
+            text-transform:none;
+            letter-spacing:0
+        }
 
-        /* =========================================================
-           BOTÕES
-           ========================================================= */
+        /* Informação auxiliar da seção de responsável. */
+        .info{
+            margin:-4px 0 18px;
+            padding:11px 13px;
+            border-radius:12px;
+            background:#f4f8fc;
+            color:#7a8b9e;
+            font-size:11px
+        }
 
+        .info i{color:var(--azul)}
+
+        /* Área final das ações. */
         .acoes{
             display:flex;
             justify-content:space-between;
@@ -575,21 +483,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             gap:15px;
             margin-top:8px;
             padding-top:20px;
-            border-top:1px solid #edf2f7;
+            border-top:1px solid #edf2f7
         }
 
         .acoes-info{
             color:#8998a9;
-            font-size:11px;
+            font-size:11px
         }
 
         .acoes-botoes{
             display:flex;
-            gap:9px;
+            gap:9px
         }
 
-        .btn-salvar,
-        .btn-cancelar{
+        .btn-salvar,.btn-cancelar{
             display:inline-flex;
             align-items:center;
             gap:7px;
@@ -597,81 +504,69 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius:12px;
             font-size:13px;
             font-weight:800;
-            text-decoration:none;
+            text-decoration:none
         }
 
         .btn-salvar{
             border:0;
             background:var(--azul);
             color:#fff;
-            transition:.22s;
+            transition:.22s
         }
 
         .btn-salvar:hover{
             background:var(--azule);
             color:#fff;
             transform:translateY(-2px);
-            box-shadow:0 9px 18px rgba(47,128,237,.18);
+            box-shadow:0 9px 18px rgba(47,128,237,.18)
         }
 
         .btn-cancelar{
             border:1px solid #d9e3ed;
             background:#fff;
             color:#64768a;
-            transition:.22s;
+            transition:.22s
         }
 
         .btn-cancelar:hover{
             background:#f5f8fb;
-            color:#405268;
+            color:#405268
         }
 
-
-        /* =========================================================
-           RESPONSIVIDADE
-           ========================================================= */
-
+        /* Adapta o formulário para telas menores. */
         @media(max-width:700px){
 
-            .pagina{
-                padding:18px 14px 35px;
-            }
+            .pagina{padding:18px 14px 35px}
 
             .topo{
                 align-items:flex-start;
-                flex-direction:column;
+                flex-direction:column
             }
 
             .btn-voltar{
                 width:100%;
-                justify-content:center;
+                justify-content:center
             }
+
+            .form-card{padding:20px}
+            .secao{padding:17px}
 
             .form-grid{
-                grid-template-columns:1fr;
+                grid-template-columns:1fr
             }
 
-            .campo.full{
-                grid-column:auto;
-            }
-
-            .form-card{
-                padding:20px;
-            }
+            .campo.full{grid-column:auto}
 
             .acoes{
                 align-items:stretch;
-                flex-direction:column;
+                flex-direction:column
             }
 
-            .acoes-botoes{
-                width:100%;
-            }
+            .acoes-botoes{width:100%}
 
-            .btn-salvar,
-            .btn-cancelar{
+            .btn-salvar,.btn-cancelar{
                 flex:1;
-                justify-content:center;
+                justify-content:center
             }
         }
 
@@ -679,13 +574,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 </head>
 
+
 <body>
 
 <div class="pagina">
 
-    <!-- =====================================================
-         CABEÇALHO
-         ===================================================== -->
+    <!-- ===================================================== -->
+    <!-- CABEÇALHO -->
+    <!-- ===================================================== -->
 
     <section class="hero">
 
@@ -697,635 +593,527 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </span>
 
             <h1>
-                <i class="bi bi-person-vcard me-2"></i>
-                Editar Paciente
+                <i class="bi bi-person-vcard me-2"></i>Editar Paciente
             </h1>
 
-            <p>
-                Atualize com segurança as informações do paciente selecionado.
-            </p>
+            <p>Atualize com segurança as informações do paciente selecionado.</p>
 
         </div>
 
     </section>
 
 
-    <!-- =====================================================
-         TÍTULO DA PÁGINA
-         ===================================================== -->
+    <!-- ===================================================== -->
+    <!-- TÍTULO -->
+    <!-- ===================================================== -->
 
     <section class="topo">
 
         <div class="titulo-area">
 
             <div class="titulo-icone">
-                <i class="bi bi-person-vcard"></i>
+                <i class="bi bi-pencil-square"></i>
             </div>
 
             <div>
 
-                <span class="rotulo">
-                    Cadastro hospitalar
-                </span>
+                <!-- Identifica a área atual do sistema. -->
+                <span class="rotulo">Cadastro hospitalar</span>
 
-                <h2 class="titulo">
-                    Informações do paciente
-                </h2>
+                <h2 class="titulo">Informações do paciente</h2>
 
-                <p class="subtitulo">
-                    Confira e atualize os dados cadastrados.
-                </p>
+                <p class="subtitulo">Confira e atualize os dados cadastrados.</p>
 
             </div>
 
         </div>
 
+        <!-- Retorna para a lista sem salvar alterações. -->
         <a href="pacientes.php" class="btn btn-secondary btn-voltar">
-            <i class="bi bi-arrow-left"></i>
-            Voltar aos pacientes
+            <i class="bi bi-arrow-left"></i>Voltar aos pacientes
         </a>
 
     </section>
 
 
-    <!-- =====================================================
-         FORMULÁRIO
-         ===================================================== -->
+    <!-- ===================================================== -->
+    <!-- FORMULÁRIO -->
+    <!-- ===================================================== -->
 
     <section class="form-card">
 
         <form method="POST">
 
 
-            <!-- =================================================
-                 DADOS DO PACIENTE
-                 ================================================= -->
+            <!-- ================================================= -->
+            <!-- DADOS DO PACIENTE -->
+            <!-- ================================================= -->
 
-            <section class="secao">
+            <div class="secao">
 
                 <div class="secao-titulo">
-                    <i class="bi bi-person-fill"></i>
-                    Dados do paciente
+                    <div class="secao-icone"><i class="bi bi-person-fill"></i></div>
+
+                    <div>
+                        <strong>Dados do paciente</strong>
+                        <span>Informações pessoais e identificação.</span>
+                    </div>
                 </div>
 
-                <div class="secao-subtitulo">
-                    Informações pessoais e identificação.
-                </div>
 
                 <div class="form-grid">
 
+                    <!-- Nome do paciente. -->
                     <div class="campo">
-
-                        <label class="form-label" for="nome">
-                            Nome
-                        </label>
+                        <label class="form-label">Nome</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-person"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="nome"
                                 name="nome"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['nome']) ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- CPF do paciente. -->
                     <div class="campo">
-
-                        <label class="form-label" for="cpf">
-                            CPF
-                        </label>
+                        <label class="form-label">CPF</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-card-text"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
                                 id="cpf"
                                 name="cpf"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['cpf']) ?>"
-                                maxlength="14"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Data de nascimento do paciente. -->
                     <div class="campo">
-
-                        <label class="form-label" for="data_de_nascimento">
-                            Data de nascimento
-                        </label>
+                        <label class="form-label">Data de Nascimento</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-calendar3"></i>
 
                             <input
                                 type="date"
-                                class="form-control"
                                 id="data_de_nascimento"
                                 name="data_de_nascimento"
-                                value="<?= htmlspecialchars($paciente['data_de_nascimento']) ?>"
+                                class="form-control"
+                                value="<?= $paciente['data_de_nascimento'] ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Telefone do paciente. -->
                     <div class="campo">
-
-                        <label class="form-label" for="telefone">
-                            Telefone
-                        </label>
+                        <label class="form-label">Telefone</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-telephone"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
                                 id="telefone"
                                 name="telefone"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['telefone']) ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Cartão do Cidadão / Cartão do SUS. -->
                     <div class="campo full">
 
-                        <label class="form-label" for="cartao_cidadao">
-                            Cartão do cidadão / SUS
-                            <span style="font-weight:600;color:#8a9aab;text-transform:none;">
-                                (opcional)
-                            </span>
+                        <label class="form-label">
+                            Cartão do Cidadão / Cartão do SUS
+                            <span class="opcional">(opcional)</span>
                         </label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-credit-card"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
                                 id="cartao_cidadao"
                                 name="cartao_cidadao"
-                                value="<?= htmlspecialchars($paciente['cartao_cidadao'] ?? '') ?>"
+                                class="form-control"
+                                placeholder="Digite apenas números"
                                 maxlength="20"
+                                inputmode="numeric"
+                                value="<?= htmlspecialchars($paciente['cartao_cidadao'] ?? '') ?>"
                             >
-
                         </div>
 
                     </div>
 
                 </div>
 
-            </section>
+            </div>
 
 
-            <!-- =================================================
-                 ENDEREÇO DO PACIENTE
-                 ================================================= -->
+            <!-- ================================================= -->
+            <!-- ENDEREÇO DO PACIENTE -->
+            <!-- ================================================= -->
 
-            <section class="secao">
+            <div class="secao">
 
                 <div class="secao-titulo">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    Endereço do paciente
+                    <div class="secao-icone"><i class="bi bi-geo-alt-fill"></i></div>
+
+                    <div>
+                        <strong>Endereço do paciente</strong>
+                        <span>Localização e informações complementares.</span>
+                    </div>
                 </div>
 
-                <div class="secao-subtitulo">
-                    Localização e informações complementares.
-                </div>
 
                 <div class="form-grid">
 
+                    <!-- Rua do paciente. -->
                     <div class="campo">
-
-                        <label class="form-label" for="rua">
-                            Rua
-                        </label>
+                        <label class="form-label">Rua</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-signpost-2"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="rua"
                                 name="rua"
+                                id="rua"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['rua']) ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Número do endereço. -->
                     <div class="campo">
-
-                        <label class="form-label" for="numero">
-                            Número
-                        </label>
+                        <label class="form-label">Número</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-hash"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="numero"
                                 name="numero"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['numero']) ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- CEP do paciente. -->
                     <div class="campo">
-
-                        <label class="form-label" for="cep">
-                            CEP
-                        </label>
+                        <label class="form-label">CEP</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-mailbox"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="cep"
                                 name="cep"
+                                id="cep"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['cep']) ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Cidade do paciente. -->
                     <div class="campo">
-
-                        <label class="form-label" for="cidade">
-                            Cidade
-                        </label>
+                        <label class="form-label">Cidade</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-buildings"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="cidade"
                                 name="cidade"
+                                id="cidade"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['cidade']) ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Complemento do endereço. -->
                     <div class="campo full">
-
-                        <label class="form-label" for="complemento">
-                            Complemento
-                            <span style="font-weight:600;color:#8a9aab;text-transform:none;">
-                                (opcional)
-                            </span>
-                        </label>
+                        <label class="form-label">Complemento</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-house-add"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="complemento"
                                 name="complemento"
-                                value="<?= htmlspecialchars($paciente['complemento'] ?? '') ?>"
+                                class="form-control"
+                                value="<?= htmlspecialchars($paciente['complemento']) ?>"
                             >
-
                         </div>
-
                     </div>
 
                 </div>
 
-            </section>
+            </div>
 
 
-            <!-- =================================================
-                 DADOS DO RESPONSÁVEL
-                 ================================================= -->
+            <!-- ================================================= -->
+            <!-- DADOS DO RESPONSÁVEL -->
+            <!-- ================================================= -->
 
-            <section class="secao">
+            <div class="secao" id="bloco_responsavel">
 
                 <div class="secao-titulo">
-                    <i class="bi bi-people-fill"></i>
-                    Dados do responsável
+                    <div class="secao-icone"><i class="bi bi-people-fill"></i></div>
+
+                    <div>
+                        <strong>Dados do responsável</strong>
+                        <span>Informações da pessoa responsável pelo paciente.</span>
+                    </div>
                 </div>
 
-                <div class="secao-subtitulo">
-                    Informações do responsável pelo paciente.
+
+                <!-- Explica que o parentesco depende da idade do paciente. -->
+                <div class="info">
+                    <i class="bi bi-info-circle me-1"></i>
+                    O grau de parentesco é definido de acordo com a idade do paciente.
                 </div>
+
 
                 <div class="form-grid">
 
+                    <!-- Nome do responsável. -->
                     <div class="campo">
-
-                        <label class="form-label" for="responsavel_nome">
-                            Nome
-                        </label>
+                        <label class="form-label">Nome</label>
 
                         <div class="campo-box">
-
-                            <i class="bi bi-person"></i>
+                            <i class="bi bi-person-badge"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="responsavel_nome"
                                 name="responsavel_nome"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['responsavel_nome'] ?? '') ?>"
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- CPF do responsável. -->
                     <div class="campo">
-
-                        <label class="form-label" for="responsavel_cpf">
-                            CPF
-                        </label>
+                        <label class="form-label">CPF</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-card-text"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="responsavel_cpf"
                                 name="responsavel_cpf"
+                                id="responsavel_cpf"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['responsavel_cpf'] ?? '') ?>"
-                                maxlength="14"
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Telefone do responsável. -->
                     <div class="campo">
-
-                        <label class="form-label" for="responsavel_telefone">
-                            Telefone
-                        </label>
+                        <label class="form-label">Telefone</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-telephone"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="responsavel_telefone"
                                 name="responsavel_telefone"
+                                id="responsavel_telefone"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['responsavel_telefone'] ?? '') ?>"
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Grau de parentesco preenchido pelo JavaScript. -->
                     <div class="campo">
-
-                        <label class="form-label" for="grau_parentesco">
-                            Grau de parentesco
-                        </label>
+                        <label class="form-label">Grau de Parentesco</label>
 
                         <div class="campo-box">
-
-                            <i class="bi bi-people"></i>
+                            <i class="bi bi-diagram-3"></i>
 
                             <select
-                                class="form-select"
-                                id="grau_parentesco"
                                 name="grau_parentesco"
-                            ></select>
-
+                                id="grau_parentesco"
+                                class="form-select"
+                            >
+                                <option value="">Selecione...</option>
+                            </select>
                         </div>
-
                     </div>
 
 
-                    <div class="campo">
-
-                        <label class="form-label" for="responsavel_data">
-                            Data de nascimento
-                        </label>
+                    <!-- Data de nascimento do responsável. -->
+                    <div class="campo full">
+                        <label class="form-label">Data de Nascimento</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-calendar3"></i>
 
                             <input
                                 type="date"
-                                class="form-control"
-                                id="responsavel_data"
                                 name="responsavel_data"
-                                value="<?= htmlspecialchars($paciente['responsavel_data'] ?? '') ?>"
+                                class="form-control"
+                                value="<?= $paciente['responsavel_data'] ?>"
                             >
-
                         </div>
-
                     </div>
 
                 </div>
 
-            </section>
+            </div>
 
 
-            <!-- =================================================
-                 ENDEREÇO DO RESPONSÁVEL
-                 ================================================= -->
+            <!-- ================================================= -->
+            <!-- ENDEREÇO DO RESPONSÁVEL -->
+            <!-- ================================================= -->
 
-            <section class="secao">
+            <div class="secao">
 
                 <div class="secao-titulo">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    Endereço do responsável
+                    <div class="secao-icone"><i class="bi bi-geo-alt-fill"></i></div>
+
+                    <div>
+                        <strong>Endereço do responsável</strong>
+                        <span>Localização e informações complementares.</span>
+                    </div>
                 </div>
 
-                <div class="secao-subtitulo">
-                    Localização e informações complementares.
-                </div>
 
                 <div class="form-grid">
 
+                    <!-- Rua do responsável. -->
                     <div class="campo">
-
-                        <label class="form-label" for="r_rua">
-                            Rua
-                        </label>
+                        <label class="form-label">Rua</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-signpost-2"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="r_rua"
                                 name="r_rua"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['r_rua'] ?? '') ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Número do endereço do responsável. -->
                     <div class="campo">
-
-                        <label class="form-label" for="r_numero">
-                            Número
-                        </label>
+                        <label class="form-label">Número</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-hash"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="r_numero"
                                 name="r_numero"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['r_numero'] ?? '') ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- CEP do responsável. -->
                     <div class="campo">
-
-                        <label class="form-label" for="r_cep">
-                            CEP
-                        </label>
+                        <label class="form-label">CEP</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-mailbox"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
                                 id="r_cep"
                                 name="r_cep"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['r_cep'] ?? '') ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Cidade do responsável. -->
                     <div class="campo">
-
-                        <label class="form-label" for="r_cidade">
-                            Cidade
-                        </label>
+                        <label class="form-label">Cidade</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-buildings"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="r_cidade"
                                 name="r_cidade"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['r_cidade'] ?? '') ?>"
                                 required
                             >
-
                         </div>
-
                     </div>
 
 
+                    <!-- Complemento do endereço do responsável. -->
                     <div class="campo full">
-
-                        <label class="form-label" for="r_complemento">
-                            Complemento
-                            <span style="font-weight:600;color:#8a9aab;text-transform:none;">
-                                (opcional)
-                            </span>
-                        </label>
+                        <label class="form-label">Complemento</label>
 
                         <div class="campo-box">
-
                             <i class="bi bi-house-add"></i>
 
                             <input
                                 type="text"
-                                class="form-control"
-                                id="r_complemento"
                                 name="r_complemento"
+                                class="form-control"
                                 value="<?= htmlspecialchars($paciente['r_complemento'] ?? '') ?>"
                             >
-
                         </div>
-
                     </div>
 
                 </div>
 
-            </section>
+            </div>
 
 
-            <!-- =================================================
-                 BOTÕES DE AÇÃO
-                 ================================================= -->
+            <!-- ================================================= -->
+            <!-- AÇÕES -->
+            <!-- ================================================= -->
 
             <div class="acoes">
 
@@ -1336,14 +1124,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="acoes-botoes">
 
+                    <!-- Cancela a edição sem alterar os dados. -->
                     <a href="pacientes.php" class="btn-cancelar">
-                        <i class="bi bi-x-lg"></i>
-                        Cancelar
+                        <i class="bi bi-x-lg"></i>Cancelar
                     </a>
 
+                    <!-- Envia as alterações para o PHP. -->
                     <button type="submit" class="btn-salvar">
-                        <i class="bi bi-check-lg"></i>
-                        Salvar alterações
+                        <i class="bi bi-check-lg"></i>Salvar alterações
                     </button>
 
                 </div>
@@ -1359,148 +1147,131 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <script>
 
-    // =========================================================
-    // MÁSCARA DE CPF
-    // =========================================================
+// =========================================================
+// MÁSCARA CPF PACIENTE
+// =========================================================
 
-    document.getElementById('cpf').addEventListener('input', function () {
+// Formata o CPF enquanto o usuário digita.
+document.getElementById('cpf').addEventListener('input', function() {
 
-        let valor = this.value.replace(/\D/g, '').slice(0, 11);
+    let v = this.value.replace(/\D/g, '');
 
-        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
-        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
-        valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 
-        this.value = valor;
+    this.value = v;
+});
+
+
+// =========================================================
+// GRAU DE PARENTESCO
+// =========================================================
+
+// Campos utilizados para controlar as opções de parentesco.
+const dataNascimento = document.getElementById('data_de_nascimento');
+const parentesco = document.getElementById('grau_parentesco');
+
+// Recupera o parentesco que já estava salvo no banco.
+const grauAtual = <?= json_encode($paciente['grau_de_parentesco'] ?? '') ?>;
+
+
+// Calcula a idade do paciente a partir da data informada.
+function calcularIdade(data) {
+
+    if (!data) return null;
+
+    const hoje = new Date();
+    const nascimento = new Date(data + 'T00:00:00');
+
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+
+    if (
+        hoje.getMonth() < nascimento.getMonth() ||
+        (
+            hoje.getMonth() === nascimento.getMonth() &&
+            hoje.getDate() < nascimento.getDate()
+        )
+    ) {
+        idade--;
+    }
+
+    return idade;
+}
+
+
+// Monta as opções permitidas de acordo com a idade.
+function carregarParentesco() {
+
+    const idade = calcularIdade(dataNascimento.value);
+    const valorSelecionado = parentesco.value || grauAtual;
+
+    parentesco.innerHTML = '<option value="">Selecione...</option>';
+
+    if (idade === null) return;
+
+    // Menores de idade possuem opções específicas.
+    const opcoes = idade < 18
+        ? ['Pai', 'Mãe', 'Tutor Legal']
+        : [
+            'Pai',
+            'Mãe',
+            'Avô',
+            'Avó',
+            'Tio',
+            'Tia',
+            'Irmão',
+            'Irmã',
+            'Tutor Legal',
+            'Outro'
+        ];
+
+    // Adiciona as opções ao campo.
+    opcoes.forEach(grau => {
+
+        const option = document.createElement('option');
+
+        option.value = grau;
+        option.textContent = grau;
+
+        parentesco.appendChild(option);
+    });
+
+    // Mantém o valor anteriormente salvo quando permitido.
+    parentesco.value = opcoes.includes(valorSelecionado)
+        ? valorSelecionado
+        : '';
+}
+
+
+// Atualiza o parentesco quando a data de nascimento muda.
+dataNascimento.addEventListener('change', carregarParentesco);
+
+// Carrega o parentesco automaticamente ao abrir a página.
+window.addEventListener('load', carregarParentesco);
+
+
+// =========================================================
+// MÁSCARA CARTÃO DO CIDADÃO / CARTÃO DO SUS
+// =========================================================
+
+// Mantém somente números e limita o campo a 20 caracteres.
+const cartaoCidadao = document.getElementById('cartao_cidadao');
+
+if (cartaoCidadao) {
+
+    cartaoCidadao.addEventListener('input', function() {
+
+        this.value = this.value
+            .replace(/\D/g, '')
+            .slice(0, 20);
 
     });
 
-
-    // =========================================================
-    // MÁSCARA DE CPF DO RESPONSÁVEL
-    // =========================================================
-
-    document.getElementById('responsavel_cpf').addEventListener('input', function () {
-
-        let valor = this.value.replace(/\D/g, '').slice(0, 11);
-
-        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
-        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
-        valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-
-        this.value = valor;
-
-    });
-
-
-    // =========================================================
-    // CÁLCULO DA IDADE
-    // =========================================================
-
-    function calcularIdade(data) {
-
-        if (!data) return null;
-
-        const nascimento = new Date(data + 'T00:00:00');
-        const hoje = new Date();
-
-        let idade = hoje.getFullYear() - nascimento.getFullYear();
-
-        const mes = hoje.getMonth() - nascimento.getMonth();
-
-        if (
-            mes < 0 ||
-            (mes === 0 && hoje.getDate() < nascimento.getDate())
-        ) {
-            idade--;
-        }
-
-        return idade;
-    }
-
-
-    // =========================================================
-    // CARREGAMENTO DO GRAU DE PARENTESCO
-    // =========================================================
-
-    const grauAtual = <?= json_encode($paciente['grau_de_parentesco'] ?? '') ?>;
-
-    function carregarParentesco() {
-
-        const data = document.getElementById('data_de_nascimento').value;
-        const idade = calcularIdade(data);
-        const select = document.getElementById('grau_parentesco');
-
-        select.innerHTML = '';
-
-        let opcoes;
-
-        // Para menores de idade, são exibidas opções específicas.
-        if (idade !== null && idade < 18) {
-
-            opcoes = [
-                'Pai',
-                'Mãe',
-                'Tutor Legal'
-            ];
-
-        } else {
-
-            // Para maiores de idade, são exibidos outros graus.
-            opcoes = [
-                'Pai',
-                'Mãe',
-                'Avô',
-                'Avó',
-                'Tio',
-                'Tia',
-                'Irmão',
-                'Irmã',
-                'Tutor Legal',
-                'Outro'
-            ];
-        }
-
-        opcoes.forEach(function (opcao) {
-
-            const option = document.createElement('option');
-
-            option.value = opcao;
-            option.textContent = opcao;
-
-            if (opcao === grauAtual) {
-                option.selected = true;
-            }
-
-            select.appendChild(option);
-
-        });
-    }
-
-
-    // Atualiza as opções quando a data de nascimento muda.
-    document
-        .getElementById('data_de_nascimento')
-        .addEventListener('change', carregarParentesco);
-
-
-    // Carrega as opções ao abrir a página.
-    window.addEventListener('load', carregarParentesco);
-
-
-    // =========================================================
-    // CARTÃO DO CIDADÃO / SUS
-    // =========================================================
-
-    document
-        .getElementById('cartao_cidadao')
-        .addEventListener('input', function () {
-
-            this.value = this.value.replace(/\D/g, '').slice(0, 20);
-
-        });
+}
 
 </script>
 
 </body>
 </html>
+
