@@ -29,52 +29,37 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $id = (int) $_GET['id'];
 
 
-// =========================================================
+
+ // =========================================================
 // BUSCA ITEM DO ESTOQUE
 // =========================================================
 
-// Prepara uma consulta SQL para buscar os dados do item de estoque.
-// Também são buscados o nome do medicamento e o nome do fornecedor.
+// Prepara a consulta SQL para buscar os dados do item.
+// Também busca o nome do medicamento e do fornecedor relacionados.
 $sql = $pdo->prepare("
 
-    // Seleciona todos os campos da tabela estoque.
     SELECT
-
         e.*,
-
-        // Busca o nome do medicamento e cria o apelido "medicamento".
         m.nome AS medicamento,
-
-        // Busca o nome do fornecedor e cria o apelido "fornecedor".
         f.nome AS fornecedor
 
-    // Define a tabela principal da consulta.
     FROM estoque e
 
-    // Relaciona a tabela estoque com a tabela medicamento.
     INNER JOIN medicamento m
-
-        // Relaciona o medicamento_id do estoque com o id do medicamento.
         ON e.medicamento_id = m.id
 
-    // Relaciona a tabela estoque com a tabela fornecedor.
     INNER JOIN fornecedor f
-
-        // Relaciona o fornecedor_id do estoque com o id do fornecedor.
         ON e.fornecedor_id = f.id
 
-    // Busca somente o item que possui o ID recebido pela URL.
     WHERE e.id = ?
 
 ");
 
-// Executa a consulta substituindo o ponto de interrogação pelo ID do item.
+// Executa a consulta utilizando o ID do item.
 $sql->execute([$id]);
 
-// Recupera o primeiro resultado da consulta como um array associativo.
-// Dessa forma, os campos podem ser acessados pelo nome da coluna.
+// Recupera os dados encontrados no banco.
 $item = $sql->fetch(PDO::FETCH_ASSOC);
-
 
 // Caso não encontre
 
