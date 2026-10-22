@@ -23,7 +23,7 @@ require_once __DIR__ . '/../config/database.php';
 // Esta página deve ser acessada somente através
 // do formulário de cadastro de usuário.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: usuario_novo.php');
+    header('Location: novo_usuario.php');
     exit;
 }
 

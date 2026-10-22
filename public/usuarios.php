@@ -103,7 +103,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <a
-            href="usuario_novo.php"
+            href="novo_usuario.php"
             class="btn btn-primary"
         >
             <i class="bi bi-person-plus-fill"></i>
