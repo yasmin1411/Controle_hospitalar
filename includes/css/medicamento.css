@@ -1,0 +1,1144 @@
+
+/* =========================================================
+   MEDICAMENTOS.CSS
+   Estilos exclusivos da página de medicamentos.
+   Inclui suporte aos temas claro e escuro.
+   ========================================================= */
+
+/* =========================================================
+   1. VARIÁVEIS DO TEMA CLARO
+   ========================================================= */
+
+   :root {
+    color-scheme: light;
+
+    --azul: #2F80ED;
+    --azul2: #56CCF2;
+    --azule: #174ea6;
+
+    --texto: #203247;
+    --suave: #708198;
+    --borda: #dce7f2;
+
+    --verde: #27AE60;
+    --vermelho: #dc3545;
+
+    --fundo: #edf5ff;
+    --card: #ffffff;
+    --card-transparente: rgba(255, 255, 255, .88);
+
+    --texto-principal: #24374d;
+    --texto-secundario: #52667d;
+
+    --campo-fundo: #ffffff;
+    --linha-tabela: #edf2f7;
+    --hover-tabela: #f8fbff;
+
+    --icone-fundo: #edf5ff;
+    --icone-texto: #2F80ED;
+
+    --forma-fundo: #edf5ff;
+    --forma-texto: #2F80ED;
+
+    --dados-fundo: #f7f9fc;
+    --dados-texto: #617388;
+
+    --fundo-suave: #f1f6fb;
+    --fundo-botao-secundario: #f1f5f9;
+
+    --sombra-card: 0 12px 28px rgba(39, 89, 145, .06);
+    --sombra-tabela: 0 15px 35px rgba(39, 89, 145, .07);
+}
+
+/* =========================================================
+   2. VARIÁVEIS DO TEMA ESCURO
+   ========================================================= */
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --azul: #5b9dff;
+    --azul2: #56CCF2;
+    --azule: #3678d5;
+
+    --texto: #e4edf8;
+    --suave: #a6b6ca;
+    --borda: #334860;
+
+    --fundo: #101b2a;
+    --card: #19283a;
+    --card-transparente: rgba(25, 40, 58, .94);
+
+    --texto-principal: #e4edf8;
+    --texto-secundario: #c0cfe0;
+
+    --campo-fundo: #142235;
+    --linha-tabela: #2b3d52;
+    --hover-tabela: #22354b;
+
+    --icone-fundo: #223b58;
+    --icone-texto: #8dbbff;
+
+    --forma-fundo: #223b58;
+    --forma-texto: #a4ccff;
+
+    --dados-fundo: #142235;
+    --dados-texto: #c0cfe0;
+
+    --fundo-suave: #22354b;
+    --fundo-botao-secundario: #2b3d52;
+
+    --sombra-card: 0 12px 28px rgba(0, 0, 0, .16);
+    --sombra-tabela: 0 15px 35px rgba(0, 0, 0, .2);
+}
+
+/* =========================================================
+   3. CONFIGURAÇÕES GERAIS
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--texto);
+
+    background:
+        radial-gradient(
+            circle at 7% 12%,
+            rgba(86, 204, 242, .17),
+            transparent 24%
+        ),
+        radial-gradient(
+            circle at 94% 20%,
+            rgba(47, 128, 237, .14),
+            transparent 25%
+        ),
+        linear-gradient(
+            135deg,
+            #f7fbff,
+            #edf5ff 52%,
+            #e7f2ff
+        );
+
+    transition:
+        background .25s ease,
+        color .25s ease;
+}
+
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(
+            circle at 7% 12%,
+            rgba(56, 122, 205, .12),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 94% 20%,
+            rgba(45, 151, 190, .09),
+            transparent 26%
+        ),
+        linear-gradient(
+            135deg,
+            #101b2a,
+            #142236 55%,
+            #17283d
+        );
+}
+
+.pagina {
+    width: 100%;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 26px 26px 50px;
+}
+
+/* =========================================================
+   4. CABEÇALHO PRINCIPAL
+   ========================================================= */
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+    padding: 28px 32px;
+    border-radius: 26px;
+    color: #ffffff;
+
+    background: linear-gradient(
+        110deg,
+        #1767d1,
+        #2F80ED 55%,
+        #42b6df
+    );
+
+    box-shadow: 0 20px 45px rgba(31, 91, 160, .16);
+}
+
+.hero::before,
+.hero::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .1);
+    pointer-events: none;
+}
+
+.hero::before {
+    width: 250px;
+    height: 250px;
+    right: -90px;
+    top: -135px;
+    background: rgba(255, 255, 255, .06);
+}
+
+.hero::after {
+    width: 105px;
+    height: 105px;
+    right: 170px;
+    bottom: -65px;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    margin-bottom: 11px;
+
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .12);
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+}
+
+.hero h1 {
+    margin: 0;
+    font-size: 31px;
+    font-weight: 850;
+    letter-spacing: -.6px;
+}
+
+.hero p {
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, .88);
+    font-size: 14px;
+}
+
+/* =========================================================
+   5. ALERTAS
+   ========================================================= */
+
+.alert {
+    border: 0;
+    border-radius: 16px;
+}
+
+html[data-theme="dark"] .alert-danger {
+    color: #ffd6da;
+    background: #48252e;
+    border: 1px solid #713541;
+}
+
+html[data-theme="dark"] .alert-danger .btn-close {
+    filter: invert(1);
+}
+
+/* =========================================================
+   6. CABEÇALHO DO MÓDULO
+   ========================================================= */
+
+.modulo-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    margin-bottom: 24px;
+    padding: 4px 4px 0;
+}
+
+.titulo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.titulo-icone {
+    width: 58px;
+    height: 58px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 18px;
+    background: var(--icone-fundo);
+    color: var(--icone-texto);
+
+    font-size: 27px;
+    box-shadow: 0 9px 22px rgba(47, 128, 237, .08);
+}
+
+.titulo-label {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--azul);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+}
+
+.titulo {
+    margin: 0;
+    color: var(--texto);
+    font-size: 29px;
+    font-weight: 850;
+    letter-spacing: -.6px;
+}
+
+.subtitulo {
+    margin: 4px 0 0;
+    color: var(--suave);
+    font-size: 13px;
+}
+
+.btn-voltar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 11px 16px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    font-weight: 750;
+    white-space: nowrap;
+
+    transition: .2s ease;
+}
+
+.btn-voltar:hover {
+    transform: translateY(-2px);
+}
+
+html[data-theme="dark"] .btn-voltar {
+    color: #e4edf8;
+    background: #2b3d52;
+    border-color: #40546c;
+}
+
+html[data-theme="dark"] .btn-voltar:hover {
+    color: #ffffff;
+    background: #3a506b;
+}
+
+/* =========================================================
+   7. RESUMO DE MEDICAMENTOS
+   ========================================================= */
+
+.resumo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+
+    margin-bottom: 20px;
+    padding: 17px 20px;
+
+    border: 1px solid var(--borda);
+    border-radius: 19px;
+    background: var(--card-transparente);
+    box-shadow: var(--sombra-card);
+
+    transition: background .25s ease, border-color .25s ease;
+}
+
+.resumo-left {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.resumo-icone {
+    width: 49px;
+    height: 49px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+    background: var(--icone-fundo);
+    color: var(--icone-texto);
+    font-size: 23px;
+}
+
+.resumo-numero {
+    margin: 0;
+    color: var(--azul);
+    font-size: 27px;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.resumo-texto {
+    margin: 3px 0 0;
+    color: var(--suave);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.resumo-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 8px 11px;
+    border-radius: 999px;
+
+    background: #edf9f2;
+    border: 1px solid #d7efdf;
+    color: #20874c;
+
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.resumo-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+
+    border-radius: 50%;
+    background: var(--verde);
+    box-shadow: 0 0 0 4px rgba(39, 174, 96, .1);
+}
+
+html[data-theme="dark"] .resumo-status {
+    background: #183b30;
+    border-color: #285844;
+    color: #91e0b3;
+}
+
+/* =========================================================
+   8. PESQUISA
+   ========================================================= */
+
+.pesquisa {
+    margin-bottom: 18px;
+    padding: 18px 20px;
+
+    border: 1px solid var(--borda);
+    border-radius: 20px;
+    background: var(--card-transparente);
+    box-shadow: var(--sombra-card);
+}
+
+.pesquisa-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.pesquisa-titulo {
+    margin: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    color: var(--texto);
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.pesquisa-titulo i {
+    color: var(--azul);
+}
+
+.pesquisa-dica {
+    margin: 0;
+    color: var(--suave);
+    font-size: 12px;
+}
+
+.pesquisa-form {
+    display: flex;
+    gap: 10px;
+}
+
+.campo {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.campo > i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8294a8;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.campo input {
+    min-height: 50px;
+    padding: 0 42px;
+
+    border: 1px solid var(--borda);
+    border-radius: 13px;
+
+    color: var(--texto);
+    background: var(--campo-fundo);
+    font-size: 14px;
+
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.campo input::placeholder {
+    color: var(--suave);
+    opacity: .8;
+}
+
+.campo input:focus {
+    color: var(--texto);
+    background: var(--campo-fundo);
+    border-color: var(--azul);
+    box-shadow: 0 0 0 .2rem rgba(47, 128, 237, .12);
+}
+
+html[data-theme="dark"] .campo input {
+    color-scheme: dark;
+}
+
+.limpar {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 29px;
+    height: 29px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: var(--fundo-botao-secundario);
+    color: var(--suave);
+    text-decoration: none;
+
+    transition: .2s ease;
+}
+
+.limpar:hover {
+    background: #fff0f2;
+    color: var(--vermelho);
+}
+
+.btn-buscar {
+    min-width: 122px;
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 13px;
+
+    background: var(--azul);
+    color: #ffffff;
+
+    font-weight: 800;
+    transition: .22s ease;
+}
+
+.btn-buscar:hover {
+    background: var(--azule);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 9px 18px rgba(47, 128, 237, .18);
+}
+
+/* =========================================================
+   9. AÇÕES E CONTADOR
+   ========================================================= */
+
+.linha-acoes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.contador {
+    color: var(--suave);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.novo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 11px 15px;
+    border-radius: 12px;
+
+    background: var(--azul);
+    color: #ffffff;
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 800;
+    transition: .22s ease;
+}
+
+.novo:hover {
+    background: var(--azule);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 9px 18px rgba(47, 128, 237, .18);
+}
+
+/* =========================================================
+   10. TABELA DE MEDICAMENTOS
+   ========================================================= */
+
+.tabela {
+    overflow: hidden;
+
+    border: 1px solid var(--borda);
+    border-radius: 20px;
+
+    background: var(--card);
+    box-shadow: var(--sombra-tabela);
+}
+
+.tabela .table {
+    margin: 0;
+    color: var(--texto);
+    background: var(--card);
+    vertical-align: middle;
+    border-color: var(--linha-tabela);
+}
+
+.tabela .table > :not(caption) > * > * {
+    color: inherit;
+    background-color: transparent;
+    border-bottom-color: var(--linha-tabela);
+    box-shadow: none;
+}
+
+.tabela .table thead th {
+    padding: 15px 18px;
+    border: 0;
+
+    background: linear-gradient(110deg, #236fda, #2F80ED);
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    white-space: nowrap;
+}
+
+.tabela .table tbody td {
+    padding: 15px 18px;
+    border-color: var(--linha-tabela);
+    vertical-align: middle;
+    font-size: 13px;
+}
+
+.tabela .table tbody tr {
+    transition: background .18s ease;
+}
+
+.tabela .table-hover tbody tr:hover > * {
+    background-color: var(--hover-tabela);
+    color: var(--texto);
+}
+
+.med {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 220px;
+}
+
+.med-icone {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+    background: var(--icone-fundo);
+    color: var(--icone-texto);
+    font-size: 17px;
+
+    transition: .22s ease;
+}
+
+.tabela .table tbody tr:hover .med-icone {
+    transform: scale(1.08) rotate(-4deg);
+}
+
+.med-nome {
+    color: var(--texto-principal);
+    font-weight: 850;
+    overflow-wrap: anywhere;
+}
+
+.med-sub {
+    margin-top: 2px;
+    color: var(--suave);
+    font-size: 10px;
+}
+
+.fabricante {
+    color: var(--texto-secundario);
+    font-weight: 650;
+}
+
+.dosagem {
+    color: var(--texto-principal);
+    font-weight: 850;
+}
+
+.forma {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 11px;
+    border-radius: 999px;
+
+    background: var(--forma-fundo);
+    color: var(--forma-texto);
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* =========================================================
+   11. BOTÕES DE AÇÃO DA TABELA
+   ========================================================= */
+
+.acoes {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+}
+
+.editar,
+.excluir {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 8px 11px;
+    border: 0;
+    border-radius: 10px;
+
+    font-size: 12px;
+    font-weight: 750;
+    text-decoration: none;
+
+    transition: .2s ease;
+}
+
+.editar {
+    background: #edf5ff;
+    color: #2F80ED;
+}
+
+.editar:hover {
+    background: #2F80ED;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.excluir {
+    background: #fff0f2;
+    color: #dc3545;
+}
+
+.excluir:hover {
+    background: #dc3545;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+html[data-theme="dark"] .editar {
+    background: #223b58;
+    color: #a4ccff;
+}
+
+html[data-theme="dark"] .editar:hover {
+    background: #3678d5;
+    color: #ffffff;
+}
+
+html[data-theme="dark"] .excluir {
+    background: #48252e;
+    color: #ffadb7;
+}
+
+html[data-theme="dark"] .excluir:hover {
+    background: #c93749;
+    color: #ffffff;
+}
+
+/* =========================================================
+   12. ESTADO VAZIO
+   ========================================================= */
+
+.vazio {
+    padding: 55px 20px !important;
+    text-align: center;
+    color: var(--texto);
+}
+
+.vazio-icone {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 13px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 20px;
+    background: var(--fundo-suave);
+    color: var(--suave);
+    font-size: 27px;
+}
+
+.vazio h4 {
+    margin: 0 0 6px;
+    color: var(--texto);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.vazio p {
+    margin: 0 0 15px;
+    color: var(--suave);
+    font-size: 12px;
+}
+
+.btn-vazio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 9px 13px;
+    border-radius: 10px;
+
+    background: var(--icone-fundo);
+    color: var(--icone-texto);
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 800;
+    transition: .2s ease;
+}
+
+.btn-vazio:hover {
+    background: var(--azul);
+    color: #ffffff;
+}
+
+/* =========================================================
+   13. MODAL DE CONFIRMAÇÃO DE EXCLUSÃO
+   ========================================================= */
+
+.modal-content {
+    overflow: hidden;
+
+    border: 1px solid var(--borda);
+    border-radius: 22px;
+
+    background: var(--card);
+    color: var(--texto);
+
+    box-shadow: 0 25px 65px rgba(25, 53, 86, .2);
+}
+
+.modal-body {
+    color: var(--texto);
+}
+
+.modal-icone {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 20px;
+    background: #fff4d6;
+    color: #b07b00;
+    font-size: 28px;
+}
+
+.modal-body h3 {
+    font-size: 22px;
+}
+
+.texto-modal {
+    color: var(--suave);
+}
+
+.dados {
+    margin: 16px 0;
+    padding: 14px 16px;
+
+    border-radius: 15px;
+    background: var(--dados-fundo);
+
+    text-align: left;
+    font-size: 13px;
+}
+
+.dados p {
+    margin: 0 0 7px;
+    color: var(--dados-texto);
+    overflow-wrap: anywhere;
+}
+
+.dados p:last-child {
+    margin-bottom: 0;
+}
+
+.dados strong {
+    color: var(--texto);
+}
+
+.dados span {
+    color: var(--texto-secundario);
+}
+
+.modal-body .btn-secondary {
+    border-color: var(--borda);
+    background: var(--fundo-botao-secundario);
+    color: var(--texto);
+}
+
+.modal-body .btn-secondary:hover {
+    filter: brightness(.95);
+}
+
+.modal-body .btn-danger {
+    font-weight: 750;
+}
+
+html[data-theme="dark"] .modal-content {
+    box-shadow: 0 25px 65px rgba(0, 0, 0, .35);
+}
+
+html[data-theme="dark"] .modal-body .text-danger {
+    color: #ff9da9 !important;
+}
+
+/* =========================================================
+   14. RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 900px) {
+    .pagina {
+        padding: 22px 18px 40px;
+    }
+
+    .modulo-topo {
+        align-items: flex-start;
+    }
+
+    .titulo {
+        font-size: 26px;
+    }
+
+    .pesquisa-topo {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+@media (max-width: 700px) {
+    .pagina {
+        padding: 18px 14px 35px;
+    }
+
+    .hero {
+        padding: 23px 20px;
+        border-radius: 22px;
+    }
+
+    .hero h1 {
+        font-size: 26px;
+    }
+
+    .hero p {
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .modulo-topo,
+    .resumo,
+    .linha-acoes {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .modulo-topo {
+        gap: 15px;
+    }
+
+    .titulo-area {
+        align-items: flex-start;
+    }
+
+    .titulo-icone {
+        width: 48px;
+        height: 48px;
+        border-radius: 15px;
+        font-size: 23px;
+    }
+
+    .titulo {
+        font-size: 25px;
+    }
+
+    .subtitulo {
+        line-height: 1.6;
+    }
+
+    .btn-voltar,
+    .novo {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .resumo {
+        width: 100%;
+    }
+
+    .resumo-status {
+        align-self: flex-start;
+    }
+
+    .pesquisa {
+        padding: 16px;
+    }
+
+    .pesquisa-form {
+        flex-direction: column;
+    }
+
+    .campo input {
+        width: 100%;
+    }
+
+    .btn-buscar {
+        min-height: 48px;
+    }
+
+    .linha-acoes {
+        gap: 12px;
+    }
+
+    .contador {
+        line-height: 1.5;
+    }
+
+    .tabela {
+        border-radius: 16px;
+    }
+
+    .tabela .table {
+        min-width: 850px;
+    }
+
+    .modal-dialog {
+        margin: 12px;
+    }
+
+    .modal-body {
+        padding: 22px !important;
+    }
+
+    .modal-body h3 {
+        font-size: 20px;
+    }
+
+    .modal-body .btn {
+        margin: 4px 0;
+    }
+}
+
+/* =========================================================
+   15. ACESSIBILIDADE E MOVIMENTOS
+   ========================================================= */
+
+button,
+a,
+input {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+    outline: 3px solid rgba(47, 128, 237, .35);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

@@ -1,22 +1,32 @@
+
 <?php
 
-// Inclui arquivo responsável pela autenticação do usuário
+// =========================================================
+// AUTENTICAÇÃO E CONEXÃO COM O BANCO
+// =========================================================
+
+// Inclui arquivo responsável pela autenticação do usuário.
 require_once '../includes/auth.php';
 
-// Inclui a conexão com o banco de dados (PDO)
+// Inclui a conexão com o banco de dados (PDO).
 require_once '../config/database.php';
 
-// Verifica se a requisição foi enviada via método POST (envio do formulário)
+
+// =========================================================
+// PROCESSAMENTO DO CADASTRO
+// =========================================================
+
+// Verifica se a requisição foi enviada via método POST.
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    // Recebe os dados enviados pelo formulário
+    // Recebe os dados enviados pelo formulário.
     $nome = $_POST['nome'];
     $fabricante = $_POST['fabricante'];
     $numero_de_registro = $_POST['numero_de_registro'];
     $dosagem = $_POST['dosagem'];
     $forma = $_POST['forma'];
 
-    // Prepara a query SQL para inserir um novo medicamento no banco
+    // Prepara a query SQL para inserir um novo medicamento no banco.
     $sql = $pdo->prepare("
         INSERT INTO medicamento
         (
@@ -30,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         (?, ?, ?, ?, ?)
     ");
 
-    // Executa a inserção no banco de dados passando os valores recebidos
+    // Executa a inserção no banco de dados.
     $sql->execute([
         $nome,
         $fabricante,
@@ -39,306 +49,329 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $forma
     ]);
 
-    // Redireciona o usuário para a página de listagem de medicamento
+    // Redireciona para a listagem após cadastrar o medicamento.
     header("Location: medicamento.php");
     exit;
 }
 
 ?>
-
 <!DOCTYPE html>
-<html lang="pt-br">
-
+<html lang="pt-BR">
 <head>
+    <!-- Define a codificação de caracteres. -->
+    <meta charset="UTF-8">
 
-<!-- Define a codificação de caracteres -->
-<meta charset="UTF-8">
+    <!-- Permite adaptação a celulares, tablets e computadores. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Responsividade para dispositivos móveis -->
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Título da página. -->
+    <title>Cadastrar Medicamento | Controle Hospitalar</title>
 
-<!-- Título da página -->
-<title>Cadastrar Medicamento</title>
+    <!-- Aplica o tema salvo antes de carregar o CSS. -->
+    <script>
+        (function () {
+            const temaSalvo = localStorage.getItem('controleHospitalarTema');
+            const tema = temaSalvo === 'dark' ? 'dark' : 'light';
 
-<!-- Importação do Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            document.documentElement.setAttribute('data-theme', tema);
+        })();
+    </script>
 
-<!-- Importação dos ícones Bootstrap -->
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Importação do Bootstrap. -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-<style>
+    <!-- Importação dos ícones Bootstrap. -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet"
+    >
 
-/* Variáveis de cores principais */
-:root{
-    --azul-principal:#2F80ED;
-    --azul-claro:#56CCF2;
-}
-
-/* Estilo geral do corpo da página */
-body{
-    background:linear-gradient(135deg,#eef5ff,#dbeeff);
-    font-family:'Segoe UI',sans-serif;
-    min-height:100vh;
-}
-
-/* Card principal do formulário */
-.card-principal{
-    background:white;
-    border:none;
-    border-radius:25px;
-    box-shadow:0 15px 40px rgba(47,128,237,.12);
-    padding:35px;
-}
-
-/* Card informativo superior */
-.info-card{
-    background:linear-gradient(135deg,var(--azul-principal),var(--azul-claro));
-    color:white;
-    border-radius:20px;
-    padding:25px;
-    margin-bottom:30px;
-}
-
-/* Título dentro do info-card */
-.info-card h3{
-    font-weight:700;
-}
-
-/* Título principal */
-.titulo{
-    color:var(--azul-principal);
-    font-weight:700;
-}
-
-/* Subtítulo */
-.subtitulo{
-    color:#6c757d;
-    font-size:14px;
-}
-
-/* Labels dos campos do formulário */
-.form-label{
-    font-weight:600;
-    color:#495057;
-}
-
-/* Inputs e select do formulário */
-.form-control,
-.form-select{
-    border-radius:12px;
-    border:1px solid #dbe7ff;
-    padding:12px;
-}
-
-/* Foco nos campos do formulário */
-.form-control:focus,
-.form-select:focus{
-    border-color:var(--azul-principal);
-    box-shadow:0 0 0 .2rem rgba(47,128,237,.15);
-}
-
-/* Botão principal azul */
-.btn-azul{
-    background:var(--azul-principal);
-    border:none;
-    color:white;
-    border-radius:12px;
-    padding:10px 20px;
-    font-weight:600;
-}
-
-/* Hover do botão azul */
-.btn-azul:hover{
-    background:#1c6ad6;
-    color:white;
-}
-
-/* Botão secundário */
-.btn-secondary{
-    border-radius:12px;
-    padding:10px 20px;
-}
-
-/* Espaçamento entre campos */
-.campo{
-    margin-bottom:20px;
-}
-
-</style>
-
+    <!-- Carrega o CSS externo do cadastro de medicamentos. -->
+    <link rel="stylesheet" href="../includes/css/medicamento_cadastrar.css">
 </head>
 
 <body>
+<div class="pagina">
 
-<!-- Container principal da página -->
-<div class="container py-5">
+    <!-- =====================================================
+         CABEÇALHO PRINCIPAL
+    ====================================================== -->
 
-    <!-- Card principal do formulário -->
-    <div class="card-principal">
+    <!-- Apresenta a identidade visual do módulo de medicamentos. -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="hero-tag">
+                <i class="bi bi-capsule" aria-hidden="true"></i>
+                Gestão de medicamentos
+            </span>
 
-        <!-- Card informativo do sistema -->
-        <div class="info-card">
+            <h1>
+                <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>
+                Cadastrar Medicamento
+            </h1>
 
-            <h3>
-                <i class="bi bi-capsule"></i>
-                Cadastro de Medicamento
-            </h3>
-
-            <p class="mb-0">
-                Preencha as informações para cadastrar um novo medicamento no sistema hospitalar.
+            <p>
+                Registre as informações do medicamento de forma organizada
+                no sistema hospitalar.
             </p>
-
         </div>
 
-        <!-- Título da seção -->
-        <div class="mb-4">
+        <div class="hero-icon" aria-hidden="true">
+            <i class="bi bi-prescription2"></i>
+        </div>
+    </section>
 
-            <h2 class="titulo">
 
-                <i class="bi bi-plus-circle"></i>
+    <!-- =====================================================
+         TÍTULO E NAVEGAÇÃO
+    ====================================================== -->
 
-                Novo Medicamento
-
-            </h2>
-
-            <div class="subtitulo">
-
-                Registro seguro e organizado de medicamento hospitalares
-
+    <section class="topo">
+        <div class="titulo-area">
+            <div class="titulo-icone" aria-hidden="true">
+                <i class="bi bi-clipboard2-pulse"></i>
             </div>
 
+            <div>
+                <span class="rotulo">Catálogo hospitalar</span>
+
+                <h2 class="titulo">Novo Medicamento</h2>
+
+                <p class="subtitulo">
+                    Preencha todos os campos para registrar um novo medicamento.
+                </p>
+            </div>
         </div>
 
-        <!-- Formulário de cadastro -->
+        <!-- Retorna para a listagem de medicamentos. -->
+        <a href="medicamento.php" class="btn-voltar">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Voltar ao catálogo
+        </a>
+    </section>
+
+
+    <!-- =====================================================
+         FORMULÁRIO DE CADASTRO
+    ====================================================== -->
+
+    <section class="form-card">
+
+        <div class="form-card-header">
+            <div class="form-card-header-icon" aria-hidden="true">
+                <i class="bi bi-file-earmark-medical"></i>
+            </div>
+
+            <div>
+                <h3>Dados do medicamento</h3>
+                <p>
+                    Informe os dados de identificação e a apresentação farmacêutica.
+                </p>
+            </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Formulário original de cadastro, com apresentação visual aprimorada. -->
         <form method="POST">
 
-            <!-- Campo nome -->
-            <div class="campo">
+            <div class="form-grid">
 
-                <label class="form-label">
+                <!-- Campo nome. -->
+                <div class="campo">
+                    <label for="nome" class="form-label">
+                        Nome do medicamento
+                    </label>
 
-                    Nome do Medicamento
+                    <div class="campo-box">
+                        <i class="bi bi-capsule" aria-hidden="true"></i>
 
-                </label>
+                        <input
+                            type="text"
+                            id="nome"
+                            name="nome"
+                            class="form-control"
+                            placeholder="Ex.: Dipirona"
+                            autocomplete="off"
+                            required
+                        >
+                    </div>
 
-                <input
-                    type="text"
-                    name="nome"
-                    class="form-control"
-                    placeholder="Ex: Dipirona"
-                    required>
+                    <small class="campo-ajuda">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        Informe o nome utilizado para identificar o medicamento.
+                    </small>
+                </div>
+
+
+                <!-- Campo fabricante. -->
+                <div class="campo">
+                    <label for="fabricante" class="form-label">
+                        Fabricante
+                    </label>
+
+                    <div class="campo-box">
+                        <i class="bi bi-building" aria-hidden="true"></i>
+
+                        <input
+                            type="text"
+                            id="fabricante"
+                            name="fabricante"
+                            class="form-control"
+                            placeholder="Ex.: EMS, Neo Química"
+                            autocomplete="organization"
+                            required
+                        >
+                    </div>
+
+                    <small class="campo-ajuda">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        Nome da empresa fabricante.
+                    </small>
+                </div>
+
+
+                <!-- Campo número de registro. -->
+                <div class="campo campo-full">
+                    <label for="numero_de_registro" class="form-label">
+                        Número de registro
+                    </label>
+
+                    <div class="campo-box">
+                        <i class="bi bi-card-text" aria-hidden="true"></i>
+
+                        <input
+                            type="text"
+                            id="numero_de_registro"
+                            name="numero_de_registro"
+                            class="form-control"
+                            placeholder="Informe o número de registro"
+                            autocomplete="off"
+                            required
+                        >
+                    </div>
+
+                    <!-- Orientação sobre o número de registro. -->
+                    <div class="registro-info">
+                        <i class="bi bi-shield-check" aria-hidden="true"></i>
+
+                        <span>
+                            Confira o número de registro informado antes de salvar
+                            o cadastro.
+                        </span>
+                    </div>
+                </div>
+
+
+                <!-- Campo dosagem. -->
+                <div class="campo">
+                    <label for="dosagem" class="form-label">
+                        Dosagem
+                    </label>
+
+                    <div class="campo-box">
+                        <i class="bi bi-droplet-half" aria-hidden="true"></i>
+
+                        <input
+                            type="text"
+                            id="dosagem"
+                            name="dosagem"
+                            class="form-control"
+                            placeholder="Ex.: 500 mg"
+                            autocomplete="off"
+                            required
+                        >
+                    </div>
+
+                    <small class="campo-ajuda">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        Informe a dosagem conforme o produto.
+                    </small>
+                </div>
+
+
+                <!-- Campo forma farmacêutica. -->
+                <div class="campo">
+                    <label for="forma" class="form-label">
+                        Forma farmacêutica
+                    </label>
+
+                    <div class="campo-box">
+                        <i class="bi bi-prescription2" aria-hidden="true"></i>
+
+                        <select
+                            id="forma"
+                            name="forma"
+                            class="form-select"
+                            required
+                        >
+                            <option value="">Selecione uma forma</option>
+                            <option value="Comprimido">Comprimido</option>
+                            <option value="Cápsula">Cápsula</option>
+                            <option value="Xarope">Xarope</option>
+                            <option value="Injetável">Injetável</option>
+                            <option value="Pomada">Pomada</option>
+                            <option value="Gotas">Gotas</option>
+                            <option value="Suspensão">Suspensão</option>
+                        </select>
+                    </div>
+
+                    <small class="campo-ajuda">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        Selecione a apresentação correspondente.
+                    </small>
+                </div>
 
             </div>
 
-            <!-- Campo fabricante -->
-            <div class="campo">
 
-                <label class="form-label">
+            <!-- =================================================
+                 AÇÕES DO FORMULÁRIO
+            ================================================== -->
 
-                    Fabricante
+            <div class="acoes">
+                <div class="acoes-info">
+                    <span class="acoes-icone" aria-hidden="true">
+                        <i class="bi bi-shield-check"></i>
+                    </span>
 
-                </label>
+                    <span>
+                        Confira os dados antes de confirmar o cadastro.
+                    </span>
+                </div>
 
-                <input
-                    type="text"
-                    name="fabricante"
-                    class="form-control"
-                    placeholder="Ex: EMS, Neo Química, Pfizer"
-                    required>
+                <div class="acoes-botoes">
 
-            </div>
+                    <!-- Retorna à listagem sem cadastrar. -->
+                    <a href="medicamento.php" class="btn-cancelar">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        Cancelar
+                    </a>
 
-            <!-- Campo número de registro -->
-            <div class="campo">
+                    <!-- Envia o formulário para o processamento PHP. -->
+                    <button type="submit" class="btn-salvar">
+                        <i class="bi bi-check-circle" aria-hidden="true"></i>
+                        Salvar medicamento
+                    </button>
 
-                <label class="form-label">
-
-                    Número de Registro
-
-                </label>
-
-                <input
-                    type="text"
-                    name="numero_de_registro"
-                    class="form-control"
-                    placeholder="Registro ANVISA"
-                    required>
-
-            </div>
-
-            <!-- Campo dosagem -->
-            <div class="campo">
-
-                <label class="form-label">
-
-                    Dosagem
-
-                </label>
-
-                <input
-                    type="text"
-                    name="dosagem"
-                    class="form-control"
-                    placeholder="Ex: 500mg"
-                    required>
-
-            </div>
-
-            <!-- Campo forma farmacêutica -->
-            <div class="campo">
-
-                <label class="form-label">
-
-                    Forma Farmacêutica
-
-                </label>
-
-                <select
-                    name="forma"
-                    class="form-select"
-                    required>
-
-                    <option value="">Selecione</option>
-
-                    <option>Comprimido</option>
-                    <option>Cápsula</option>
-                    <option>Xarope</option>
-                    <option>Injetável</option>
-                    <option>Pomada</option>
-                    <option>Gotas</option>
-                    <option>Suspensão</option>
-
-                </select>
-
-            </div>
-
-            <!-- Botões de ação -->
-            <div class="mt-4">
-
-                <button type="submit" class="btn btn-azul">
-
-                    <i class="bi bi-check-circle"></i>
-
-                    Salvar Medicamento
-
-                </button>
-
-                <a href="medicamento.php" class="btn btn-secondary">
-
-                    <i class="bi bi-arrow-left"></i>
-
-                    Voltar
-
-                </a>
-
+                </div>
             </div>
 
         </form>
+    </section>
 
-    </div>
+
+    <!-- Rodapé complementar. -->
+    <footer class="rodape">
+        <i class="bi bi-heart-pulse" aria-hidden="true"></i>
+        Controle Hospitalar
+        <span class="rodape-separador">•</span>
+        Gestão de medicamentos
+    </footer>
 
 </div>
-
 </body>
 </html>
