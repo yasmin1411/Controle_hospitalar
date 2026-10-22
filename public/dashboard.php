@@ -453,7 +453,7 @@ $nomeUsuario = htmlspecialchars(
                         dos funcionários ao sistema hospitalar.
                     </p>
 
-                    <a href="usuario_novo.php" class="btn-modulo">
+                    <a href="novo_usuario.php" class="btn-modulo">
                         Acessar cadastro
                         <i class="bi bi-arrow-right"></i>
                     </a>
