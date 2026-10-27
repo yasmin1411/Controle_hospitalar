@@ -1,1431 +1,755 @@
+
 <?php
 
 // ==========================================================
-// IMPORTAÇÃO DOS ARQUIVOS NECESSÁRIOS
+// AUTENTICAÇÃO E CONEXÃO
 // ==========================================================
 
-// Verifica se o usuário possui autorização para acessar
-// a página de edição de funcionários.
+// Verifica o acesso do usuário ao sistema.
 require_once __DIR__ . '/../includes/auth.php';
 
-
-// ==========================================================
-// CONTROLE DE ACESSO AO MÓDULO DE FUNCIONÁRIOS
-// ==========================================================
-//
-// Esta página permite alterar os dados cadastrados
-// de um funcionário.
-//
-// Como a edição pertence ao módulo de funcionários,
-// somente usuários autorizados podem acessar esta página.
-//
-// Atualmente possuem acesso:
-// - Administrador
-// - Diretor do Hospital
-//
-
+// Verifica a permissão para acessar o módulo de funcionários.
 verificarModulo('funcionarios');
-
 
 // Carrega a conexão com o banco de dados.
 require_once __DIR__ . '/../config/database.php';
 
-
 // ==========================================================
-// RECEBER ID E TABELA
+// INICIALIZAÇÃO DAS VARIÁVEIS
 // ==========================================================
 
-// Recebe o ID do funcionário através da URL.
-//
-// FILTER_VALIDATE_INT verifica se o valor recebido
-// é um número inteiro válido.
+$erro = '';
+$funcionario = [];
+$funcao = '';
+$campoRegistro = null;
+$tabela = '';
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
-// Recebe o nome da tabela através da URL.
-//
-// Exemplos:
-// medico
-// enfermeiro
-// farmaceutico
-// cirurgiao
-// anestesista
-// recepcionista
-// faturista
-// comprador_almoxarifado
-// gerente_financeiro
-// diretor_hospital
-$tabela = $_GET['tabela'] ?? '';
-
-
 // ==========================================================
-// DEFINIR TABELAS PERMITIDAS
+// TABELAS PERMITIDAS
 // ==========================================================
 
-// Define quais tabelas podem ser utilizadas
-// para editar funcionários.
-//
-// Cada tabela possui:
-// nome = nome da função exibida no sistema
-// registro = campo do registro profissional.
-//
-// As funções administrativas não possuem
-// registro profissional.
-$tabelasPermitidas = [
-
+// A lista permitida evita que o nome da tabela seja recebido
+// livremente pela URL e utilizado diretamente na consulta.
+$funcoesPermitidas = [
     'medico' => [
         'nome' => 'Médico',
         'registro' => 'crm'
     ],
-
     'enfermeiro' => [
         'nome' => 'Enfermeiro',
         'registro' => 'coren'
     ],
-
     'farmaceutico' => [
         'nome' => 'Farmacêutico',
         'registro' => 'crf'
     ],
-
     'cirurgiao' => [
         'nome' => 'Cirurgião',
         'registro' => 'crm'
     ],
-
     'anestesista' => [
         'nome' => 'Anestesista',
         'registro' => 'crm'
     ],
-
     'recepcionista' => [
         'nome' => 'Recepcionista',
         'registro' => null
     ],
-
     'faturista' => [
         'nome' => 'Faturista',
         'registro' => null
     ],
-
     'comprador_almoxarifado' => [
         'nome' => 'Comprador de Almoxarifado',
         'registro' => null
     ],
-
     'gerente_financeiro' => [
         'nome' => 'Gerente Financeiro',
         'registro' => null
     ],
-
     'diretor_hospital' => [
-        'nome' => 'Diretor do Hospital',
+        'nome' => 'Diretor Hospitalar',
         'registro' => null
     ]
 ];
 
+// Recupera a tabela informada na URL.
+$tabelaRecebida = $_GET['tabela'] ?? '';
 
-// ==========================================================
-// VALIDAR FUNCIONÁRIO E TABELA
-// ==========================================================
-
-// Verifica se o ID é válido e se a tabela informada
-// está cadastrada na lista de tabelas permitidas.
-if (!$id || !isset($tabelasPermitidas[$tabela])) {
-
-    // Caso alguma informação seja inválida,
-    // interrompe a execução.
-    exit('Funcionário inválido.');
+// Valida o identificador e a tabela.
+if (!$id || !isset($funcoesPermitidas[$tabelaRecebida])) {
+    header('Location: funcionarios.php');
+    exit;
 }
 
+$tabela = $tabelaRecebida;
+$funcao = $funcoesPermitidas[$tabela]['nome'];
+$campoRegistro = $funcoesPermitidas[$tabela]['registro'];
 
 // ==========================================================
-// IDENTIFICAR FUNÇÃO E CAMPO DE REGISTRO
-// ==========================================================
-
-// Obtém o nome da função correspondente
-// à tabela escolhida.
-$funcao = $tabelasPermitidas[$tabela]['nome'];
-
-// Obtém o nome do campo que armazena
-// o registro profissional.
-//
-// Para as funções administrativas,
-// esse valor será NULL.
-$campoRegistro = $tabelasPermitidas[$tabela]['registro'];
-
-
-// Variável utilizada para armazenar mensagens de erro
-// durante o processo de atualização.
-$erro = '';
-
-
-// ==========================================================
-// BUSCAR FUNCIONÁRIO
+// BUSCA DO FUNCIONÁRIO
 // ==========================================================
 
 try {
 
-    // ------------------------------------------------------
-    // DEFINIR CAMPO DE REGISTRO
-    // ------------------------------------------------------
-
-    // Caso a tabela possua registro profissional,
-    // utiliza o campo correspondente.
-    //
-    // Caso seja uma função administrativa,
-    // retorna NULL como registro.
-    if ($campoRegistro !== null) {
-
-        $campoRegistroSQL = "f.$campoRegistro AS registro";
-
-    } else {
-
-        $campoRegistroSQL = "NULL AS registro";
-    }
-
-
-    // ------------------------------------------------------
-    // CONSULTA DO FUNCIONÁRIO
-    // ------------------------------------------------------
-
-    // Monta a consulta para buscar os dados do funcionário
-    // e também os dados do endereço relacionado.
-    //
-    // O LEFT JOIN permite que o funcionário seja encontrado
-    // mesmo que não possua um endereço relacionado.
-    $sql = "
-
+    // Busca o funcionário e o endereço associado.
+    $sql = $pdo->prepare("
         SELECT
-
-            f.id,
-
-            f.nome,
-
-            $campoRegistroSQL,
-
-            f.telefone,
-
-            f.email,
-
-            f.cpf,
-
-            f.data_nascimento,
-
-            f.sexo,
-
-            f.status,
-
-            f.endereco_id,
-
+            f.*,
             e.rua,
-
             e.numero,
-
             e.cep,
-
             e.cidade,
-
             e.complemento
-
         FROM `$tabela` f
-
         LEFT JOIN endereco e
-
             ON e.id = f.endereco_id
-
         WHERE f.id = ?
-
         LIMIT 1
+    ");
 
-    ";
+    $sql->execute([$id]);
 
-    // Prepara a consulta SQL.
-    $stmt = $pdo->prepare($sql);
+    $funcionario = $sql->fetch(PDO::FETCH_ASSOC);
 
-    // Executa a consulta utilizando o ID do funcionário.
-    $stmt->execute([$id]);
-
-    // Recupera os dados encontrados como array associativo.
-    $funcionario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-
-    // Verifica se o funcionário foi encontrado.
+    // Retorna à lista se o cadastro não existir.
     if (!$funcionario) {
-
-        // Caso não exista, interrompe a execução.
-        exit('Funcionário não encontrado.');
+        header('Location: funcionarios.php');
+        exit;
     }
 
+    // Disponibiliza o registro profissional no formulário,
+    // independentemente do nome da coluna da tabela.
+    if ($campoRegistro !== null) {
+        $funcionario['registro'] =
+            $funcionario[$campoRegistro] ?? '';
+    }
 
 } catch (PDOException $e) {
 
-    // Caso ocorra algum erro na consulta,
-    // exibe uma mensagem informando o problema.
-    exit('Erro ao carregar funcionário: ' . $e->getMessage());
+    error_log('Erro ao buscar funcionário: ' . $e->getMessage());
+
+    http_response_code(500);
+    exit('Não foi possível carregar os dados do funcionário.');
 }
 
-
 // ==========================================================
-// PROCESSAR ATUALIZAÇÃO
+// ATUALIZAÇÃO DO FUNCIONÁRIO
 // ==========================================================
 
-// Verifica se o formulário foi enviado utilizando POST.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // ------------------------------------------------------
-    // RECEBER DADOS DO FUNCIONÁRIO
-    // ------------------------------------------------------
-
-    // Recebe o nome e remove espaços extras.
+    // Recupera os dados enviados pelo formulário.
     $nome = trim($_POST['nome'] ?? '');
-
-    // Recebe o registro profissional.
-    //
-    // Nas funções administrativas esse campo não existe
-    // e permanecerá vazio.
     $registro = trim($_POST['registro'] ?? '');
-
-    // Recebe o telefone.
-    $telefone = trim($_POST['telefone'] ?? '');
-
-    // Recebe o e-mail.
-    $email = trim($_POST['email'] ?? '');
-
-    // Recebe o CPF.
     $cpf = trim($_POST['cpf'] ?? '');
-
-    // Recebe a data de nascimento.
-    //
-    // Caso o campo esteja vazio, será armazenado como NULL.
-    $data_nascimento = !empty($_POST['data_nascimento'])
-        ? $_POST['data_nascimento']
-        : null;
-
-    // Recebe o sexo.
+    $telefone = trim($_POST['telefone'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $dataNascimento = trim($_POST['data_nascimento'] ?? '');
     $sexo = trim($_POST['sexo'] ?? '');
-
-    // Recebe o status.
     $status = trim($_POST['status'] ?? '');
 
-
-    // ------------------------------------------------------
-    // RECEBER DADOS DO ENDEREÇO
-    // ------------------------------------------------------
-
-    // Recebe a rua.
     $rua = trim($_POST['rua'] ?? '');
-
-    // Recebe o número.
     $numero = trim($_POST['numero'] ?? '');
-
-    // Recebe o CEP.
     $cep = trim($_POST['cep'] ?? '');
-
-    // Recebe a cidade.
     $cidade = trim($_POST['cidade'] ?? '');
-
-    // Recebe o complemento.
     $complemento = trim($_POST['complemento'] ?? '');
 
+    // Normaliza o CEP para armazenar apenas os números
+    // e depois aplica a formatação 00000-000.
+    $cepNumeros = preg_replace('/\D/', '', $cep);
 
-    // ======================================================
-    // VALIDAÇÕES
-    // ======================================================
-
-    // Verifica se o nome foi preenchido.
-    if ($nome === '') {
-
-        $erro = 'O nome é obrigatório.';
-
-    // Verifica o registro profissional somente
-    // para as funções que possuem esse campo.
-    } elseif ($campoRegistro !== null && $registro === '') {
-
-        $erro = 'O registro profissional é obrigatório.';
-
-    // Verifica se o status possui um dos valores permitidos.
-    } elseif ($status !== 'Ativo' && $status !== 'Inativo') {
-
-        $erro = 'Status inválido.';
-
-    // Verifica se a rua foi preenchida.
-    } elseif ($rua === '') {
-
-        $erro = 'A rua é obrigatória.';
-
-    // Verifica se o número foi preenchido.
-    } elseif ($numero === '') {
-
-        $erro = 'O número é obrigatório.';
-
-    // Verifica se o CEP foi preenchido.
-    } elseif ($cep === '') {
-
-        $erro = 'O CEP é obrigatório.';
-
-    // Verifica se a cidade foi preenchida.
-    } elseif ($cidade === '') {
-
-        $erro = 'A cidade é obrigatória.';
+    if (strlen($cepNumeros) === 8) {
+        $cep = substr($cepNumeros, 0, 5)
+             . '-'
+             . substr($cepNumeros, 5, 3);
     }
 
+    // Preserva os valores enviados caso a validação falhe.
+    $funcionario['nome'] = $nome;
+    $funcionario['registro'] = $registro;
+    $funcionario['cpf'] = $cpf;
+    $funcionario['telefone'] = $telefone;
+    $funcionario['email'] = $email;
+    $funcionario['data_nascimento'] = $dataNascimento;
+    $funcionario['sexo'] = $sexo;
+    $funcionario['status'] = $status;
+    $funcionario['rua'] = $rua;
+    $funcionario['numero'] = $numero;
+    $funcionario['cep'] = $cep;
+    $funcionario['cidade'] = $cidade;
+    $funcionario['complemento'] = $complemento;
 
-    // ======================================================
-    // CORRIGIR E VALIDAR CEP
-    // ======================================================
+    // Valida os campos obrigatórios.
+    if (
+        $nome === '' ||
+        $status === '' ||
+        $rua === '' ||
+        $numero === '' ||
+        $cidade === '' ||
+        strlen($cepNumeros) !== 8
+    ) {
+        $erro = 'Preencha corretamente todos os campos obrigatórios. O CEP deve possuir 8 números.';
 
-    // Só realiza a validação do CEP se nenhuma validação
-    // anterior tiver encontrado um erro.
-    if ($erro === '') {
+    } elseif (
+        $campoRegistro !== null &&
+        $registro === ''
+    ) {
+        $erro = 'Informe o registro profissional do funcionário.';
 
-        // Remove todos os caracteres que não sejam números.
-        //
-        // Exemplo:
-        // 13050-000 -> 13050000
-        $cep = preg_replace('/\D/', '', $cep);
+    } elseif (!in_array($status, ['Ativo', 'Inativo'], true)) {
+        $erro = 'Selecione um status válido.';
 
+    } else {
 
-        // Verifica se o CEP possui exatamente 8 números.
-        if (strlen($cep) !== 8) {
-
-            // Define a mensagem de erro.
-            $erro = 'CEP inválido.';
-
-        } else {
-
-            // Recoloca o hífen no formato padrão.
-            //
-            // Exemplo:
-            // 13050000 -> 13050-000
-            $cep = substr($cep, 0, 5) . '-' . substr($cep, 5);
-        }
-    }
-
-
-    // ======================================================
-    // SALVAR ALTERAÇÕES
-    // ======================================================
-
-    // Só tenta salvar os dados se nenhuma validação
-    // tiver encontrado um erro.
-    if ($erro === '') {
+        // Converte a data vazia em NULL para o banco de dados.
+        $dataNascimento = $dataNascimento !== ''
+            ? $dataNascimento
+            : null;
 
         try {
 
-            // --------------------------------------------------
-            // INICIAR TRANSAÇÃO
-            // --------------------------------------------------
-
-            // Inicia uma transação no banco de dados.
-            //
-            // Isso permite atualizar o funcionário e o endereço
-            // como uma única operação.
+            // Inicia uma transação para manter a atualização
+            // dos dados e do endereço consistente.
             $pdo->beginTransaction();
 
+            // Monta a atualização dos dados do funcionário.
+            $camposAtualizacao = [
+                'nome = ?',
+                'cpf = ?',
+                'telefone = ?',
+                'email = ?',
+                'data_nascimento = ?',
+                'sexo = ?',
+                'status = ?'
+            ];
 
-            // --------------------------------------------------
-            // ATUALIZAR FUNCIONÁRIO
-            // --------------------------------------------------
+            $valoresAtualizacao = [
+                $nome,
+                $cpf,
+                $telefone,
+                $email,
+                $dataNascimento,
+                $sexo,
+                $status
+            ];
 
-            // Caso a função possua registro profissional,
-            // atualiza também o campo CRM, COREN ou CRF.
+            // Acrescenta o registro apenas para funções
+            // que possuem registro profissional.
             if ($campoRegistro !== null) {
-
-                $sql = "
-
-                    UPDATE `$tabela`
-
-                    SET
-
-                        nome = ?,
-
-                        `$campoRegistro` = ?,
-
-                        telefone = ?,
-
-                        email = ?,
-
-                        cpf = ?,
-
-                        data_nascimento = ?,
-
-                        sexo = ?,
-
-                        status = ?
-
-                    WHERE id = ?
-
-                ";
-
-                // Prepara a consulta.
-                $stmt = $pdo->prepare($sql);
-
-                // Executa a atualização.
-                $stmt->execute([
-
-                    $nome,
-
-                    $registro,
-
-                    $telefone,
-
-                    $email,
-
-                    $cpf,
-
-                    $data_nascimento,
-
-                    $sexo,
-
-                    $status,
-
-                    $id
-
-                ]);
-
-            } else {
-
-                // --------------------------------------------------
-                // ATUALIZAR FUNCIONÁRIO ADMINISTRATIVO
-                // --------------------------------------------------
-
-                // As funções administrativas não possuem
-                // CRM, COREN ou CRF.
-                $sql = "
-
-                    UPDATE `$tabela`
-
-                    SET
-
-                        nome = ?,
-
-                        telefone = ?,
-
-                        email = ?,
-
-                        cpf = ?,
-
-                        data_nascimento = ?,
-
-                        sexo = ?,
-
-                        status = ?
-
-                    WHERE id = ?
-
-                ";
-
-                // Prepara a consulta.
-                $stmt = $pdo->prepare($sql);
-
-                // Executa a atualização.
-                $stmt->execute([
-
-                    $nome,
-
-                    $telefone,
-
-                    $email,
-
-                    $cpf,
-
-                    $data_nascimento,
-
-                    $sexo,
-
-                    $status,
-
-                    $id
-
-                ]);
+                $camposAtualizacao[] = "`$campoRegistro` = ?";
+                $valoresAtualizacao[] = $registro;
             }
 
+            $valoresAtualizacao[] = $id;
 
-            // --------------------------------------------------
-            // ATUALIZAR OU CADASTRAR ENDEREÇO
-            // --------------------------------------------------
+            $sqlAtualizar = "
+                UPDATE `$tabela`
+                SET " . implode(', ', $camposAtualizacao) . "
+                WHERE id = ?
+            ";
 
-            // Verifica se o funcionário já possui
-            // um endereço relacionado.
-            if (!empty($funcionario['endereco_id'])) {
+            $stmt = $pdo->prepare($sqlAtualizar);
+            $stmt->execute($valoresAtualizacao);
 
-                // Se existir endereço, atualiza os dados
-                // do endereço existente.
-                $stmtEndereco = $pdo->prepare("
+            // Verifica se o funcionário já possui endereço.
+            $enderecoId = $funcionario['endereco_id'] ?? null;
 
+            if (!empty($enderecoId)) {
+
+                // Atualiza o endereço existente.
+                $sqlEndereco = $pdo->prepare("
                     UPDATE endereco
-
                     SET
-
                         rua = ?,
-
                         numero = ?,
-
                         cep = ?,
-
                         cidade = ?,
-
                         complemento = ?
-
                     WHERE id = ?
-
                 ");
 
-                // Executa a atualização do endereço.
-                $stmtEndereco->execute([
-
+                $sqlEndereco->execute([
                     $rua,
-
                     $numero,
-
                     $cep,
-
                     $cidade,
-
                     $complemento,
-
-                    $funcionario['endereco_id']
-
+                    $enderecoId
                 ]);
 
             } else {
 
-                // --------------------------------------------------
-                // CADASTRAR NOVO ENDEREÇO
-                // --------------------------------------------------
-
-                // Caso o funcionário não tenha um endereço,
-                // cria um novo registro na tabela endereco.
-                $stmtEndereco = $pdo->prepare("
-
-                    INSERT INTO endereco
-
-                    (
-
+                // Cria um endereço caso ainda não exista.
+                $sqlEndereco = $pdo->prepare("
+                    INSERT INTO endereco (
                         rua,
-
                         numero,
-
                         cep,
-
                         cidade,
-
                         complemento
-
                     )
-
                     VALUES (?, ?, ?, ?, ?)
-
                 ");
 
-                // Executa o cadastro do novo endereço.
-                $stmtEndereco->execute([
-
+                $sqlEndereco->execute([
                     $rua,
-
                     $numero,
-
                     $cep,
-
                     $cidade,
-
                     $complemento
-
                 ]);
 
+                $novoEnderecoId = $pdo->lastInsertId();
 
-                // Recupera o ID gerado para o novo endereço.
-                $enderecoId = $pdo->lastInsertId();
-
-
-                // --------------------------------------------------
-                // RELACIONAR NOVO ENDEREÇO AO FUNCIONÁRIO
-                // --------------------------------------------------
-
-                // Atualiza o funcionário para armazenar
-                // o ID do endereço recém-criado.
-                $stmtEnderecoFuncionario = $pdo->prepare("
-
+                // Vincula o endereço criado ao funcionário.
+                $sqlVinculo = $pdo->prepare("
                     UPDATE `$tabela`
-
                     SET endereco_id = ?
-
                     WHERE id = ?
-
                 ");
 
-                // Executa a atualização do relacionamento.
-                $stmtEnderecoFuncionario->execute([
-
-                    $enderecoId,
-
+                $sqlVinculo->execute([
+                    $novoEnderecoId,
                     $id
-
                 ]);
             }
 
-
-            // ==================================================
-            // CONFIRMAR TRANSAÇÃO
-            // ==================================================
-
-            // Confirma todas as alterações realizadas.
+            // Confirma todas as alterações.
             $pdo->commit();
 
-
-            // ==================================================
-            // REDIRECIONAR APÓS A ATUALIZAÇÃO
-            // ==================================================
-
-            // Depois de salvar as alterações,
-            // retorna para a página de visualização
-            // mantendo também a tabela de origem.
+            // Retorna à visualização do funcionário.
             header(
-                'Location: funcionario_visualizar.php?id=' .
-                $id .
-                '&tabela=' .
-                urlencode($tabela)
+                'Location: funcionario_visualizar.php?id='
+                . urlencode((string) $id)
+                . '&tabela='
+                . urlencode($tabela)
             );
 
-            // Encerra a execução.
             exit;
 
+        } catch (Throwable $e) {
 
-        } catch (PDOException $e) {
-
-            // ==================================================
-            // DESFAZER TRANSAÇÃO EM CASO DE ERRO
-            // ==================================================
-
-            // Verifica se existe uma transação ativa.
+            // Desfaz as operações se ocorrer algum problema.
             if ($pdo->inTransaction()) {
-
-                // Desfaz todas as alterações realizadas
-                // durante a transação.
                 $pdo->rollBack();
             }
 
-            // Armazena a mensagem de erro para ser exibida
-            // na página.
-            $erro = 'Erro ao atualizar funcionário: ' . $e->getMessage();
+            error_log(
+                'Erro ao atualizar funcionário: '
+                . $e->getMessage()
+            );
+
+            $erro = 'Não foi possível atualizar o funcionário. Verifique os dados e tente novamente.';
         }
     }
+}
 
-
-    // ======================================================
-    // MANTER OS DADOS DIGITADOS
-    // ======================================================
-
-    // Caso exista algum erro de validação ou banco de dados,
-    // os valores digitados pelo usuário são colocados novamente
-    // no array $funcionario.
-
-    // Mantém o nome informado.
-    $funcionario['nome'] = $nome;
-
-    // Mantém o registro profissional informado.
-    $funcionario['registro'] = $registro;
-
-    // Mantém o telefone informado.
-    $funcionario['telefone'] = $telefone;
-
-    // Mantém o e-mail informado.
-    $funcionario['email'] = $email;
-
-    // Mantém o CPF informado.
-    $funcionario['cpf'] = $cpf;
-
-    // Mantém a data de nascimento.
-    $funcionario['data_nascimento'] = $data_nascimento;
-
-    // Mantém o sexo selecionado.
-    $funcionario['sexo'] = $sexo;
-
-    // Mantém o status selecionado.
-    $funcionario['status'] = $status;
-
-    // Mantém a rua digitada.
-    $funcionario['rua'] = $rua;
-
-    // Mantém o número digitado.
-    $funcionario['numero'] = $numero;
-
-    // Mantém o CEP digitado.
-    $funcionario['cep'] = $cep;
-
-    // Mantém a cidade digitada.
-    $funcionario['cidade'] = $cidade;
-
-    // Mantém o complemento digitado.
-    $funcionario['complemento'] = $complemento;
+// Função para exibir valores com segurança e evitar
+// avisos quando o valor for NULL.
+function escapar($valor): string
+{
+    return htmlspecialchars(
+        (string) ($valor ?? ''),
+        ENT_QUOTES,
+        'UTF-8'
+    );
 }
 
 ?>
 
 <!DOCTYPE html>
-
 <html lang="pt-br">
-
 <head>
-
-<!-- Define a codificação dos caracteres da página. -->
-<meta charset="UTF-8">
-
-<!-- Faz a página se adaptar a diferentes tamanhos de tela. -->
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Define o título exibido na aba do navegador. -->
-<title>Editar Funcionário</title>
-
-
-<!-- ======================================================
-     BOOTSTRAP
-     ====================================================== -->
-
-<!-- Importa o CSS do Bootstrap 5.3.3. -->
-<link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
->
-
-<!-- Importa os ícones do Bootstrap Icons. -->
-<link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
->
-
-
-<!-- ======================================================
-     ESTILOS PERSONALIZADOS
-     ====================================================== -->
-
-<style>
-
-    /* Define o fundo geral da página. */
-    body {
-
-        background: linear-gradient(135deg, #eef5ff, #dbeeff);
-
-        font-family: 'Segoe UI', sans-serif;
-
-        min-height: 100vh;
-    }
-
-
-    /* Define o cartão principal que contém o formulário. */
-    .card-principal {
-
-        max-width: 1050px;
-
-        margin: 40px auto;
-
-        background: white;
-
-        border-radius: 25px;
-
-        padding: 30px;
-
-        box-shadow: 0 15px 40px rgba(47,128,237,.12);
-    }
-
-
-    /* Define o cabeçalho azul da página. */
-    .cabecalho {
-
-        background: linear-gradient(135deg,#2F80ED,#56CCF2);
-
-        color: white;
-
-        border-radius: 20px;
-
-        padding: 25px;
-
-        margin-bottom: 30px;
-    }
-
-
-    /* Estiliza o título do cabeçalho. */
-    .cabecalho h2 {
-
-        font-weight: 700;
-
-        margin: 0;
-    }
-
-
-    /* Estiliza o texto abaixo do título. */
-    .cabecalho p {
-
-        margin: 5px 0 0;
-
-        opacity: .9;
-    }
-
-
-    /* Define o estilo dos títulos das seções. */
-    .secao {
-
-        color: #2F80ED;
-
-        font-weight: 700;
-
-        margin-top: 25px;
-
-        margin-bottom: 18px;
-
-        padding-bottom: 8px;
-
-        border-bottom: 1px solid #e5edf7;
-    }
-
-
-    /* Define o formato dos campos de texto e selects. */
-    .form-control,
-    .form-select {
-
-        border-radius: 11px;
-
-        padding: 10px 13px;
-    }
-
-
-    /* Define o destaque dos campos quando recebem foco. */
-    .form-control:focus,
-    .form-select:focus {
-
-        border-color: #2F80ED;
-
-        box-shadow: 0 0 0 .2rem rgba(47,128,237,.15);
-    }
-
-
-    /* Estilo do botão principal de salvar. */
-    .btn-principal {
-
-        background: #2F80ED;
-
-        color: white;
-
-        border: none;
-
-        border-radius: 11px;
-
-        padding: 10px 18px;
-
-        font-weight: 600;
-    }
-
-
-    /* Altera a cor do botão quando o mouse passa sobre ele. */
-    .btn-principal:hover {
-
-        background: #1c6ad6;
-
-        color: white;
-    }
-
-
-    /* Estilo do botão de voltar/cancelar. */
-    .btn-voltar {
-
-        border-radius: 11px;
-
-        padding: 10px 18px;
-    }
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Editar Funcionário | Controle Hospitalar</title>
+
+    <!-- Aplica o tema salvo antes de carregar o CSS. -->
+    <script>
+        (function () {
+            const tema =
+                localStorage.getItem('controleHospitalarTema') || 'light';
+
+            document.documentElement.setAttribute(
+                'data-theme',
+                tema === 'dark' ? 'dark' : 'light'
+            );
+        })();
+    </script>
+
+    <!-- Bootstrap e ícones -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- CSS externo da página -->
+    <link rel="stylesheet" href="../includes/css/funcionario_editar.css">
 </head>
 
 <body>
-<!-- ======================================================
-     CARTÃO PRINCIPAL
-     ====================================================== -->
 
-<div class="card-principal">
+<div class="container pagina-container">
 
-
-    <!-- ==================================================
-         CABEÇALHO
-         ================================================== -->
-
-    <div class="cabecalho">
-
-        <!-- Ícone e título da página. -->
-        <h2>
-
-            <i class="bi bi-pencil-square"></i>
-
-            Editar Funcionário
-
-        </h2>
-
-        <!-- Descrição da finalidade da página. -->
-        <p>
-
-            Altere os dados cadastrais e profissionais.
-
-        </p>
-
-    </div>
-
-
-    <!-- ==================================================
-         MENSAGEM DE ERRO
-         ================================================== -->
-
-    <!-- Só exibe o alerta se a variável $erro possuir algum valor. -->
-    <?php if ($erro !== ''): ?>
-
-        <div class="alert alert-danger">
-
-            <!-- Ícone de aviso. -->
-            <i class="bi bi-exclamation-triangle"></i>
-
-            <!-- Exibe a mensagem de erro com segurança. -->
-            <?= htmlspecialchars($erro) ?>
-
+    <!-- Cabeçalho da página -->
+    <header class="cabecalho">
+        <div class="cabecalho-icone">
+            <i class="bi bi-person-gear"></i>
         </div>
 
-    <?php endif; ?>
+        <div class="cabecalho-texto">
+            <span class="sobretitulo">CONTROLE HOSPITALAR</span>
+            <h1>Editar Funcionário</h1>
+            <p>Atualize os dados pessoais, profissionais e o endereço cadastrado.</p>
+        </div>
+    </header>
 
+    <main class="card-principal">
 
-    <!-- ==================================================
-         FORMULÁRIO
-         ================================================== -->
-
-    <!-- Formulário responsável por enviar os dados
-         atualizados através do método POST. -->
-    <form method="POST">
-
-
-        <!-- ==================================================
-             DADOS DO FUNCIONÁRIO
-             ================================================== -->
-
-        <h5 class="secao">
-
-            <!-- Ícone de pessoa. -->
-            <i class="bi bi-person"></i>
-
-            Dados do Funcionário
-
-        </h5>
-
-
-        <div class="row g-3">
-
-
-            <!-- Campo do nome. -->
-            <div class="col-md-8">
-
-                <label class="form-label">
-
-                    Nome *
-
-                </label>
-
-                <input
-                    type="text"
-                    name="nome"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['nome'] ?? '') ?>"
-                    required
-                >
-
+        <!-- Identificação do funcionário -->
+        <div class="identificacao">
+            <div class="identificacao-icone">
+                <i class="bi bi-person-vcard"></i>
             </div>
 
+            <div class="identificacao-texto">
+                <span class="identificacao-legenda">FUNCIONÁRIO EM EDIÇÃO</span>
 
-            <!-- Campo da função. -->
-            <div class="col-md-4">
+                <h2><?= escapar($funcionario['nome'] ?? '') ?></h2>
 
-                <label class="form-label">
-
-                    Função
-
-                </label>
-
-                <!-- A função é definida pela tabela de origem
-                     e não pode ser alterada nesta tela. -->
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcao) ?>"
-                    disabled
-                >
-
+                <span class="funcao">
+                    <i class="bi bi-briefcase"></i>
+                    <?= escapar($funcao) ?>
+                </span>
             </div>
 
-
-            <!-- Campo do registro profissional. -->
-            <div class="col-md-4">
-
-                <label class="form-label">
-
-                    Registro profissional
-
-                    <?php if ($campoRegistro !== null): ?>
-
-                        *
-
-                    <?php endif; ?>
-
-                </label>
-
-
-                <?php if ($campoRegistro !== null): ?>
-
-                    <!-- Exibe o campo somente para
-                         funções que possuem registro. -->
-                    <input
-                        type="text"
-                        name="registro"
-                        class="form-control"
-                        value="<?= htmlspecialchars($funcionario['registro'] ?? '') ?>"
-                        required
-                    >
-
-                <?php else: ?>
-
-                    <!-- Funções administrativas não possuem
-                         registro profissional. -->
-                    <input
-                        type="text"
-                        class="form-control"
-                        value="Não informado"
-                        disabled
-                    >
-
-                <?php endif; ?>
-
-            </div>
-
-
-            <!-- Campo do CPF. -->
-            <div class="col-md-4">
-
-                <label class="form-label">
-
-                    CPF
-
-                </label>
-
-                <input
-                    type="text"
-                    name="cpf"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['cpf'] ?? '') ?>"
-                >
-
-            </div>
-
-
-            <!-- Campo do telefone. -->
-            <div class="col-md-4">
-
-                <label class="form-label">
-
-                    Telefone
-
-                </label>
-
-                <input
-                    type="text"
-                    name="telefone"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['telefone'] ?? '') ?>"
-                >
-
-            </div>
-
-
-            <!-- Campo do e-mail. -->
-            <div class="col-md-6">
-
-                <label class="form-label">
-
-                    E-mail
-
-                </label>
-
-                <input
-                    type="email"
-                    name="email"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['email'] ?? '') ?>"
-                >
-
-            </div>
-
-
-            <!-- Campo da data de nascimento. -->
-            <div class="col-md-3">
-
-                <label class="form-label">
-
-                    Data de nascimento
-
-                </label>
-
-                <input
-                    type="date"
-                    name="data_nascimento"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['data_nascimento'] ?? '') ?>"
-                >
-
-            </div>
-
-
-            <!-- Campo do sexo. -->
-            <div class="col-md-3">
-
-                <label class="form-label">
-
-                    Sexo
-
-                </label>
-
-                <select name="sexo" class="form-select">
-
-                    <!-- Opção padrão. -->
-                    <option value="">Selecione</option>
-
-                    <!-- Opção Masculino. -->
-                    <option
-                        value="Masculino"
-                        <?= ($funcionario['sexo'] ?? '') === 'Masculino' ? 'selected' : '' ?>
-                    >
-
-                        Masculino
-
-                    </option>
-
-                    <!-- Opção Feminino. -->
-                    <option
-                        value="Feminino"
-                        <?= ($funcionario['sexo'] ?? '') === 'Feminino' ? 'selected' : '' ?>
-                    >
-
-                        Feminino
-
-                    </option>
-
-                    <!-- Opção Outro. -->
-                    <option
-                        value="Outro"
-                        <?= ($funcionario['sexo'] ?? '') === 'Outro' ? 'selected' : '' ?>
-                    >
-
-                        Outro
-
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <!-- Campo do status. -->
-            <div class="col-md-4">
-
-                <label class="form-label">
-
-                    Status *
-
-                </label>
-
-                <select name="status" class="form-select" required>
-
-                    <!-- Opção de funcionário ativo. -->
-                    <option
-                        value="Ativo"
-                        <?= ($funcionario['status'] ?? '') === 'Ativo' ? 'selected' : '' ?>
-                    >
-
-                        Ativo
-
-                    </option>
-
-                    <!-- Opção de funcionário inativo. -->
-                    <option
-                        value="Inativo"
-                        <?= ($funcionario['status'] ?? '') === 'Inativo' ? 'selected' : '' ?>
-                    >
-
-                        Inativo
-
-                    </option>
-
-                </select>
-
-            </div>
-
+            <span class="id-funcionario">
+                <i class="bi bi-hash"></i>
+                ID <?= (int) $id ?>
+            </span>
         </div>
 
-
-        <!-- ==================================================
-             ENDEREÇO
-             ================================================== -->
-
-        <h5 class="secao">
-
-            <!-- Ícone de localização. -->
-            <i class="bi bi-geo-alt"></i>
-
-            Endereço
-
-        </h5>
-
-
-        <div class="row g-3">
-
-
-            <!-- Campo da rua. -->
-            <div class="col-md-8">
-
-                <label class="form-label">
-
-                    Rua *
-
-                </label>
-
-                <input
-                    type="text"
-                    name="rua"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['rua'] ?? '') ?>"
-                    required
-                >
-
+        <!-- Mensagem de erro -->
+        <?php if ($erro !== ''): ?>
+            <div class="alerta-erro" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span><?= escapar($erro) ?></span>
             </div>
+        <?php endif; ?>
 
+        <form method="POST">
 
-            <!-- Campo do número. -->
-            <div class="col-md-4">
+            <!-- Dados pessoais e profissionais -->
+            <section class="secao-formulario">
+                <div class="titulo-secao">
+                    <div class="icone-secao">
+                        <i class="bi bi-person"></i>
+                    </div>
 
-                <label class="form-label">
+                    <div>
+                        <h3>Dados do funcionário</h3>
+                        <p>Informações pessoais e profissionais.</p>
+                    </div>
+                </div>
 
-                    Número *
+                <div class="row g-3">
 
-                </label>
+                    <div class="col-md-8">
+                        <label for="nome" class="form-label">
+                            Nome completo <span class="obrigatorio">*</span>
+                        </label>
 
-                <input
-                    type="text"
-                    name="numero"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['numero'] ?? '') ?>"
-                    required
+                        <input
+                            type="text"
+                            id="nome"
+                            name="nome"
+                            class="form-control"
+                            value="<?= escapar($funcionario['nome'] ?? '') ?>"
+                            autocomplete="name"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="funcao" class="form-label">Função</label>
+
+                        <input
+                            type="text"
+                            id="funcao"
+                            class="form-control campo-bloqueado"
+                            value="<?= escapar($funcao) ?>"
+                            disabled
+                        >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="registro" class="form-label">
+                            Registro profissional
+
+                            <?php if ($campoRegistro !== null): ?>
+                                <span class="obrigatorio">*</span>
+                            <?php endif; ?>
+                        </label>
+
+                        <?php if ($campoRegistro !== null): ?>
+                            <input
+                                type="text"
+                                id="registro"
+                                name="registro"
+                                class="form-control"
+                                value="<?= escapar($funcionario['registro'] ?? '') ?>"
+                                required
+                            >
+                        <?php else: ?>
+                            <input
+                                type="text"
+                                id="registro"
+                                class="form-control campo-bloqueado"
+                                value="Não se aplica"
+                                disabled
+                            >
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="cpf" class="form-label">CPF</label>
+
+                        <input
+                            type="text"
+                            id="cpf"
+                            name="cpf"
+                            class="form-control"
+                            value="<?= escapar($funcionario['cpf'] ?? '') ?>"
+                            inputmode="numeric"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="telefone" class="form-label">Telefone</label>
+
+                        <input
+                            type="text"
+                            id="telefone"
+                            name="telefone"
+                            class="form-control"
+                            value="<?= escapar($funcionario['telefone'] ?? '') ?>"
+                            autocomplete="tel"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">E-mail</label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            class="form-control"
+                            value="<?= escapar($funcionario['email'] ?? '') ?>"
+                            autocomplete="email"
+                        >
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="data_nascimento" class="form-label">
+                            Data de nascimento
+                        </label>
+
+                        <input
+                            type="date"
+                            id="data_nascimento"
+                            name="data_nascimento"
+                            class="form-control"
+                            value="<?= escapar($funcionario['data_nascimento'] ?? '') ?>"
+                        >
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="sexo" class="form-label">Sexo</label>
+
+                        <select id="sexo" name="sexo" class="form-select">
+                            <option value="">Selecione</option>
+
+                            <option
+                                value="Masculino"
+                                <?= ($funcionario['sexo'] ?? '') === 'Masculino' ? 'selected' : '' ?>
+                            >Masculino</option>
+
+                            <option
+                                value="Feminino"
+                                <?= ($funcionario['sexo'] ?? '') === 'Feminino' ? 'selected' : '' ?>
+                            >Feminino</option>
+
+                            <option
+                                value="Outro"
+                                <?= ($funcionario['sexo'] ?? '') === 'Outro' ? 'selected' : '' ?>
+                            >Outro</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="status" class="form-label">
+                            Status <span class="obrigatorio">*</span>
+                        </label>
+
+                        <select id="status" name="status" class="form-select" required>
+                            <option
+                                value="Ativo"
+                                <?= ($funcionario['status'] ?? '') === 'Ativo' ? 'selected' : '' ?>
+                            >Ativo</option>
+
+                            <option
+                                value="Inativo"
+                                <?= ($funcionario['status'] ?? '') === 'Inativo' ? 'selected' : '' ?>
+                            >Inativo</option>
+                        </select>
+                    </div>
+
+                </div>
+            </section>
+
+            <div class="divisor-secao"></div>
+
+            <!-- Endereço do funcionário -->
+            <section class="secao-formulario">
+                <div class="titulo-secao">
+                    <div class="icone-secao">
+                        <i class="bi bi-geo-alt"></i>
+                    </div>
+
+                    <div>
+                        <h3>Endereço</h3>
+                        <p>Localização vinculada ao cadastro do funcionário.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+
+                    <div class="col-md-8">
+                        <label for="rua" class="form-label">
+                            Rua <span class="obrigatorio">*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="rua"
+                            name="rua"
+                            class="form-control"
+                            value="<?= escapar($funcionario['rua'] ?? '') ?>"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="numero" class="form-label">
+                            Número <span class="obrigatorio">*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="numero"
+                            name="numero"
+                            class="form-control"
+                            value="<?= escapar($funcionario['numero'] ?? '') ?>"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="cep" class="form-label">
+                            CEP <span class="obrigatorio">*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="cep"
+                            name="cep"
+                            class="form-control"
+                            maxlength="9"
+                            value="<?= escapar($funcionario['cep'] ?? '') ?>"
+                            inputmode="numeric"
+                            placeholder="00000-000"
+                            required
+                        >
+
+                        <small class="ajuda-campo">
+                            Informe os 8 números do CEP.
+                        </small>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label for="cidade" class="form-label">
+                            Cidade <span class="obrigatorio">*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="cidade"
+                            name="cidade"
+                            class="form-control"
+                            value="<?= escapar($funcionario['cidade'] ?? '') ?>"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-12">
+                        <label for="complemento" class="form-label">
+                            Complemento
+                        </label>
+
+                        <input
+                            type="text"
+                            id="complemento"
+                            name="complemento"
+                            class="form-control"
+                            value="<?= escapar($funcionario['complemento'] ?? '') ?>"
+                            placeholder="Apartamento, bloco, referência..."
+                        >
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Botões de ação -->
+            <footer class="acoes-formulario">
+                <a
+                    href="funcionario_visualizar.php?id=<?= (int) $id ?>&tabela=<?= urlencode($tabela) ?>"
+                    class="btn btn-voltar"
                 >
+                    <i class="bi bi-arrow-left"></i>
+                    Cancelar
+                </a>
 
-            </div>
+                <button type="submit" class="btn btn-salvar">
+                    <i class="bi bi-check-circle"></i>
+                    Salvar alterações
+                </button>
+            </footer>
 
+            <p class="nota-formulario">
+                <i class="bi bi-info-circle"></i>
+                Os campos marcados com <span class="obrigatorio">*</span>
+                são obrigatórios.
+            </p>
 
-            <!-- Campo do CEP. -->
-            <div class="col-md-4">
+        </form>
+    </main>
 
-                <label class="form-label">
-
-                    CEP *
-
-                </label>
-
-                <input
-                    type="text"
-                    name="cep"
-                    class="form-control"
-                    maxlength="9"
-                    value="<?= htmlspecialchars($funcionario['cep'] ?? '') ?>"
-                    required
-                >
-
-            </div>
-
-
-            <!-- Campo da cidade. -->
-            <div class="col-md-8">
-
-                <label class="form-label">
-
-                    Cidade *
-
-                </label>
-
-                <input
-                    type="text"
-                    name="cidade"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['cidade'] ?? '') ?>"
-                    required
-                >
-
-            </div>
-
-
-            <!-- Campo do complemento. -->
-            <div class="col-md-12">
-
-                <label class="form-label">
-
-                    Complemento
-
-                </label>
-
-                <input
-                    type="text"
-                    name="complemento"
-                    class="form-control"
-                    value="<?= htmlspecialchars($funcionario['complemento'] ?? '') ?>"
-                >
-
-            </div>
-
-        </div>
-
-
-        <!-- ==================================================
-             BOTÕES
-             ================================================== -->
-
-        <div class="d-flex gap-2 mt-4">
-
-
-            <!-- Botão para cancelar a edição.
-                 Retorna para a tela de visualização. -->
-            <a
-                href="funcionario_visualizar.php?id=<?= $id ?>&tabela=<?= urlencode($tabela) ?>"
-                class="btn btn-secondary btn-voltar"
-            >
-
-                <!-- Ícone de seta para voltar. -->
-                <i class="bi bi-arrow-left"></i>
-
-                Cancelar
-
-            </a>
-
-
-            <!-- Botão responsável por enviar
-                 as alterações para o servidor. -->
-            <button
-                type="submit"
-                class="btn btn-principal"
-            >
-
-                <!-- Ícone de confirmação. -->
-                <i class="bi bi-check-circle"></i>
-
-                Salvar alterações
-
-            </button>
-
-        </div>
-
-    </form>
+    <p class="rodape-pagina">
+        <i class="bi bi-shield-check"></i>
+        Controle Hospitalar · Edição de cadastro
+    </p>
 
 </div>
 
 </body>
-
 </html>
-

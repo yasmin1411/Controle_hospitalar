@@ -1,0 +1,724 @@
+
+/* =========================================================
+   CONTROLE HOSPITALAR — EDITAR INTERNAÇÃO
+   Temas claro e escuro
+   ========================================================= */
+
+/* Variáveis do tema claro */
+:root,
+[data-theme="light"] {
+    color-scheme: light;
+
+    --azul: #2F80ED;
+    --azul2: #56CCF2;
+    --azule: #174ea6;
+
+    --texto: #203247;
+    --texto-secundario: #708198;
+    --texto-label: #42566d;
+
+    --borda: #dce7f2;
+    --borda-suave: #edf2f7;
+
+    --fundo-pagina: #edf5ff;
+    --fundo-card: rgba(255, 255, 255, 0.96);
+    --fundo-secao: #ffffff;
+    --fundo-campo: #fbfdff;
+    --fundo-clinico: #f7fbff;
+    --fundo-icone: #edf5ff;
+    --fundo-hover: #f3f8fd;
+
+    --texto-icone: #8193a7;
+    --texto-ajuda: #8290a0;
+
+    --erro-fundo: #fff1f2;
+    --erro-borda: #fecdd3;
+    --erro-texto: #b4232f;
+
+    --sombra-card: 0 16px 38px rgba(39, 89, 145, 0.08);
+    --sombra-hero: 0 18px 40px rgba(31, 91, 160, 0.16);
+
+    --cancelar-fundo: #ffffff;
+    --cancelar-borda: #d9e3ed;
+    --cancelar-texto: #64768a;
+}
+
+/* Variáveis do tema escuro */
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --azul: #559bff;
+    --azul2: #56CCF2;
+    --azule: #3278d5;
+
+    --texto: #e6edf7;
+    --texto-secundario: #a2b2c7;
+    --texto-label: #c5d2e2;
+
+    --borda: #35475d;
+    --borda-suave: #2c3d51;
+
+    --fundo-pagina: #111a28;
+    --fundo-card: #1b2839;
+    --fundo-secao: #202f42;
+    --fundo-campo: #172334;
+    --fundo-clinico: #192a40;
+    --fundo-icone: #263c56;
+    --fundo-hover: #293b50;
+
+    --texto-icone: #a6b7cb;
+    --texto-ajuda: #a1b2c6;
+
+    --erro-fundo: #3a2029;
+    --erro-borda: #743542;
+    --erro-texto: #ffb6bf;
+
+    --sombra-card: 0 16px 38px rgba(0, 0, 0, 0.2);
+    --sombra-hero: 0 18px 40px rgba(0, 0, 0, 0.25);
+
+    --cancelar-fundo: #253448;
+    --cancelar-borda: #40536a;
+    --cancelar-texto: #d1dceb;
+}
+
+/* =========================================================
+   CONFIGURAÇÕES GERAIS
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: var(--texto);
+
+    background:
+        radial-gradient(
+            circle at 7% 12%,
+            rgba(86, 204, 242, 0.13),
+            transparent 24%
+        ),
+        radial-gradient(
+            circle at 94% 20%,
+            rgba(47, 128, 237, 0.12),
+            transparent 25%
+        ),
+        var(--fundo-pagina);
+
+    transition:
+        background-color 0.25s ease,
+        color 0.25s ease;
+}
+
+.pagina {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 26px 24px 50px;
+}
+
+/* =========================================================
+   CABEÇALHO
+   ========================================================= */
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 22px;
+    padding: 27px 30px;
+    border-radius: 24px;
+    color: #ffffff;
+
+    background: linear-gradient(
+        110deg,
+        #1767d1,
+        #2F80ED 55%,
+        #42b6df
+    );
+
+    box-shadow: var(--sombra-hero);
+}
+
+.hero::before,
+.hero::after {
+    content: "";
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.hero::before {
+    top: -130px;
+    right: -80px;
+    width: 230px;
+    height: 230px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.hero::after {
+    right: 160px;
+    bottom: -60px;
+    width: 100px;
+    height: 100px;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.hero-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 0;
+}
+
+.hero-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 58px;
+    height: 58px;
+
+    border-radius: 17px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 27px;
+}
+
+.hero h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 29px;
+    font-weight: 850;
+    line-height: 1.25;
+}
+
+.hero p {
+    margin: 5px 0 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.hero-id {
+    padding: 9px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+/* =========================================================
+   MENSAGEM DE ERRO
+   ========================================================= */
+
+.alerta-erro {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    margin-bottom: 18px;
+    padding: 13px 16px;
+
+    border: 1px solid var(--erro-borda);
+    border-radius: 13px;
+    background: var(--erro-fundo);
+
+    color: var(--erro-texto);
+    font-size: 13px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.alerta-erro i {
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+/* =========================================================
+   CARTÃO PRINCIPAL DO FORMULÁRIO
+   ========================================================= */
+
+.form-card {
+    padding: 27px;
+    border: 1px solid var(--borda);
+    border-radius: 22px;
+    background: var(--fundo-card);
+    box-shadow: var(--sombra-card);
+
+    transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease;
+}
+
+.form-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--borda-suave);
+}
+
+.form-topo h2 {
+    margin: 0;
+    color: var(--texto);
+    font-size: 22px;
+    font-weight: 850;
+}
+
+.form-topo h2 i {
+    color: var(--azul);
+}
+
+.form-topo p {
+    margin: 4px 0 0;
+    color: var(--texto-secundario);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.form-topo .text-muted {
+    color: var(--texto-secundario) !important;
+    white-space: nowrap;
+}
+
+.obrigatorio {
+    color: #dc3545;
+    font-weight: 800;
+}
+
+/* =========================================================
+   SEÇÕES DO FORMULÁRIO
+   ========================================================= */
+
+.secao {
+    margin-bottom: 18px;
+    padding: 20px;
+
+    border: 1px solid var(--borda);
+    border-radius: 17px;
+    background: var(--fundo-secao);
+
+    transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease;
+}
+
+.secao-titulo {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+}
+
+.secao-icone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 12px;
+    background: var(--fundo-icone);
+    color: var(--azul);
+    font-size: 19px;
+}
+
+.secao-titulo h3 {
+    margin: 0;
+    color: var(--texto);
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.secao-titulo p {
+    margin: 2px 0 0;
+    color: var(--texto-secundario);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   CAMPOS E RÓTULOS
+   ========================================================= */
+
+.form-label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--texto-label);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.form-control,
+.form-select {
+    width: 100%;
+    min-height: 48px;
+
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+
+    background-color: var(--fundo-campo);
+    color: var(--texto);
+
+    font-family: inherit;
+    font-size: 13px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.25s ease,
+        color 0.25s ease;
+}
+
+.form-control::placeholder {
+    color: var(--texto-secundario);
+    opacity: 0.8;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--azul);
+    background-color: var(--fundo-secao);
+    color: var(--texto);
+    box-shadow: 0 0 0 0.2rem rgba(47, 128, 237, 0.13);
+    outline: none;
+}
+
+.form-control:disabled,
+.form-select:disabled {
+    background-color: var(--fundo-hover);
+    color: var(--texto-secundario);
+}
+
+textarea.form-control {
+    min-height: 115px;
+    padding: 12px 13px;
+    resize: vertical;
+    line-height: 1.55;
+}
+
+/* Ajusta as opções dos campos de seleção */
+.form-select option {
+    background-color: var(--fundo-secao);
+    color: var(--texto);
+}
+
+/* =========================================================
+   CAMPOS COM ÍCONES
+   ========================================================= */
+
+.campo-icone {
+    position: relative;
+}
+
+.campo-icone > i {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    z-index: 2;
+
+    transform: translateY(-50%);
+
+    color: var(--texto-icone);
+    pointer-events: none;
+}
+
+.campo-icone .form-control {
+    padding-left: 41px;
+}
+
+/* =========================================================
+   QUADRO CLÍNICO
+   ========================================================= */
+
+.clinico {
+    padding: 16px;
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+    background: var(--fundo-clinico);
+
+    transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease;
+}
+
+.clinico .form-label {
+    color: var(--texto-label);
+}
+
+.clinico .form-label i {
+    color: var(--azul);
+}
+
+.ajuda {
+    margin-top: 6px;
+    color: var(--texto-ajuda);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.ajuda i {
+    color: var(--azul);
+}
+
+/* =========================================================
+   BOTÕES DE AÇÃO
+   ========================================================= */
+
+.acoes {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+
+    margin-top: 4px;
+    padding-top: 19px;
+    border-top: 1px solid var(--borda-suave);
+}
+
+.btn-acao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 44px;
+    padding: 11px 17px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.btn-acao:focus-visible {
+    outline: 3px solid rgba(47, 128, 237, 0.35);
+    outline-offset: 3px;
+}
+
+.btn-salvar {
+    border: 0;
+    background: var(--azul);
+    color: #ffffff;
+}
+
+.btn-salvar:hover {
+    transform: translateY(-1px);
+    background: var(--azule);
+    color: #ffffff;
+    box-shadow: 0 8px 17px rgba(47, 128, 237, 0.18);
+}
+
+.btn-salvar:active {
+    transform: translateY(0);
+}
+
+.btn-cancelar {
+    border-color: var(--cancelar-borda);
+    background: var(--cancelar-fundo);
+    color: var(--cancelar-texto);
+}
+
+.btn-cancelar:hover {
+    border-color: var(--borda);
+    background: var(--fundo-hover);
+    color: var(--texto);
+}
+
+/* =========================================================
+   AJUSTES PARA O TEMA ESCURO
+   ========================================================= */
+
+[data-theme="dark"] body {
+    background:
+        radial-gradient(
+            circle at 7% 12%,
+            rgba(86, 204, 242, 0.055),
+            transparent 24%
+        ),
+        radial-gradient(
+            circle at 94% 20%,
+            rgba(47, 128, 237, 0.08),
+            transparent 25%
+        ),
+        var(--fundo-pagina);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    color-scheme: dark;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(85, 155, 255, 0.18);
+}
+
+[data-theme="dark"] .obrigatorio {
+    color: #ff8c98;
+}
+
+[data-theme="dark"] .btn-salvar {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .btn-salvar:hover {
+    background: #3f83e2;
+}
+
+[data-theme="dark"] .btn-cancelar:hover {
+    background: #304258;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .form-topo,
+[data-theme="dark"] .acoes {
+    border-color: var(--borda-suave);
+}
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 700px) {
+    .pagina {
+        padding: 18px 14px 35px;
+    }
+
+    .hero {
+        padding: 22px;
+        border-radius: 20px;
+    }
+
+    .hero-content,
+    .form-topo,
+    .acoes {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .hero-info {
+        align-items: flex-start;
+    }
+
+    .hero-icon {
+        width: 49px;
+        height: 49px;
+        border-radius: 14px;
+        font-size: 23px;
+    }
+
+    .hero h1 {
+        font-size: 25px;
+    }
+
+    .hero-id {
+        align-self: flex-start;
+        text-align: center;
+    }
+
+    .form-card {
+        padding: 19px;
+        border-radius: 18px;
+    }
+
+    .form-topo h2 {
+        font-size: 20px;
+    }
+
+    .form-topo .text-muted {
+        white-space: normal;
+    }
+
+    .secao {
+        padding: 16px;
+        border-radius: 15px;
+    }
+
+    .secao-titulo h3 {
+        font-size: 16px;
+    }
+
+    .btn-acao {
+        width: 100%;
+    }
+}
+
+@media (max-width: 400px) {
+    .pagina {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .hero {
+        padding: 18px;
+    }
+
+    .hero h1 {
+        font-size: 22px;
+    }
+
+    .hero p {
+        font-size: 12px;
+    }
+
+    .form-card {
+        padding: 14px;
+    }
+
+    .secao {
+        padding: 13px;
+    }
+
+    .clinico {
+        padding: 12px;
+    }
+}
+
+/* Respeita a preferência do usuário por menos animações */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
