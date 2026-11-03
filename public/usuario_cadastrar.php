@@ -4,15 +4,13 @@
 // IMPORTAÇÃO DOS ARQUIVOS NECESSÁRIOS
 // ==========================================================
 
-// Inclui o arquivo responsável pela autenticação
-// e pelo controle de permissões do sistema.
+// Inclui a autenticação e o controle de permissões.
 require_once __DIR__ . '/../includes/auth.php';
 
-// Permite o cadastro de usuários somente para
-// administradores e diretores do hospital.
-verificarPermissao(['admin', 'diretor_hospital']);
+// Somente administradores e diretores podem cadastrar usuários.
+verificarFuncoesPermitidas(['admin', 'diretor_hospital']);
 
-// Inclui o arquivo responsável pela conexão com o banco de dados.
+// Inclui a conexão com o banco de dados.
 require_once __DIR__ . '/../config/database.php';
 
 
@@ -20,8 +18,6 @@ require_once __DIR__ . '/../config/database.php';
 // VERIFICAR SE A REQUISIÇÃO É POST
 // ==========================================================
 
-// Esta página deve ser acessada somente através
-// do formulário de cadastro de usuário.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: novo_usuario.php');
     exit;
@@ -29,40 +25,73 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 
 // ==========================================================
-// RECEBER OS DADOS DO FORMULÁRIO
+// RECEBER E VALIDAR A SELEÇÃO DO FUNCIONÁRIO
 // ==========================================================
 
-// Recebe o ID do funcionário selecionado.
-$funcionarioId = filter_input(
-    INPUT_POST,
-    'funcionario_id',
+// O formulário possui três campos relacionados ao funcionário:
+// funcionario: seleção no formato "tabela|id"
+// funcionario_id: campo oculto
+// funcionario_tabela: campo oculto
+//
+// Primeiro, tentamos utilizar os campos ocultos.
+// Se estiverem vazios ou inválidos, usamos a seleção principal.
+
+$funcionarioId = filter_var(
+    $_POST['funcionario_id'] ?? '',
     FILTER_VALIDATE_INT
 );
 
-// Recebe o nome da tabela onde o funcionário está cadastrado.
-$funcionarioTabela = trim($_POST['funcionario_tabela'] ?? '');
+$funcionarioTabela = trim(
+    $_POST['funcionario_tabela'] ?? ''
+);
 
-// Recebe o e-mail informado para a conta.
+// Recupera a seleção principal, por exemplo: medico|5.
+$selecaoFuncionario = trim($_POST['funcionario'] ?? '');
+
+if ($selecaoFuncionario !== '') {
+    $partes = explode('|', $selecaoFuncionario);
+
+    if (count($partes) === 2) {
+        $tabelaSelecionada = trim($partes[0]);
+        $idSelecionado = filter_var(
+            $partes[1],
+            FILTER_VALIDATE_INT
+        );
+
+        // Usa a seleção principal se os campos ocultos
+        // não tiverem sido preenchidos corretamente.
+        if (
+            $idSelecionado !== false &&
+            $idSelecionado !== null &&
+            $idSelecionado > 0
+        ) {
+            $funcionarioId = $idSelecionado;
+            $funcionarioTabela = $tabelaSelecionada;
+        }
+    }
+}
+
+
+// ==========================================================
+// RECEBER OS DEMAIS DADOS DO FORMULÁRIO
+// ==========================================================
+
 $email = trim($_POST['email'] ?? '');
-
-// Recebe a senha.
 $senha = $_POST['senha'] ?? '';
-
-// Recebe a confirmação da senha.
 $confirmarSenha = $_POST['confirmar_senha'] ?? '';
 
-// Recebe o status da conta.
-$ativo = isset($_POST['ativo']) ? (int) $_POST['ativo'] : 1;
+$ativo = isset($_POST['ativo'])
+    ? filter_var($_POST['ativo'], FILTER_VALIDATE_INT)
+    : 1;
 
 
 // ==========================================================
 // TABELAS DE FUNCIONÁRIOS PERMITIDAS
 // ==========================================================
 
-// Esta lista funciona como uma proteção.
-//
-// Somente tabelas que realmente pertencem ao sistema
-// podem ser utilizadas na consulta abaixo.
+// A lista impede que nomes de tabelas não autorizados
+// sejam utilizados nas consultas SQL.
+
 $tabelasFuncionarios = [
     'medico' => 'Médico',
     'enfermeiro' => 'Enfermeiro',
@@ -81,12 +110,19 @@ $tabelasFuncionarios = [
 // VALIDAÇÕES INICIAIS
 // ==========================================================
 
-// Verifica se um funcionário foi realmente selecionado.
-if (!$funcionarioId || $funcionarioId <= 0) {
-    die('É necessário selecionar um funcionário.');
+// Verifica se um funcionário foi selecionado.
+if (
+    $funcionarioId === false ||
+    $funcionarioId === null ||
+    $funcionarioId <= 0
+) {
+    die(
+        'É necessário selecionar um funcionário. ' .
+        'Volte ao formulário e selecione uma pessoa na lista.'
+    );
 }
 
-// Verifica se a tabela enviada pertence à lista permitida.
+// Verifica se a tabela do funcionário é permitida.
 if (!array_key_exists($funcionarioTabela, $tabelasFuncionarios)) {
     die('A função do funcionário selecionado é inválida.');
 }
@@ -96,39 +132,32 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     die('Informe um e-mail válido.');
 }
 
-// Verifica se a senha possui pelo menos 6 caracteres.
+// Verifica o tamanho mínimo da senha.
 if (strlen($senha) < 6) {
-    die('A senha deve possuir pelo menos 6 caracteres.');
+    die('A senha deve possuir pelo menos seis caracteres.');
 }
 
-// Verifica se a confirmação é igual à senha.
+// Confere se as senhas são iguais.
 if ($senha !== $confirmarSenha) {
     die('As senhas não coincidem.');
 }
 
-// Verifica se o status enviado é válido.
+// Verifica o status da conta.
 if ($ativo !== 0 && $ativo !== 1) {
     die('O status informado é inválido.');
 }
 
 
 // ==========================================================
-// BUSCAR O FUNCIONÁRIO SELECIONADO
+// BUSCAR O FUNCIONÁRIO NO BANCO DE DADOS
 // ==========================================================
 
-// A tabela somente é utilizada aqui porque anteriormente
-// verificamos que ela pertence à lista permitida.
-//
-// O nome do funcionário NÃO vem do formulário.
-//
-// O sistema busca o nome diretamente do banco de dados.
+// O nome da tabela é seguro porque foi validado
+// pela lista permitida acima.
+
 $sqlFuncionario = "
-    SELECT
-        id,
-        nome,
-        email,
-        status
-    FROM {$funcionarioTabela}
+    SELECT id, nome, email, status
+    FROM `{$funcionarioTabela}`
     WHERE id = ?
     LIMIT 1
 ";
@@ -152,30 +181,19 @@ if (!$funcionario) {
 // VERIFICAR SE O FUNCIONÁRIO ESTÁ ATIVO
 // ==========================================================
 
-// Somente funcionários ativos podem receber
-// uma conta de acesso ao sistema.
-if ($funcionario['status'] !== 'Ativo') {
+if (trim((string) $funcionario['status']) !== 'Ativo') {
     die('Somente funcionários ativos podem possuir uma conta de acesso.');
 }
 
 
 // ==========================================================
-// DEFINIR NOME E FUNÇÃO AUTOMATICAMENTE
+// DEFINIR NOME E TIPO DO USUÁRIO
 // ==========================================================
 
-// O nome vem diretamente do cadastro do funcionário.
+// O nome vem do cadastro do funcionário no banco.
 $nome = $funcionario['nome'];
 
-// A função também vem da tabela selecionada.
-//
-// Exemplo:
-// medico -> medico
-// enfermeiro -> enfermeiro
-// farmaceutico -> farmaceutico
-// diretor_hospital -> diretor_hospital
-//
-// Assim, o usuário não consegue escolher uma função
-// diferente da função real cadastrada.
+// O tipo corresponde à tabela do funcionário selecionado.
 $tipo = $funcionarioTabela;
 
 
@@ -191,18 +209,19 @@ $sqlVerificarFuncionario = "
     LIMIT 1
 ";
 
-$stmtVerificarFuncionario = $pdo->prepare($sqlVerificarFuncionario);
+$stmtVerificarFuncionario = $pdo->prepare(
+    $sqlVerificarFuncionario
+);
 
 $stmtVerificarFuncionario->execute([
     $funcionarioId,
     $funcionarioTabela
 ]);
 
-$usuarioExistente = $stmtVerificarFuncionario->fetch(PDO::FETCH_ASSOC);
+$usuarioExistente = $stmtVerificarFuncionario->fetch(
+    PDO::FETCH_ASSOC
+);
 
-
-// Se já existir uma conta vinculada ao funcionário,
-// o sistema impede a criação de uma segunda conta.
 if ($usuarioExistente) {
     die('Este funcionário já possui uma conta de acesso.');
 }
@@ -224,9 +243,6 @@ $stmtVerificarEmail->execute([$email]);
 
 $emailExistente = $stmtVerificarEmail->fetch(PDO::FETCH_ASSOC);
 
-
-// Como o campo email da tabela usuarios é UNIQUE,
-// não podemos cadastrar dois usuários com o mesmo e-mail.
 if ($emailExistente) {
     die('Este e-mail já está cadastrado em outra conta.');
 }
@@ -236,9 +252,7 @@ if ($emailExistente) {
 // CRIAR O HASH DA SENHA
 // ==========================================================
 
-// A senha nunca deve ser armazenada diretamente no banco.
-//
-// password_hash() transforma a senha em um hash seguro.
+// A senha é armazenada como hash, não em texto puro.
 $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
 
@@ -276,7 +290,6 @@ $stmt->execute([
 // FINALIZAÇÃO
 // ==========================================================
 
-// Depois que o usuário for cadastrado,
-// volta para a lista de usuários.
+// Redireciona para a lista de usuários após o cadastro.
 header('Location: usuarios.php?sucesso=usuario_cadastrado');
 exit;

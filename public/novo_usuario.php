@@ -1,17 +1,43 @@
 <?php
 
 // ==========================================================
-// AUTENTICAÇÃO E CONEXÃO
-// Mantido: não alterar o processamento do backend.
+// AUTENTICAÇÃO E CONTROLE DE ACESSO
 // ==========================================================
+
+// Carrega a autenticação do sistema.
+// Esse arquivo é responsável por verificar o login
+// e disponibilizar as funções de segurança.
 require_once __DIR__ . '/../includes/auth.php';
 
-verificarPermissao([
+// ==========================================================
+// PERMISSÃO PARA CADASTRAR USUÁRIOS
+// ==========================================================
+
+// Somente administradores e diretores do hospital
+// podem acessar a página de cadastro de usuários.
+$funcoesPermitidas = [
     'admin',
     'diretor_hospital'
-]);
+];
+
+// Recupera a função do usuário autenticado.
+$funcaoUsuario = $_SESSION['tipo'] ?? '';
+
+// Bloqueia o acesso de usuários sem a função autorizada.
+if (!in_array($funcaoUsuario, $funcoesPermitidas, true)) {
+    http_response_code(403);
+
+    exit('Acesso negado. Você não tem permissão para cadastrar usuários.');
+}
+
+// ==========================================================
+// CONEXÃO COM O BANCO DE DADOS
+// ==========================================================
 
 require_once __DIR__ . '/../config/database.php';
+
+
+
 
 // ==========================================================
 // FUNCIONÁRIOS DISPONÍVEIS
@@ -1001,17 +1027,24 @@ html::-webkit-scrollbar-thumb:hover {
          CABEÇALHO
          ================================================== -->
     <section class="nu-hero">
-        <div class="nu-hero-content">
-            <h1 class="nu-hero-title">
-                <i class="bi bi-person-plus-fill"></i>
-                Novo usuário
-            </h1>
-            <p class="nu-hero-description">
-                Gerencie o acesso ao sistema hospitalar com segurança.
-                Vincule um funcionário cadastrado e configure suas
-                credenciais de acesso.
-            </p>
-        </div>
+    <div class="nu-hero-content">
+    <h1 class="nu-hero-title">
+        <i class="bi bi-person-plus-fill"></i>
+        Novo usuário
+    </h1>
+
+    <p class="nu-hero-description">
+        Gerencie o acesso ao sistema hospitalar com segurança.
+        Vincule um funcionário cadastrado e configure suas
+        credenciais de acesso.
+    </p>
+
+    <!-- Botão para retornar ao Dashboard -->
+    <a href="dashboard.php" class="nu-back">
+        <i class="bi bi-arrow-left-circle"></i>
+        Voltar ao painel principal
+    </a>
+</div>
     </section>
 
     <!-- ==================================================
@@ -1375,11 +1408,13 @@ html::-webkit-scrollbar-thumb:hover {
 </div>
 
 <script>
-// ==========================================================
-// SELEÇÃO DO FUNCIONÁRIO
-// Mantém o preenchimento dos campos ocultos e do e-mail.
-// ==========================================================
-const selectFuncionario = document.getElementById('funcionario');
+
+ // ==========================================================
+ // SELEÇÃO DO FUNCIONÁRIO
+ // Preenche e confere os campos antes de enviar o formulário.
+ // ==========================================================
+
+ const selectFuncionario = document.getElementById('funcionario');
 const campoEmail = document.getElementById('email');
 const campoFuncionarioId = document.getElementById('funcionario_id');
 const campoFuncionarioTabela = document.getElementById('funcionario_tabela');
@@ -1387,34 +1422,78 @@ const campoTipo = document.getElementById('tipo');
 const dadosFuncionario = document.getElementById('dadosFuncionario');
 const nomeFuncionario = document.getElementById('nomeFuncionario');
 const funcaoFuncionario = document.getElementById('funcaoFuncionario');
+const formUsuario = document.getElementById('formUsuario');
 
-if (selectFuncionario) {
-    selectFuncionario.addEventListener('change', function () {
-        const opcao = this.options[this.selectedIndex];
+function preencherFuncionario() {
+    if (!selectFuncionario || !campoFuncionarioId ||
+        !campoFuncionarioTabela || !campoTipo) {
+        return false;
+    }
 
-        if (!this.value) {
+    const opcao = selectFuncionario.options[selectFuncionario.selectedIndex];
+
+    // Nenhum funcionário selecionado.
+    if (!selectFuncionario.value || !opcao) {
+        campoFuncionarioId.value = '';
+        campoFuncionarioTabela.value = '';
+        campoTipo.value = '';
+
+        if (dadosFuncionario) {
             dadosFuncionario.classList.add('d-none');
-            campoFuncionarioId.value = '';
-            campoFuncionarioTabela.value = '';
-            campoTipo.value = '';
-            return;
         }
 
-        const partes = this.value.split('|');
-        const tabela = partes[0];
-        const id = partes[1];
-        const email = opcao.dataset.email || '';
-        const funcao = opcao.dataset.funcao || '';
+        return false;
+    }
 
-        campoFuncionarioId.value = id;
-        campoFuncionarioTabela.value = tabela;
-        campoTipo.value = tabela;
-        campoEmail.value = email;
+    // O valor da opção tem o formato: tabela|id
+    const partes = selectFuncionario.value.split('|');
+
+    if (partes.length !== 2 || !partes[0] || !partes[1]) {
+        return false;
+    }
+
+    const tabela = partes[0];
+    const id = partes[1];
+
+    campoFuncionarioId.value = id;
+    campoFuncionarioTabela.value = tabela;
+    campoTipo.value = tabela;
+
+    if (campoEmail) {
+        campoEmail.value = opcao.dataset.email || '';
+    }
+
+    if (nomeFuncionario) {
         nomeFuncionario.textContent = opcao.textContent.trim();
-        funcaoFuncionario.textContent = funcao;
+    }
+
+    if (funcaoFuncionario) {
+        funcaoFuncionario.textContent = opcao.dataset.funcao || '';
+    }
+
+    if (dadosFuncionario) {
         dadosFuncionario.classList.remove('d-none');
+    }
+
+    return true;
+}
+
+// Atualiza os campos quando o funcionário é selecionado.
+if (selectFuncionario) {
+    selectFuncionario.addEventListener('change', preencherFuncionario);
+}
+
+// Confere novamente os campos no momento do envio.
+if (formUsuario) {
+    formUsuario.addEventListener('submit', function (evento) {
+        if (!preencherFuncionario()) {
+            evento.preventDefault();
+            alert('Selecione um funcionário antes de criar o usuário.');
+            selectFuncionario?.focus();
+        }
     });
 }
+
 
 // ==========================================================
 // MOSTRAR / OCULTAR SENHA

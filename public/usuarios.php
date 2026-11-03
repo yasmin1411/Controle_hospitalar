@@ -9,10 +9,26 @@ require_once __DIR__ . '/../includes/auth.php';
 
 // Somente administrador e diretor do hospital podem
 // acessar o gerenciamento de usuários.
-verificarPermissao([
+
+
+// ==========================================================
+// CONTROLE DE ACESSO À PÁGINA DE USUÁRIOS
+// ==========================================================
+
+// Verifica se a sessão contém uma função autorizada.
+$funcoesPermitidas = [
     'admin',
     'diretor_hospital'
-]);
+];
+
+$funcaoUsuario = $_SESSION['tipo'] ?? '';
+
+if (!in_array($funcaoUsuario, $funcoesPermitidas, true)) {
+    http_response_code(403);
+    exit('Acesso negado. Você não tem permissão para acessar esta página.');
+}
+
+
 
 // Carrega a conexão com o banco de dados.
 require_once __DIR__ . '/../config/database.php';
@@ -87,30 +103,45 @@ require_once __DIR__ . '/../includes/header.php';
          CABEÇALHO DA PÁGINA
          ================================================== -->
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
-        <div>
+<div>
 
-            <h2 class="mb-1">
-                <i class="bi bi-people-fill"></i>
-                Usuários do Sistema
-            </h2>
+    <h2 class="mb-1">
+        <i class="bi bi-people-fill"></i>
+        Usuários do Sistema
+    </h2>
 
-            <p class="text-muted mb-0">
-                Gerencie as contas de acesso ao sistema hospitalar.
-            </p>
+    <p class="text-muted mb-0">
+        Gerencie as contas de acesso ao sistema hospitalar.
+    </p>
 
-        </div>
+</div>
 
-        <a
-            href="novo_usuario.php"
-            class="btn btn-primary"
-        >
-            <i class="bi bi-person-plus-fill"></i>
-            Novo Usuário
-        </a>
+<!-- Botões de navegação -->
+<div class="d-flex align-items-center gap-2 flex-wrap">
 
-    </div>
+    <!-- Voltar ao Dashboard -->
+    <a
+        href="dashboard.php"
+        class="btn btn-outline-primary"
+    >
+        <i class="bi bi-arrow-left-circle"></i>
+        Voltar ao painel
+    </a>
+
+    <!-- Cadastrar novo usuário -->
+    <a
+        href="novo_usuario.php"
+        class="btn btn-primary"
+    >
+        <i class="bi bi-person-plus-fill"></i>
+        Novo Usuário
+    </a>
+
+</div>
+
+</div>
 
 
     <!-- ==================================================
