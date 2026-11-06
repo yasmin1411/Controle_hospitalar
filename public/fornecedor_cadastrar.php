@@ -1,4 +1,3 @@
-
 <?php
 
 // ==========================================================
@@ -18,21 +17,31 @@ $erro = '';
 $sucesso = '';
 
 // ==========================================================
+// COLOCA A PRIMEIRA LETRA DE CADA PALAVRA EM MAIÚSCULO
+// ==========================================================
+
+function formatarTexto($texto) {
+    $texto = trim($texto);
+
+    return mb_convert_case($texto, MB_CASE_TITLE, 'UTF-8');
+}
+
+// ==========================================================
 // PROCESSA O CADASTRO
 // ==========================================================
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Recebe os dados enviados pelo formulário.
-    $nome = trim($_POST['nome'] ?? '');
+    $nome = formatarTexto($_POST['nome'] ?? '');
     $cnpj = trim($_POST['cnpj'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $telefone = trim($_POST['telefone'] ?? '');
-    $rua = trim($_POST['rua'] ?? '');
+    $rua = formatarTexto($_POST['rua'] ?? '');
     $numero = trim($_POST['numero'] ?? '');
     $cep = trim($_POST['cep'] ?? '');
-    $cidade = trim($_POST['cidade'] ?? '');
-    $complemento = trim($_POST['complemento'] ?? '');
+    $cidade = formatarTexto($_POST['cidade'] ?? '');
+    $complemento = formatarTexto($_POST['complemento'] ?? '');
 
     // Mantém somente os números para validar telefone e CEP.
     $telefoneNumeros = preg_replace('/\D/', '', $telefone);
@@ -693,6 +702,39 @@ document.querySelector('form').addEventListener('submit', function (e) {
 
         telefone.focus();
     }
+});
+
+// ==========================================================
+// CAPITALIZAÇÃO AUTOMÁTICA DOS CAMPOS
+// ==========================================================
+
+function primeiraLetraMaiuscula(texto) {
+
+return texto.replace(/(^|\s)([a-zá-ú])/gi, function(match, espaco, letra) {
+    return espaco + letra.toLocaleUpperCase('pt-BR');
+});
+
+}
+
+const camposCapitalizados = [
+document.getElementById('nome'),
+document.getElementById('rua'),
+document.getElementById('cidade'),
+document.getElementById('complemento')
+];
+
+camposCapitalizados.forEach(function(campo) {
+
+campo.addEventListener('input', function() {
+
+    const posicao = this.selectionStart;
+
+    this.value = primeiraLetraMaiuscula(this.value);
+
+    this.setSelectionRange(posicao, posicao);
+
+});
+
 });
 </script>
 

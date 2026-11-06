@@ -1,4 +1,3 @@
-
 <?php
 
 // ==========================================================
@@ -565,12 +564,13 @@ function escapar($valor): string
                         </label>
 
                         <input
-                            type="date"
-                            id="data_nascimento"
-                            name="data_nascimento"
-                            class="form-control"
-                            value="<?= escapar($funcionario['data_nascimento'] ?? '') ?>"
-                        >
+    type="date"
+    name="data_nascimento"
+    id="data_nascimento"
+    min="1900-01-01"
+    max="<?= date('Y-m-d') ?>"
+    required
+>
                     </div>
 
                     <div class="col-md-3">

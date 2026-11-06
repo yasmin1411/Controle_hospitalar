@@ -55,13 +55,55 @@ function campoComErro($campo, $erros)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validações
-    if ($paciente_id === '') $erros['paciente_id'] = true;
-    if ($medico_id === '') $erros['medico_id'] = true;
-    if ($enfermeiro_id === '') $erros['enfermeiro_id'] = true;
-    if ($data_entrada === '') $erros['data_entrada'] = true;
-    if ($quarto === '') $erros['quarto'] = true;
-    if ($leito === '') $erros['leito'] = true;
-    if ($quadro_clinico === '') $erros['quadro_clinico'] = true;
+    if ($paciente_id === '') {
+        $erros['paciente_id'] = true;
+    }
+
+    if ($medico_id === '') {
+        $erros['medico_id'] = true;
+    }
+
+    if ($enfermeiro_id === '') {
+        $erros['enfermeiro_id'] = true;
+    }
+
+    // Validação da data de entrada
+    $dataMinima = '1980-01-01';
+    $dataMaxima = date('Y-m-d');
+
+    $dataValida = false;
+
+    if ($data_entrada !== '') {
+        // Verifica se a data está no formato AAAA-MM-DD
+        $dataObjeto = DateTime::createFromFormat('!Y-m-d', $data_entrada);
+
+        if (
+            $dataObjeto !== false &&
+            $dataObjeto->format('Y-m-d') === $data_entrada &&
+            $data_entrada >= $dataMinima &&
+            $data_entrada <= $dataMaxima
+        ) {
+            $dataValida = true;
+        }
+    }
+
+    // Impede datas anteriores a 01/01/1980,
+    // datas inexistentes e datas futuras
+    if (!$dataValida) {
+        $erros['data_entrada'] = true;
+    }
+
+    if ($quarto === '') {
+        $erros['quarto'] = true;
+    }
+
+    if ($leito === '') {
+        $erros['leito'] = true;
+    }
+
+    if ($quadro_clinico === '') {
+        $erros['quadro_clinico'] = true;
+    }
 
     // Salva se não houver erros
     if (empty($erros)) {
@@ -386,14 +428,16 @@ $quadros = [
                         </label>
 
                         <div class="campo-com-icone">
-                            <i class="bi bi-calendar3 icone-campo"></i>
-
-                            <input
-                                type="date"
-                                name="data_entrada"
-                                class="form-control"
-                                value="<?= htmlspecialchars($data_entrada) ?>"
-                            >
+                            <i class="bi bi-calendar3 icone-campo"></i>              
+<input
+    type="date"
+    name="data_entrada"
+    class="form-control"
+    min="1980-01-01"
+    max="<?= date('Y-m-d') ?>"
+    value="<?= htmlspecialchars($data_entrada) ?>"
+    required
+>
                         </div>
                     </div>
 

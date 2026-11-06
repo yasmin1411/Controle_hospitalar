@@ -60,6 +60,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // FUNÇÕES AUXILIARES
 // ==========================================================
 
+// ==========================================================
+// FORMATAR TEXTOS COM A PRIMEIRA LETRA MAIÚSCULA
+// ==========================================================
+
+function formatarTexto($texto) {
+
+    $texto = trim($texto);
+
+    return mb_convert_case($texto, MB_CASE_TITLE, 'UTF-8');
+
+}
 // Função responsável por remover todos os caracteres
 // que não sejam números de um determinado valor.
 //
@@ -76,8 +87,8 @@ function somenteNumeros($valor)
 // DADOS DO FUNCIONÁRIO
 // ==========================================================
 
-// Recebe o nome do funcionário e remove espaços extras.
-$nome = trim($_POST['nome'] ?? '');
+// Recebe o nome com a primeira letra de cada palavra maiúscula.
+$nome = formatarTexto($_POST['nome'] ?? '');
 
 // Recebe a função profissional escolhida.
 $funcao = trim($_POST['funcao'] ?? '');
@@ -111,7 +122,7 @@ $status = trim($_POST['status'] ?? '');
 // ==========================================================
 
 // Recebe o nome da rua.
-$rua = trim($_POST['rua'] ?? '');
+$rua = formatarTexto($_POST['rua'] ?? '');
 
 // Recebe o número do endereço.
 $numero = trim($_POST['numero'] ?? '');
@@ -120,11 +131,11 @@ $numero = trim($_POST['numero'] ?? '');
 $cep = somenteNumeros($_POST['cep'] ?? '');
 
 // Recebe a cidade.
-$cidade = trim($_POST['cidade'] ?? '');
+$cidade = formatarTexto($_POST['cidade'] ?? '');
 
 // Recebe o complemento do endereço.
 // Este campo pode permanecer vazio.
-$complemento = trim($_POST['complemento'] ?? '');
+$complemento = formatarTexto($_POST['complemento'] ?? '');
 
 
 // ==========================================================
@@ -457,18 +468,72 @@ if (!preg_match('/^\d{8}$/', $cep)) {
 }
 
 
+/* ==========================================================
+   VALIDAR DATA DE NASCIMENTO E IDADE MÍNIMA
+   ========================================================== */
+
+   $dataMinima = '1900-01-01';
+   $hoje = new DateTimeImmutable('today');
+   $dataMaxima = $hoje->format('Y-m-d');
+   
+   // Verifica se a data foi informada.
+   if ($data_nascimento === '') {
+       die('Informe a data de nascimento.');
+   }
+   
+   // Converte a data no formato AAAA-MM-DD.
+   $data = DateTimeImmutable::createFromFormat(
+       '!Y-m-d',
+       $data_nascimento
+   );
+   
+   $errosData = DateTimeImmutable::getLastErrors();
+   
+   // Confere se a data realmente existe.
+   $dataValida = (
+       $data !== false &&
+       (
+           $errosData === false ||
+           (
+               $errosData['warning_count'] === 0 &&
+               $errosData['error_count'] === 0
+           )
+       ) &&
+       $data->format('Y-m-d') === $data_nascimento
+   );
+   
+   if (!$dataValida) {
+       die('Data de nascimento inválida.');
+   }
+   
+   // Impede datas anteriores a 01/01/1900.
+   if ($data_nascimento < $dataMinima) {
+       die('A data mínima permitida é 01/01/1900.');
+   }
+   
+   // Impede datas futuras.
+   if ($data_nascimento > $dataMaxima) {
+       die('A data de nascimento não pode ser futura.');
+   }
+   
+   // Calcula a idade em anos completos.
+   $idade = $data->diff($hoje)->y;
+   
+   // Bloqueia o cadastro de menores de 18 anos.
+   if ($idade < 18) {
+       die('Cadastro bloqueado: o funcionário precisa ter pelo menos 18 anos completos.');
+   }
 // ==========================================================
-// VALIDAÇÃO DA DATA DE NASCIMENTO
+// VERIFICAR IDADE MÍNIMA
 // ==========================================================
 
-// Verifica se a data de nascimento foi informada.
-if (empty($data_nascimento)) {
+// Calcula a idade considerando os anos completos.
+$idade = $data->diff($hoje)->y;
 
-    // A data de nascimento é obrigatória.
-    die('Informe a data de nascimento.');
+// O funcionário precisa ter pelo menos 18 anos.
+if ($idade < 18) {
+    die('O funcionário precisa ter 18 anos ou mais para ser cadastrado.');
 }
-
-
 // Tenta transformar a data recebida em um objeto DateTime.
 //
 // O formato esperado é:
@@ -501,19 +566,6 @@ if ($data > $hoje) {
     // Uma pessoa não pode ter uma data de nascimento futura.
     die('A data de nascimento não pode ser posterior à data de hoje.');
 }
-
-
-// ==========================================================
-// VERIFICAR IDADE MÍNIMA
-// ==========================================================
-
-// Calcula a diferença entre a data de nascimento
-// e a data atual.
-//
-// O "y" representa a quantidade de anos completos.
-$idade = $data->diff($hoje)->y;
-
-
 // Verifica se o funcionário possui menos de 18 anos.
 if ($idade < 18) {
 

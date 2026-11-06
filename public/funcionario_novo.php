@@ -179,10 +179,16 @@ require_once '../config/database.php';
                     <label for="data_nascimento">Data de nascimento <span>*</span></label>
                     <div class="campo-box">
                         <i class="bi bi-calendar-event"></i>
-                        <input type="date"
-                               id="data_nascimento"
-                               name="data_nascimento"
-                               required>
+                        
+<input
+    type="date"
+    id="data_nascimento"
+    name="data_nascimento"
+    min="1900-01-01"
+    max="<?= date('Y-m-d') ?>"
+    required
+>
+
                     </div>
                 </div>
 
@@ -313,6 +319,32 @@ require_once '../config/database.php';
 </div>
 
 <script>
+    // Coloca a primeira letra de cada palavra em maiúsculo.
+function formatarPrimeiraLetra(texto) {
+    return texto.replace(/(^|\s)([a-zá-ú])/g, function (letra) {
+        return letra.toLocaleUpperCase('pt-BR');
+    });
+}
+
+// Campos que devem começar com letras maiúsculas.
+const camposMaiusculos = [
+    document.getElementById('nome'),
+    document.getElementById('rua'),
+    document.getElementById('cidade'),
+    document.getElementById('complemento')
+];
+
+// Aplica a formatação enquanto o usuário digita.
+camposMaiusculos.forEach(function (campo) {
+    campo.addEventListener('input', function () {
+        const inicio = this.selectionStart;
+        const fim = this.selectionEnd;
+
+        this.value = formatarPrimeiraLetra(this.value);
+
+        this.setSelectionRange(inicio, fim);
+    });
+});
 // Atualiza o campo de registro conforme a função escolhida.
 const funcao = document.getElementById('funcao');
 const registro = document.getElementById('registro');
