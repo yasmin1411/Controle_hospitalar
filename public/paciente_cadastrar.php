@@ -2459,9 +2459,6 @@ $mostrarResponsavel = (
 
 
 
-<script>&#x20;
-
-
 
 // Coloca a primeira letra de cada palavra em maiúscula.
 
