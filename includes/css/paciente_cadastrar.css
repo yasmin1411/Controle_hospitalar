@@ -1,0 +1,362 @@
+/* ==========================================================
+   CONTROLE HOSPITALAR — CADASTRO DE PACIENTES
+   Tema claro e escuro seguindo o padrão de medicamentos.css.
+   A preferência é lida da chave controleHospitalarTema.
+========================================================== */
+
+/* ==========================================================
+   1. VARIÁVEIS DO TEMA CLARO
+========================================================== */
+:root {
+    color-scheme: light;
+
+    --azul: #2F80ED;
+    --azul2: #56CCF2;
+    --azule: #174ea6;
+
+    --texto: #203247;
+    --suave: #708198;
+    --borda: #dce7f2;
+
+    --verde: #27AE60;
+    --vermelho: #dc3545;
+
+    --fundo: #edf5ff;
+    --card: rgba(255, 255, 255, .96);
+    --campo-fundo: #ffffff;
+    --texto-principal: #24374d;
+    --texto-secundario: #52667d;
+
+    --fundo-secao: #f7faff;
+    --fundo-suave: #f1f6fb;
+    --linha: #edf2f7;
+    --hover: #f8fbff;
+
+    --sombra-card: 0 12px 28px rgba(39, 89, 145, .06);
+    --foco: 0 0 0 .2rem rgba(47, 128, 237, .12);
+
+    --info-fundo: #f7f9fc;
+    --info-texto: #44576d;
+}
+
+/* ==========================================================
+   2. VARIÁVEIS DO TEMA ESCURO
+   Mesma paleta azul-marinho usada nas demais páginas.
+========================================================== */
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --azul: #5b9dff;
+    --azul2: #56CCF2;
+    --azule: #3678d5;
+
+    --texto: #e4edf8;
+    --suave: #a6b6ca;
+    --borda: #334860;
+
+    --fundo: #101b2a;
+    --card: rgba(25, 40, 58, .94);
+    --campo-fundo: #142235;
+    --texto-principal: #e4edf8;
+    --texto-secundario: #c0cfe0;
+
+    --fundo-secao: #22354b;
+    --fundo-suave: #22354b;
+    --linha: #2b3d52;
+    --hover: #22354b;
+
+    --sombra-card: 0 12px 28px rgba(0, 0, 0, .16);
+    --foco: 0 0 0 .2rem rgba(91, 157, 255, .16);
+
+    --info-fundo: #142235;
+    --info-texto: #c0cfe0;
+}
+
+/* ==========================================================
+   3. FUNDO E CONFIGURAÇÕES GERAIS
+========================================================== */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: var(--texto);
+    background:
+        radial-gradient(circle at 7% 12%, rgba(86, 204, 242, .17), transparent 24%),
+        radial-gradient(circle at 94% 20%, rgba(47, 128, 237, .14), transparent 25%),
+        linear-gradient(135deg, #f7fbff, #edf5ff 52%, #e7f2ff);
+    transition: background .25s ease, color .25s ease;
+}
+
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(circle at 7% 12%, rgba(56, 122, 205, .12), transparent 25%),
+        radial-gradient(circle at 94% 20%, rgba(45, 151, 190, .09), transparent 26%),
+        linear-gradient(135deg, #101b2a, #142236 55%, #17283d);
+}
+
+.container {
+    max-width: 1180px;
+}
+
+/* ==========================================================
+   4. CABEÇALHO PRINCIPAL
+========================================================== */
+.cabecalho {
+    position: relative;
+    overflow: hidden;
+    padding: 28px 32px;
+    margin-bottom: 26px;
+    border-radius: 22px;
+    color: #ffffff;
+    background: linear-gradient(110deg, #1767d1, #2F80ED 55%, #42b6df);
+    box-shadow: 0 20px 45px rgba(31, 91, 160, .16);
+}
+
+.cabecalho::before,
+.cabecalho::after {
+    content: "";
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.cabecalho::before {
+    width: 230px;
+    height: 230px;
+    top: -125px;
+    right: -75px;
+    background: rgba(255, 255, 255, .06);
+}
+
+.cabecalho::after {
+    width: 100px;
+    height: 100px;
+    right: 150px;
+    bottom: -65px;
+}
+
+.cabecalho h2,
+.cabecalho p {
+    position: relative;
+    z-index: 1;
+}
+
+.cabecalho h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+}
+
+.cabecalho p {
+    color: rgba(255, 255, 255, .88);
+    font-size: .95rem;
+}
+
+/* ==========================================================
+   5. CARTÕES E SEÇÕES DO FORMULÁRIO
+========================================================== */
+.card {
+    margin-bottom: 24px;
+    overflow: hidden;
+    color: var(--texto-principal);
+    background: var(--card);
+    border: 1px solid var(--borda);
+    border-radius: 18px;
+    box-shadow: var(--sombra-card);
+    transition: background .25s ease, border-color .25s ease;
+}
+
+.card-header {
+    padding: 16px 22px;
+    color: var(--azule);
+    background: var(--fundo-secao);
+    border-bottom: 1px solid var(--borda);
+    font-size: 1.02rem;
+    font-weight: 750;
+}
+
+.card-header i {
+    margin-right: 8px;
+    color: var(--azul);
+}
+
+.card-body {
+    padding: 25px;
+}
+
+/* ==========================================================
+   6. CAMPOS DO FORMULÁRIO
+========================================================== */
+.form-label {
+    margin-bottom: 8px;
+    color: var(--texto-secundario);
+    font-size: .92rem;
+    font-weight: 700;
+}
+
+.form-control,
+.form-select {
+    min-height: 47px;
+    padding: 10px 13px;
+    color: var(--texto-principal);
+    background-color: var(--campo-fundo);
+    border: 1px solid var(--borda);
+    border-radius: 11px;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.form-control::placeholder {
+    color: var(--suave);
+    opacity: .85;
+}
+
+.form-control:focus,
+.form-select:focus {
+    color: var(--texto-principal);
+    background-color: var(--campo-fundo);
+    border-color: var(--azul);
+    box-shadow: var(--foco);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+    color: var(--suave);
+    background-color: var(--fundo-secao);
+    border-color: var(--borda);
+}
+
+.form-select option {
+    color: var(--texto-principal);
+    background: var(--card);
+}
+
+.form-text {
+    margin-top: 6px;
+    color: var(--suave);
+    font-size: .82rem;
+}
+
+.obrigatorio {
+    color: var(--vermelho);
+    font-weight: 800;
+}
+
+.text-danger {
+    display: inline-block;
+    margin-top: 5px;
+    color: var(--vermelho) !important;
+    font-size: .84rem;
+}
+
+/* ==========================================================
+   7. BOTÕES E MENSAGENS
+========================================================== */
+.btn-primary {
+    padding: 11px 20px;
+    color: #ffffff;
+    background: var(--azul);
+    border-color: var(--azul);
+    border-radius: 11px;
+    font-weight: 700;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    color: #ffffff;
+    background: var(--azule);
+    border-color: var(--azule);
+}
+
+.btn-secondary {
+    padding: 11px 20px;
+    border-radius: 11px;
+    font-weight: 650;
+}
+
+html[data-theme="dark"] .btn-secondary {
+    color: #e4edf8;
+    background: #2b3d52;
+    border-color: #40546c;
+}
+
+html[data-theme="dark"] .btn-secondary:hover {
+    color: #ffffff;
+    background: #3a506b;
+    border-color: #506783;
+}
+
+.alert {
+    border-radius: 14px;
+}
+
+.alert-info {
+    color: var(--info-texto);
+    background: var(--info-fundo);
+    border-color: var(--borda);
+}
+
+html[data-theme="dark"] .alert-danger {
+    color: #ffd6da;
+    background: #48252e;
+    border: 1px solid #713541;
+}
+
+html[data-theme="dark"] .alert-danger .btn-close {
+    filter: invert(1);
+}
+
+.mensagem-cep {
+    min-height: 18px;
+    margin-top: 6px;
+    color: var(--suave);
+    font-size: .84rem;
+}
+
+hr {
+    border-color: var(--borda);
+    opacity: 1;
+}
+
+h5 {
+    color: var(--texto-principal);
+    font-weight: 750;
+}
+
+html[data-theme="dark"] .text-muted {
+    color: var(--suave) !important;
+}
+
+/* ==========================================================
+   8. RESPONSIVIDADE
+========================================================== */
+@media (max-width: 767.98px) {
+    .container {
+        padding-right: 14px;
+        padding-left: 14px;
+    }
+
+    .cabecalho {
+        padding: 22px 20px;
+        border-radius: 17px;
+    }
+
+    .cabecalho h2 {
+        font-size: 1.4rem;
+    }
+
+    .card-body {
+        padding: 19px;
+    }
+
+    .card-header {
+        padding: 14px 18px;
+    }
+}
