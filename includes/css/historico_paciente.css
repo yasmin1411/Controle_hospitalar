@@ -336,3 +336,11 @@ body {
 .hist-section-icon {
     text-align: center;
 }
+
+/* Oculta somente a barra superior compartilhada nesta página.
+   O botão "Voltar aos pacientes" do cabeçalho do histórico permanece visível. */
+body > nav.navbar,
+body > .navbar,
+body > header.navbar {
+    display: none !important;
+}

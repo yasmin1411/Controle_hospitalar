@@ -532,7 +532,7 @@ function formatarDataHistorico($data, $comHora = false)
 }
 ?>
 
-<link rel="stylesheet" href="../includes/css/historico_paciente.css?v=1">
+<link rel="stylesheet" href="../includes/css/historico_paciente.css?v=2">
 <script>
 (function () {
     try {
