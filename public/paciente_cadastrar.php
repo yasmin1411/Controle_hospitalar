@@ -2,8 +2,9 @@
 
 
 
-ini_set('display_errors', 1);
-
+// Registra erros no log sem exibir mensagens técnicas na tela do usuário.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
 error_reporting(E_ALL);
 
 
@@ -2457,6 +2458,9 @@ $mostrarResponsavel = (
 
 </div>
 
+
+
+<script>
 
 
 
