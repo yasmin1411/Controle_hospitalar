@@ -1,0 +1,338 @@
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
+/* ==========================================================
+   CONTROLE HOSPITALAR — HISTÓRICO DO PACIENTE
+   Tema claro e escuro integrado à preferência de perfil.php
+========================================================== */
+
+:root {
+    color-scheme: light;
+    --hist-azul: #2F80ED;
+    --hist-azul-claro: #56CCF2;
+    --hist-azul-escuro: #174ea6;
+    --hist-texto: #203247;
+    --hist-suave: #708198;
+    --hist-borda: #dce7f2;
+    --hist-fundo: #edf5ff;
+    --hist-card: #ffffff;
+    --hist-card-suave: rgba(255,255,255,.90);
+    --hist-card-interno: #f7faff;
+    --hist-linha: #edf2f7;
+    --hist-sombra: 0 13px 30px rgba(39,89,145,.07);
+    --hist-azul-claro-fundo: #edf5ff;
+    --hist-campo-texto: #40536a;
+    --hist-verde: #27AE60;
+    --hist-laranja: #e58b32;
+    --hist-violeta: #8366cf;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --hist-azul: #5b9dff;
+    --hist-azul-claro: #56CCF2;
+    --hist-azul-escuro: #3678d5;
+    --hist-texto: #e4edf8;
+    --hist-suave: #a6b6ca;
+    --hist-borda: #334860;
+    --hist-fundo: #101b2a;
+    --hist-card: #19283a;
+    --hist-card-suave: rgba(25,40,58,.94);
+    --hist-card-interno: #142235;
+    --hist-linha: #2b3d52;
+    --hist-sombra: 0 13px 30px rgba(0,0,0,.16);
+    --hist-azul-claro-fundo: #223b58;
+    --hist-campo-texto: #c0cfe0;
+}
+
+.hist-page,
+.hist-page * { box-sizing: border-box; }
+
+body {
+    min-height: 100vh;
+    color: var(--hist-texto);
+    background:
+        radial-gradient(circle at 7% 12%, rgba(86,204,242,.15), transparent 24%),
+        radial-gradient(circle at 94% 20%, rgba(47,128,237,.12), transparent 25%),
+        linear-gradient(135deg, #f7fbff, var(--hist-fundo) 52%, #e7f2ff);
+    transition: background .25s ease, color .25s ease;
+}
+
+:root[data-theme="dark"] body {
+    background:
+        radial-gradient(circle at 7% 12%, rgba(56,122,205,.10), transparent 25%),
+        radial-gradient(circle at 94% 20%, rgba(45,151,190,.08), transparent 26%),
+        linear-gradient(135deg, #101b2a, #142236 55%, #17283d);
+}
+
+.hist-page {
+    width: min(100% - 44px, 1480px);
+    margin: 0 auto;
+    padding: 28px 0 48px;
+}
+
+/* Cabeçalho principal */
+.hist-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    overflow: hidden;
+    min-height: 190px;
+    margin-bottom: 22px;
+    padding: 32px 36px;
+    border-radius: 26px;
+    color: #fff;
+    background: linear-gradient(110deg, #1767d1, #2F80ED 55%, #42b6df);
+    box-shadow: 0 20px 45px rgba(31,91,160,.16);
+}
+
+.hist-hero-content { position: relative; z-index: 1; }
+.hist-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 7px 12px;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    background: rgba(255,255,255,.13);
+    color: rgba(255,255,255,.94);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 1.1px;
+}
+.hist-hero h1 { margin: 0; color: #fff; font-size: clamp(27px,3vw,36px); font-weight: 850; letter-spacing: -.7px; }
+.hist-hero p { max-width: 650px; margin: 8px 0 0; color: rgba(255,255,255,.88); font-size: 14px; }
+.hist-back {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    flex-shrink: 0;
+    padding: 12px 17px;
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 13px;
+    background: rgba(255,255,255,.13);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 750;
+    text-decoration: none;
+    transition: .2s ease;
+    backdrop-filter: blur(8px);
+}
+.hist-back:hover { transform: translateY(-2px); background: rgba(255,255,255,.22); color: #fff; }
+.hist-hero-orbit { position: absolute; display: block; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; pointer-events: none; }
+.hist-orbit-one { width: 270px; height: 270px; right: 12%; top: -170px; background: rgba(255,255,255,.035); }
+.hist-orbit-two { width: 155px; height: 155px; right: 3%; bottom: -105px; }
+
+/* Identificação do paciente */
+.hist-patient-card {
+    display: flex;
+    align-items: center;
+    gap: 19px;
+    margin-bottom: 14px;
+    padding: 23px 25px;
+    border: 1px solid var(--hist-borda);
+    border-radius: 21px;
+    background: var(--hist-card-suave);
+    box-shadow: var(--hist-sombra);
+}
+.hist-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px;
+    height: 68px;
+    flex: 0 0 68px;
+    border: 5px solid var(--hist-azul-claro-fundo);
+    border-radius: 21px;
+    background: linear-gradient(145deg, #2F80ED, #56CCF2);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+.hist-patient-main { min-width: 0; flex: 1; }
+.hist-kicker { display: block; margin-bottom: 4px; color: var(--hist-azul); font-size: 9px; font-weight: 850; letter-spacing: 1.15px; }
+.hist-patient-main h2 { margin: 0 0 9px; color: var(--hist-texto); font-size: 22px; font-weight: 850; overflow-wrap: anywhere; }
+.hist-patient-meta { display: flex; flex-wrap: wrap; gap: 8px 19px; color: var(--hist-suave); font-size: 12px; }
+.hist-patient-meta span { display: inline-flex; align-items: center; gap: 7px; }
+.hist-patient-meta i { color: var(--hist-azul); }
+.hist-patient-code { min-width: 105px; padding-left: 20px; border-left: 1px solid var(--hist-borda); text-align: right; }
+.hist-patient-code span { display: block; color: var(--hist-suave); font-size: 9px; font-weight: 800; letter-spacing: 1px; }
+.hist-patient-code strong { display: block; margin-top: 4px; color: var(--hist-azul); font-size: 21px; font-weight: 850; }
+
+.hist-contact-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin-bottom: 22px; }
+.hist-contact-item { display: flex; align-items: center; gap: 13px; min-width: 0; padding: 16px 18px; border: 1px solid var(--hist-borda); border-radius: 17px; background: var(--hist-card-suave); }
+.hist-contact-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 13px; background: var(--hist-azul-claro-fundo); color: var(--hist-azul); font-size: 18px; }
+.hist-contact-item small { display: block; margin-bottom: 3px; color: var(--hist-suave); font-size: 10px; font-weight: 750; }
+.hist-contact-item strong { display: block; color: var(--hist-texto); font-size: 13px; overflow-wrap: anywhere; }
+
+/* Indicadores */
+.hist-overview { margin-bottom: 19px; padding: 22px; border: 1px solid var(--hist-borda); border-radius: 21px; background: var(--hist-card-suave); box-shadow: var(--hist-sombra); }
+.hist-overview-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 17px; }
+.hist-overview-heading h2 { margin: 0; color: var(--hist-texto); font-size: 19px; font-weight: 850; }
+.hist-total, .hist-count { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid var(--hist-borda); border-radius: 999px; background: var(--hist-card-interno); color: var(--hist-campo-texto); font-size: 11px; font-weight: 750; white-space: nowrap; }
+.hist-total i { color: var(--hist-azul); }
+.hist-stats-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 12px; }
+.hist-stat { display: grid; grid-template-columns: 42px 1fr; grid-template-rows: auto auto; align-items: center; column-gap: 11px; padding: 14px; border: 1px solid var(--hist-borda); border-radius: 16px; background: var(--hist-card-interno); color: var(--hist-texto); text-decoration: none; transition: transform .2s ease, border-color .2s ease; }
+.hist-stat:hover { transform: translateY(-3px); border-color: var(--hist-azul); color: var(--hist-texto); }
+.hist-stat-icon { display: grid; place-items: center; grid-row: 1 / 3; width: 42px; height: 42px; border-radius: 13px; font-size: 18px; }
+.hist-stat strong { color: var(--hist-texto); font-size: 22px; font-weight: 850; line-height: 1; }
+.hist-stat > span:last-child { margin-top: 4px; color: var(--hist-suave); font-size: 10px; font-weight: 750; }
+.stat-blue .hist-stat-icon { background: rgba(47,128,237,.12); color: #2F80ED; }
+.stat-cyan .hist-stat-icon { background: rgba(86,204,242,.15); color: #1c9fca; }
+.stat-violet .hist-stat-icon { background: rgba(131,102,207,.13); color: #8366cf; }
+.stat-green .hist-stat-icon { background: rgba(39,174,96,.13); color: #27AE60; }
+.stat-orange .hist-stat-icon { background: rgba(229,139,50,.14); color: #d98227; }
+
+/* Aviso de estado e navegação */
+.hist-notice { display: flex; align-items: center; gap: 13px; margin: 0 0 17px; padding: 14px 17px; border: 1px solid var(--hist-borda); border-radius: 16px; background: var(--hist-card-suave); }
+.hist-notice-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border-radius: 12px; font-size: 18px; }
+.hist-notice strong { display: block; color: var(--hist-texto); font-size: 12px; }
+.hist-notice p { margin: 2px 0 0; color: var(--hist-suave); font-size: 11px; }
+.notice-found .hist-notice-icon { background: rgba(39,174,96,.13); color: #27AE60; }
+.notice-empty .hist-notice-icon { background: rgba(47,128,237,.12); color: var(--hist-azul); }
+.hist-section-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.hist-section-nav a { display: inline-flex; align-items: center; gap: 7px; padding: 9px 12px; border: 1px solid var(--hist-borda); border-radius: 999px; background: var(--hist-card-suave); color: var(--hist-campo-texto); font-size: 11px; font-weight: 750; text-decoration: none; transition: .2s ease; }
+.hist-section-nav a i { color: var(--hist-azul); }
+.hist-section-nav a:hover { transform: translateY(-2px); border-color: var(--hist-azul); color: var(--hist-azul); }
+
+/* Seções clínicas */
+.hist-section { scroll-margin-top: 22px; margin-bottom: 19px; overflow: hidden; border: 1px solid var(--hist-borda); border-radius: 21px; background: var(--hist-card-suave); box-shadow: var(--hist-sombra); }
+.hist-section-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 22px; border-bottom: 1px solid var(--hist-linha); }
+.hist-section-title { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.hist-section-icon { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; border-radius: 15px; font-size: 21px; }
+.icon-blue { background: rgba(47,128,237,.13); color: #2F80ED; }
+.icon-cyan { background: rgba(86,204,242,.15); color: #169fc9; }
+.icon-violet { background: rgba(131,102,207,.14); color: #8366cf; }
+.icon-green { background: rgba(39,174,96,.13); color: #27AE60; }
+.icon-orange { background: rgba(229,139,50,.14); color: #d98227; }
+.hist-section-title h2 { margin: 0; color: var(--hist-texto); font-size: 17px; font-weight: 850; }
+.hist-section-title p { margin: 4px 0 0; color: var(--hist-suave); font-size: 11px; }
+.hist-section-body { padding: 19px 22px 22px; }
+.hist-record-list { display: grid; gap: 14px; }
+.hist-record { min-width: 0; padding: 18px; border: 1px solid var(--hist-borda); border-radius: 17px; background: var(--hist-card-interno); }
+.hist-record-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 14px; }
+.hist-record-label { display: block; margin-bottom: 5px; color: var(--hist-azul); font-size: 9px; font-weight: 850; letter-spacing: 1px; }
+.hist-record-top h3 { margin: 0; color: var(--hist-texto); font-size: 15px; font-weight: 850; overflow-wrap: anywhere; }
+.hist-status, .hist-professional, .hist-date-pill { display: inline-flex; align-items: center; gap: 7px; max-width: 48%; padding: 8px 10px; border: 1px solid var(--hist-borda); border-radius: 999px; background: var(--hist-card); color: var(--hist-campo-texto); font-size: 10px; font-weight: 750; overflow-wrap: anywhere; }
+.hist-status i { color: #27AE60; font-size: 7px; }
+.hist-professional i, .hist-date-pill i { color: var(--hist-azul); }
+.hist-date-strip { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; padding: 12px 14px; border: 1px solid var(--hist-borda); border-radius: 13px; background: var(--hist-card); }
+.hist-date-strip > span { flex: 1; min-width: 150px; }
+.hist-date-strip small, .hist-detail small, .hist-text-block small { display: block; margin-bottom: 5px; color: var(--hist-suave); font-size: 9px; font-weight: 850; letter-spacing: .6px; text-transform: uppercase; }
+.hist-date-strip strong { display: block; color: var(--hist-texto); font-size: 12px; }
+.hist-date-strip strong i { margin-right: 5px; color: var(--hist-azul); }
+.hist-detail-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-bottom: 13px; }
+.hist-detail-grid-two { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.hist-detail { min-width: 0; padding: 11px 12px; border: 1px solid var(--hist-borda); border-radius: 12px; background: var(--hist-card); }
+.hist-detail strong { display: block; color: var(--hist-texto); font-size: 12px; overflow-wrap: anywhere; }
+.hist-text-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.hist-text-grid-two { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.hist-text-block { min-width: 0; padding: 12px 13px; border: 1px solid var(--hist-borda); border-radius: 12px; background: var(--hist-card); }
+.hist-text-block p { margin: 0; color: var(--hist-campo-texto); font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; white-space: normal; }
+.hist-text-block-full { grid-column: 1 / -1; }
+
+/* Tabela de prescrições */
+.hist-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--hist-borda); border-radius: 14px; }
+.hist-table { width: 100%; min-width: 900px; margin: 0; border-collapse: collapse; color: var(--hist-campo-texto); font-size: 11px; }
+.hist-table thead th { padding: 13px 14px; border-bottom: 1px solid var(--hist-borda); background: var(--hist-card-interno); color: var(--hist-suave); font-size: 9px; font-weight: 850; letter-spacing: .65px; text-align: left; text-transform: uppercase; white-space: nowrap; }
+.hist-table tbody td { padding: 13px 14px; border-bottom: 1px solid var(--hist-linha); color: var(--hist-campo-texto); vertical-align: middle; }
+.hist-table tbody tr:last-child td { border-bottom: 0; }
+.hist-table tbody tr:hover { background: rgba(47,128,237,.045); }
+.hist-table tbody td strong { color: var(--hist-texto); font-weight: 800; }
+
+/* Estados vazios e rodapé */
+.hist-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 165px; padding: 24px 16px; border: 1px dashed var(--hist-borda); border-radius: 15px; background: var(--hist-card-interno); text-align: center; }
+.hist-empty > i { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 10px; border-radius: 15px; background: var(--hist-azul-claro-fundo); color: var(--hist-azul); font-size: 21px; }
+.hist-empty strong { color: var(--hist-texto); font-size: 13px; }
+.hist-empty span { margin-top: 4px; color: var(--hist-suave); font-size: 11px; }
+.hist-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 17px 4px 0; color: var(--hist-suave); font-size: 10px; }
+.hist-footer span, .hist-footer a { display: inline-flex; align-items: center; gap: 7px; }
+.hist-footer a { color: var(--hist-azul); font-weight: 750; text-decoration: none; }
+.hist-footer a:hover { text-decoration: underline; }
+
+:root[data-theme="dark"] .hist-table tbody tr:hover { background: rgba(91,157,255,.07); }
+
+@media (max-width: 1100px) {
+    .hist-stats-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+
+@media (max-width: 700px) {
+    .hist-page { width: min(100% - 28px, 1480px); padding-top: 18px; }
+    .hist-hero { align-items: flex-start; flex-direction: column; min-height: 0; padding: 25px 22px; border-radius: 22px; }
+    .hist-back { width: 100%; }
+    .hist-patient-card { align-items: flex-start; flex-wrap: wrap; padding: 18px; }
+    .hist-avatar { width: 56px; height: 56px; flex-basis: 56px; border-radius: 17px; }
+    .hist-patient-main { flex-basis: calc(100% - 76px); }
+    .hist-patient-main h2 { font-size: 18px; }
+    .hist-patient-code { width: 100%; padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--hist-borda); text-align: left; }
+    .hist-contact-grid { grid-template-columns: 1fr; gap: 9px; }
+    .hist-overview { padding: 17px; }
+    .hist-overview-heading { align-items: flex-start; flex-direction: column; }
+    .hist-stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+    .hist-stat { padding: 11px; grid-template-columns: 36px 1fr; column-gap: 8px; }
+    .hist-stat-icon { width: 36px; height: 36px; }
+    .hist-stat strong { font-size: 19px; }
+    .hist-notice { align-items: flex-start; }
+    .hist-section-head { align-items: flex-start; flex-direction: column; padding: 17px; }
+    .hist-section-title { align-items: flex-start; }
+    .hist-section-title h2 { font-size: 15px; }
+    .hist-section-body { padding: 14px; }
+    .hist-record { padding: 14px; }
+    .hist-record-top { flex-direction: column; }
+    .hist-status, .hist-professional, .hist-date-pill { max-width: 100%; }
+    .hist-detail-grid, .hist-detail-grid-two, .hist-text-grid, .hist-text-grid-two { grid-template-columns: 1fr; }
+    .hist-text-block-full { grid-column: auto; }
+    .hist-footer { align-items: flex-start; flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+
+/* ==========================================================
+   ÍCONES DOS QUADRADOS DE DESTAQUE
+   Carrega Bootstrap Icons diretamente pelo CSS para garantir
+   que os símbolos apareçam mesmo sem importação no header.php.
+========================================================== */
+.hist-contact-icon > .bi,
+.hist-stat-icon > .bi,
+.hist-notice-icon > .bi,
+.hist-section-icon > .bi,
+.hist-empty > .bi {
+    display: inline-block;
+    color: currentColor;
+    font-family: "bootstrap-icons" !important;
+    font-style: normal;
+    font-weight: normal !important;
+    line-height: 1;
+    vertical-align: middle;
+    -webkit-font-smoothing: antialiased;
+}
+
+.hist-contact-icon > .bi,
+.hist-notice-icon > .bi {
+    font-size: 19px;
+}
+
+.hist-stat-icon > .bi {
+    font-size: 20px;
+}
+
+.hist-section-icon > .bi,
+.hist-empty > .bi {
+    font-size: 22px;
+}
+
+.hist-contact-icon,
+.hist-stat-icon,
+.hist-notice-icon,
+.hist-section-icon {
+    text-align: center;
+}

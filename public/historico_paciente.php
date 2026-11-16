@@ -1,927 +1,841 @@
 <?php
 
+
+
 // Verifica se o usuário está autenticado
+
 // e disponibiliza as funções de controle de acesso.
+
 require_once __DIR__ . '/../includes/auth.php';
 
+
+
 // Carrega a conexão com o banco de dados.
+
 require_once __DIR__ . '/../config/database.php';
 
+
+
 // Verifica se o usuário possui permissão
+
 // para acessar o histórico do paciente.
+
 verificarModulo('historico_paciente');
 
 
 
+
+
+
+
 // ==========================================================
+
 // VERIFICAÇÃO DO PACIENTE
+
 // ==========================================================
+
+
 
 // Verifica se o ID do paciente foi enviado pela URL.
+
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 
+
+
     // Caso o ID não seja válido, volta para a lista de pacientes.
+
     header("Location: pacientes.php");
+
     exit;
+
 }
 
+
+
 // Converte o ID para inteiro por segurança.
+
 $paciente_id = (int) $_GET['id'];
 
 
+
+
+
 // ==========================================================
+
 // BUSCAR DADOS DO PACIENTE
+
 // ==========================================================
+
+
 
 // Busca os dados básicos do paciente.
+
 $sql = $pdo->prepare("
+
     SELECT
+
         p.id,
+
         p.nome,
+
         p.cpf,
+
         p.data_de_nascimento,
+
         p.telefone,
+
         p.cartao_cidadao
+
     FROM pacientes p
+
     WHERE p.id = ?
+
 ");
 
+
+
 $sql->execute([$paciente_id]);
+
+
 
 $paciente = $sql->fetch(PDO::FETCH_ASSOC);
 
 
+
+
+
 // ==========================================================
+
 // VERIFICAR SE O PACIENTE EXISTE
+
 // ==========================================================
+
+
 
 if (!$paciente) {
 
+
+
     echo "Paciente não encontrado.";
+
     exit;
+
 }
 
 
+
+
+
 // ==========================================================
+
 // BUSCAR INTERNAÇÕES ANTERIORES
+
 // ==========================================================
+
+
 
 $sqlInternacoes = $pdo->prepare("
+
     SELECT
+
         i.id,
+
         i.data_entrada,
+
         i.data_saida,
+
         i.quarto,
+
         i.motivos,
+
         i.status,
+
         i.leito,
+
         i.observacoes,
+
         i.quadro_clinico,
+
         m.nome AS medico_nome,
+
         e.nome AS enfermeiro_nome
+
     FROM internacoes i
 
+
+
     LEFT JOIN medico m
+
         ON i.medico_id = m.id
 
+
+
     LEFT JOIN enfermeiro e
+
         ON i.enfermeiro_id = e.id
+
+
 
     WHERE i.paciente_id = ?
 
+
+
     ORDER BY i.data_entrada DESC
+
 ");
 
+
+
 $sqlInternacoes->execute([$paciente_id]);
+
+
 
 $internacoes = $sqlInternacoes->fetchAll(PDO::FETCH_ASSOC);
 
 
+
+
+
 // ==========================================================
+
 // BUSCAR PRONTUÁRIOS
+
 // ==========================================================
+
+
 
 $sqlProntuarios = $pdo->prepare("
+
     SELECT
+
         p.id,
+
         p.data_hora,
+
         p.diagnostico,
+
         p.historico,
+
         p.prescricoes,
+
         p.observacoes,
+
         m.nome AS medico_nome
+
     FROM prontuario p
 
+
+
     LEFT JOIN medico m
+
         ON p.medico_id = m.id
+
+
 
     WHERE p.paciente_id = ?
 
+
+
     ORDER BY p.data_hora DESC
+
 ");
 
+
+
 $sqlProntuarios->execute([$paciente_id]);
+
+
 
 $prontuarios = $sqlProntuarios->fetchAll(PDO::FETCH_ASSOC);
 
 
+
+
+
 // ==========================================================
+
 // BUSCAR ANAMNESES
+
 // ==========================================================
+
+
 
 // Atenção:
+
 // A tabela utiliza paciente_ID e enfermeiro_ID
+
 // com letras maiúsculas no nome da coluna.
 
+
+
 $sqlAnamneses = $pdo->prepare("
+
     SELECT
+
         a.id,
+
         a.cuidados,
+
         a.frequencia,
+
         a.observacoes,
+
         a.data_hora,
+
         e.nome AS enfermeiro_nome
+
     FROM anamnese a
 
+
+
     LEFT JOIN enfermeiro e
+
         ON a.enfermeiro_ID = e.id
+
+
 
     WHERE a.paciente_ID = ?
 
+
+
     ORDER BY a.data_hora DESC
+
 ");
 
+
+
 $sqlAnamneses->execute([$paciente_id]);
+
+
 
 $anamneses = $sqlAnamneses->fetchAll(PDO::FETCH_ASSOC);
 
 
+
+
+
 // ==========================================================
+
 // BUSCAR PRESCRIÇÕES
+
 // ==========================================================
+
+
 
 $sqlPrescricoes = $pdo->prepare("
+
     SELECT
+
         pm.id,
+
         pm.dosagem,
+
         pm.via_administracao,
+
         pm.frequencia,
+
         pm.quantidade,
+
         pm.duracao,
+
         m.nome AS medicamento_nome,
+
         med.nome AS medico_nome
+
     FROM prescricao_medica pm
 
+
+
     LEFT JOIN medicamento m
+
         ON pm.medicamento_id = m.id
 
+
+
     LEFT JOIN medico med
+
         ON pm.medico_id = med.id
+
+
 
     WHERE pm.paciente_id = ?
 
+
+
     ORDER BY pm.id DESC
+
 ");
 
+
+
 $sqlPrescricoes->execute([$paciente_id]);
+
+
 
 $prescricoes = $sqlPrescricoes->fetchAll(PDO::FETCH_ASSOC);
 
 
-// ==========================================================
-// BUSCAR EXAMES
+
+
+
 // ==========================================================
 
+// BUSCAR EXAMES
+
+// ==========================================================
+
+
+
 $sqlExames = $pdo->prepare("
+
     SELECT
+
         id,
+
         nome_exame,
+
         data_exame,
+
         resultado,
+
         medico_responsavel,
+
         observacoes
+
     FROM exames
+
+
 
     WHERE paciente_id = ?
 
+
+
     ORDER BY data_exame DESC
+
 ");
 
+
+
 $sqlExames->execute([$paciente_id]);
+
+
 
 $exames = $sqlExames->fetchAll(PDO::FETCH_ASSOC);
 
 
-// ==========================================================
-// VERIFICAR SE EXISTE HISTÓRICO
+
+
+
 // ==========================================================
 
+// VERIFICAR SE EXISTE HISTÓRICO
+
+// ==========================================================
+
+
+
 $possuiHistorico =
+
     count($internacoes) > 0 ||
+
     count($prontuarios) > 0 ||
+
     count($anamneses) > 0 ||
+
     count($prescricoes) > 0 ||
+
     count($exames) > 0;
 
 
-// ==========================================================
-// FUNÇÃO PARA ESCAPAR TEXTO
+
+
+
 // ==========================================================
 
+// FUNÇÃO PARA ESCAPAR TEXTO
+
+// ==========================================================
+
+
+
 // Evita que textos armazenados no banco sejam interpretados
+
 // como código HTML.
+
 function limparTexto($texto)
+
 {
+
     return htmlspecialchars(
+
         $texto ?? '',
+
         ENT_QUOTES,
+
         'UTF-8'
+
     );
+
 }
 
 
-// ==========================================================
-// INÍCIO DA PÁGINA
+
+
+
 // ==========================================================
 
-require_once '../includes/header.php';
+// INÍCIO DA PÁGINA
+
+// ==========================================================
+
+
+
+require_once __DIR__ . '/../includes/header.php';
 
 ?>
+<?php
+// Dados calculados apenas para apresentação do prontuário.
+$idadePaciente = null;
 
-<div class="container py-4">
+if (!empty($paciente['data_de_nascimento'])) {
+    try {
+        $nascimento = new DateTime($paciente['data_de_nascimento']);
+        $idadePaciente = $nascimento->diff(new DateTime())->y;
+    } catch (Exception $e) {
+        $idadePaciente = null;
+    }
+}
 
-    <!-- =====================================================
-         CABEÇALHO
-         ===================================================== -->
+$nomePartes = preg_split('/\s+/', trim($paciente['nome'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+$iniciaisPaciente = '';
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+if (!empty($nomePartes)) {
+    preg_match('/^./u', $nomePartes[0], $primeiraInicial);
+    $iniciaisPaciente = $primeiraInicial[0] ?? '';
 
-        <div>
+    if (count($nomePartes) > 1) {
+        preg_match('/^./u', $nomePartes[count($nomePartes) - 1], $ultimaInicial);
+        $iniciaisPaciente .= $ultimaInicial[0] ?? '';
+    }
+}
 
-            <h2 class="mb-1">
-                Histórico do Paciente
-            </h2>
+$totalRegistros = count($internacoes) + count($prontuarios) + count($anamneses) + count($prescricoes) + count($exames);
 
-            <p class="text-muted mb-0">
-                Consulta do histórico hospitalar e clínico.
-            </p>
+function formatarDataHistorico($data, $comHora = false)
+{
+    if (empty($data)) {
+        return 'Não informado';
+    }
 
+    $timestamp = strtotime($data);
+    return $timestamp ? date($comHora ? 'd/m/Y · H:i' : 'd/m/Y', $timestamp) : limparTexto($data);
+}
+?>
+
+<link rel="stylesheet" href="../includes/css/historico_paciente.css?v=1">
+<script>
+(function () {
+    try {
+        const temaSalvo = localStorage.getItem('controleHospitalarTema');
+        document.documentElement.setAttribute('data-theme', temaSalvo === 'dark' ? 'dark' : 'light');
+    } catch (erro) {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+})();
+</script>
+
+<main class="hist-page">
+
+    <!-- CABEÇALHO PRINCIPAL -->
+    <section class="hist-hero">
+        <div class="hist-hero-content">
+            <span class="hist-eyebrow"><i class="bi bi-shield-check"></i> PRONTUÁRIO DIGITAL</span>
+            <h1>Histórico do paciente</h1>
+            <p>Visão integrada das informações hospitalares e dos registros clínicos.</p>
         </div>
-
-        <a
-            href="pacientes.php"
-            class="btn btn-secondary"
-        >
-            Voltar
+        <a href="pacientes.php" class="hist-back">
+            <i class="bi bi-arrow-left"></i>
+            Voltar aos pacientes
         </a>
+        <span class="hist-hero-orbit hist-orbit-one"></span>
+        <span class="hist-hero-orbit hist-orbit-two"></span>
+    </section>
 
-    </div>
-
-
-    <!-- =====================================================
-         DADOS DO PACIENTE
-         ===================================================== -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-
-            <strong>
-                Dados do paciente
-            </strong>
-
-        </div>
-
-        <div class="card-body">
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-
-                    <strong>Nome:</strong><br>
-
-                    <?= limparTexto($paciente['nome']) ?>
-
-                </div>
-
-
-                <div class="col-md-3 mb-3">
-
-                    <strong>CPF:</strong><br>
-
-                    <?= limparTexto($paciente['cpf']) ?>
-
-                </div>
-
-
-                <div class="col-md-3 mb-3">
-
-                    <strong>Data de nascimento:</strong><br>
-
-                    <?= date(
-                        'd/m/Y',
-                        strtotime($paciente['data_de_nascimento'])
-                    ) ?>
-
-                </div>
-
-
-                <div class="col-md-4">
-
-                    <strong>Telefone:</strong><br>
-
-                    <?= limparTexto($paciente['telefone']) ?>
-
-                </div>
-
-
-                <div class="col-md-4">
-
-                    <strong>Cartão do cidadão:</strong><br>
-
-                    <?= limparTexto($paciente['cartao_cidadao']) ?>
-
-                </div>
-
+    <!-- IDENTIFICAÇÃO DO PACIENTE -->
+    <section class="hist-patient-card">
+        <div class="hist-avatar"><?= limparTexto($iniciaisPaciente ?: 'P') ?></div>
+        <div class="hist-patient-main">
+            <span class="hist-kicker">PACIENTE</span>
+            <h2><?= limparTexto($paciente['nome']) ?></h2>
+            <div class="hist-patient-meta">
+                <span><i class="bi bi-person-vcard"></i> CPF: <?= limparTexto($paciente['cpf'] ?: 'Não informado') ?></span>
+                <span><i class="bi bi-calendar3"></i> Nascimento: <?= formatarDataHistorico($paciente['data_de_nascimento']) ?></span>
+                <?php if ($idadePaciente !== null): ?>
+                    <span><i class="bi bi-hourglass-split"></i> <?= (int) $idadePaciente ?> anos</span>
+                <?php endif; ?>
             </div>
+        </div>
+        <div class="hist-patient-code">
+            <span>REGISTRO</span>
+            <strong>#<?= (int) $paciente['id'] ?></strong>
+        </div>
+    </section>
 
+    <!-- CONTATO E IDENTIFICAÇÃO -->
+    <section class="hist-contact-grid">
+        <article class="hist-contact-item">
+            <span class="hist-contact-icon"><i class="bi bi-telephone"></i></span>
+            <div><small>Telefone</small><strong><?= limparTexto($paciente['telefone'] ?: 'Não informado') ?></strong></div>
+        </article>
+        <article class="hist-contact-item">
+            <span class="hist-contact-icon"><i class="bi bi-credit-card-2-front"></i></span>
+            <div><small>Cartão do cidadão</small><strong><?= limparTexto($paciente['cartao_cidadao'] ?: 'Não informado') ?></strong></div>
+        </article>
+    </section>
+
+    <!-- RESUMO DOS REGISTROS -->
+    <section class="hist-overview">
+        <div class="hist-overview-heading">
+            <div>
+                <span class="hist-kicker">VISÃO GERAL</span>
+                <h2>Resumo do histórico</h2>
+            </div>
+            <span class="hist-total"><i class="bi bi-clipboard2-pulse"></i> <?= $totalRegistros ?> registro(s)</span>
         </div>
 
-    </div>
-
-
-    <!-- =====================================================
-         AVISO SOBRE HISTÓRICO
-         ===================================================== -->
+        <div class="hist-stats-grid">
+            <a href="#internacoes" class="hist-stat stat-blue">
+                <span class="hist-stat-icon"><i class="bi bi-hospital"></i></span>
+                <strong><?= count($internacoes) ?></strong>
+                <span>Internações</span>
+            </a>
+            <a href="#prontuarios" class="hist-stat stat-cyan">
+                <span class="hist-stat-icon"><i class="bi bi-journal-medical"></i></span>
+                <strong><?= count($prontuarios) ?></strong>
+                <span>Prontuários</span>
+            </a>
+            <a href="#anamneses" class="hist-stat stat-violet">
+                <span class="hist-stat-icon"><i class="bi bi-clipboard2-heart"></i></span>
+                <strong><?= count($anamneses) ?></strong>
+                <span>Anamneses</span>
+            </a>
+            <a href="#prescricoes" class="hist-stat stat-green">
+                <span class="hist-stat-icon"><i class="bi bi-capsule"></i></span>
+                <strong><?= count($prescricoes) ?></strong>
+                <span>Prescrições</span>
+            </a>
+            <a href="#exames" class="hist-stat stat-orange">
+                <span class="hist-stat-icon"><i class="bi bi-eyedropper"></i></span>
+                <strong><?= count($exames) ?></strong>
+                <span>Exames</span>
+            </a>
+        </div>
+    </section>
 
     <?php if ($possuiHistorico): ?>
-
-        <div class="alert alert-warning shadow-sm">
-
-            <strong>
-                ⚠️ Histórico hospitalar encontrado.
-            </strong>
-
-            <br>
-
-            Este paciente possui registros anteriores
-            no sistema. Consulte as informações abaixo
-            antes de realizar o atendimento.
-
+        <div class="hist-notice notice-found">
+            <span class="hist-notice-icon"><i class="bi bi-check2-circle"></i></span>
+            <div><strong>Histórico disponível</strong><p>Foram encontrados registros anteriores para este paciente. Confira as informações antes do atendimento.</p></div>
         </div>
-
     <?php else: ?>
-
-        <div class="alert alert-info shadow-sm">
-
-            <strong>
-                ℹ️ Nenhum histórico anterior encontrado.
-            </strong>
-
-            <br>
-
-            Ainda não existem registros clínicos anteriores
-            para este paciente.
-
+        <div class="hist-notice notice-empty">
+            <span class="hist-notice-icon"><i class="bi bi-info-circle"></i></span>
+            <div><strong>Nenhum histórico anterior</strong><p>Ainda não existem registros clínicos ou hospitalares vinculados a este paciente.</p></div>
         </div>
-
     <?php endif; ?>
 
+    <!-- NAVEGAÇÃO RÁPIDA -->
+    <nav class="hist-section-nav" aria-label="Navegação do histórico">
+        <a href="#internacoes"><i class="bi bi-hospital"></i> Internações</a>
+        <a href="#prontuarios"><i class="bi bi-journal-medical"></i> Prontuários</a>
+        <a href="#anamneses"><i class="bi bi-clipboard2-heart"></i> Anamneses</a>
+        <a href="#prescricoes"><i class="bi bi-capsule"></i> Prescrições</a>
+        <a href="#exames"><i class="bi bi-eyedropper"></i> Exames</a>
+    </nav>
 
-    <!-- =====================================================
-         INTERNAÇÕES
-         ===================================================== -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-
-            <strong>
-                🏥 Internações anteriores
-            </strong>
-
+    <!-- INTERNAÇÕES -->
+    <section class="hist-section" id="internacoes">
+        <div class="hist-section-head">
+            <div class="hist-section-title">
+                <span class="hist-section-icon icon-blue"><i class="bi bi-hospital"></i></span>
+                <div><span class="hist-kicker">PERMANÊNCIA HOSPITALAR</span><h2>Internações anteriores</h2><p>Entradas, saídas e informações do atendimento hospitalar.</p></div>
+            </div>
+            <span class="hist-count"><?= count($internacoes) ?> registro(s)</span>
         </div>
 
-        <div class="card-body">
-
+        <div class="hist-section-body">
             <?php if (count($internacoes) > 0): ?>
-
-                <?php foreach ($internacoes as $internacao): ?>
-
-                    <div class="border rounded p-3 mb-3">
-
-                        <div class="row">
-
-                            <div class="col-md-4 mb-2">
-
-                                <strong>Entrada:</strong><br>
-
-                                <?= date(
-                                    'd/m/Y',
-                                    strtotime($internacao['data_entrada'])
-                                ) ?>
-
+                <div class="hist-record-list">
+                    <?php foreach ($internacoes as $internacao): ?>
+                        <article class="hist-record hist-admission">
+                            <div class="hist-record-top">
+                                <div><span class="hist-record-label">INTERNAÇÃO #<?= (int) $internacao['id'] ?></span><h3><?= limparTexto($internacao['motivos'] ?: 'Motivo não informado') ?></h3></div>
+                                <span class="hist-status"><i class="bi bi-circle-fill"></i><?= limparTexto($internacao['status'] ?: 'Status não informado') ?></span>
                             </div>
-
-
-                            <div class="col-md-4 mb-2">
-
-                                <strong>Saída:</strong><br>
-
-                                <?php if ($internacao['data_saida']): ?>
-
-                                    <?= date(
-                                        'd/m/Y',
-                                        strtotime($internacao['data_saida'])
-                                    ) ?>
-
-                                <?php else: ?>
-
-                                    Em andamento
-
-                                <?php endif; ?>
-
+                            <div class="hist-date-strip">
+                                <span><small>Entrada</small><strong><i class="bi bi-calendar-check"></i> <?= formatarDataHistorico($internacao['data_entrada']) ?></strong></span>
+                                <span><small>Saída</small><strong><i class="bi bi-calendar2-check"></i> <?= !empty($internacao['data_saida']) ? formatarDataHistorico($internacao['data_saida']) : 'Em andamento' ?></strong></span>
                             </div>
-
-
-                            <div class="col-md-4 mb-2">
-
-                                <strong>Status:</strong><br>
-
-                                <?= limparTexto($internacao['status']) ?>
-
+                            <div class="hist-detail-grid">
+                                <div class="hist-detail"><small>Quarto</small><strong><?= limparTexto($internacao['quarto'] ?: 'Não informado') ?></strong></div>
+                                <div class="hist-detail"><small>Leito</small><strong><?= limparTexto($internacao['leito'] ?: 'Não informado') ?></strong></div>
+                                <div class="hist-detail"><small>Médico</small><strong><?= limparTexto($internacao['medico_nome'] ?: 'Não informado') ?></strong></div>
+                                <div class="hist-detail"><small>Enfermeiro</small><strong><?= limparTexto($internacao['enfermeiro_nome'] ?: 'Não informado') ?></strong></div>
                             </div>
-
-
-                            <div class="col-md-4 mb-2">
-
-                                <strong>Quarto:</strong><br>
-
-                                <?= limparTexto($internacao['quarto']) ?>
-
+                            <div class="hist-text-grid">
+                                <div class="hist-text-block"><small>Quadro clínico</small><p><?= !empty($internacao['quadro_clinico']) ? nl2br(limparTexto($internacao['quadro_clinico'])) : 'Não informado' ?></p></div>
+                                <div class="hist-text-block"><small>Observações</small><p><?= !empty($internacao['observacoes']) ? nl2br(limparTexto($internacao['observacoes'])) : 'Não informado' ?></p></div>
                             </div>
-
-
-                            <div class="col-md-4 mb-2">
-
-                                <strong>Leito:</strong><br>
-
-                                <?= limparTexto($internacao['leito']) ?>
-
-                            </div>
-
-
-                            <div class="col-md-4 mb-2">
-
-                                <strong>Médico:</strong><br>
-
-                                <?= limparTexto(
-                                    $internacao['medico_nome']
-                                ) ?: 'Não informado' ?>
-
-                            </div>
-
-
-                            <div class="col-md-4 mb-2">
-
-                                <strong>Enfermeiro:</strong><br>
-
-                                <?= limparTexto(
-                                    $internacao['enfermeiro_nome']
-                                ) ?: 'Não informado' ?>
-
-                            </div>
-
-
-                            <div class="col-md-8 mb-2">
-
-                                <strong>Motivo:</strong><br>
-
-                                <?= nl2br(
-                                    limparTexto($internacao['motivos'])
-                                ) ?>
-
-                            </div>
-
-
-                            <div class="col-md-6 mb-2">
-
-                                <strong>Quadro clínico:</strong><br>
-
-                                <?= limparTexto(
-                                    $internacao['quadro_clinico']
-                                ) ?>
-
-                            </div>
-
-
-                            <div class="col-md-6 mb-2">
-
-                                <strong>Observações:</strong><br>
-
-                                <?= nl2br(
-                                    limparTexto($internacao['observacoes'])
-                                ) ?>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                <?php endforeach; ?>
-
-            <?php else: ?>
-
-                <p class="text-muted mb-0">
-                    Nenhuma internação anterior encontrada.
-                </p>
-
-            <?php endif; ?>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         PRONTUÁRIOS
-         ===================================================== -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-
-            <strong>
-                📋 Prontuários
-            </strong>
-
-        </div>
-
-        <div class="card-body">
-
-            <?php if (count($prontuarios) > 0): ?>
-
-                <?php foreach ($prontuarios as $prontuario): ?>
-
-                    <div class="border rounded p-3 mb-3">
-
-                        <p>
-                            <strong>Data:</strong>
-
-                            <?= date(
-                                'd/m/Y H:i',
-                                strtotime($prontuario['data_hora'])
-                            ) ?>
-                        </p>
-
-                        <p>
-                            <strong>Médico:</strong>
-
-                            <?= limparTexto(
-                                $prontuario['medico_nome']
-                            ) ?: 'Não informado' ?>
-                        </p>
-
-                        <p>
-                            <strong>Diagnóstico:</strong><br>
-
-                            <?= nl2br(
-                                limparTexto(
-                                    $prontuario['diagnostico']
-                                )
-                            ) ?>
-                        </p>
-
-                        <p>
-                            <strong>Histórico:</strong><br>
-
-                            <?= nl2br(
-                                limparTexto(
-                                    $prontuario['historico']
-                                )
-                            ) ?>
-                        </p>
-
-                        <p>
-                            <strong>Prescrições:</strong><br>
-
-                            <?= nl2br(
-                                limparTexto(
-                                    $prontuario['prescricoes']
-                                )
-                            ) ?>
-                        </p>
-
-                        <p class="mb-0">
-                            <strong>Observações:</strong><br>
-
-                            <?= nl2br(
-                                limparTexto(
-                                    $prontuario['observacoes']
-                                )
-                            ) ?>
-                        </p>
-
-                    </div>
-
-                <?php endforeach; ?>
-
-            <?php else: ?>
-
-                <p class="text-muted mb-0">
-                    Nenhum prontuário encontrado.
-                </p>
-
-            <?php endif; ?>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         ANAMNESES
-         ===================================================== -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-
-            <strong>
-                👩‍⚕️ Anamneses e cuidados de enfermagem
-            </strong>
-
-        </div>
-
-        <div class="card-body">
-
-            <?php if (count($anamneses) > 0): ?>
-
-                <?php foreach ($anamneses as $anamnese): ?>
-
-                    <div class="border rounded p-3 mb-3">
-
-                        <p>
-                            <strong>Data:</strong>
-
-                            <?= date(
-                                'd/m/Y H:i',
-                                strtotime($anamnese['data_hora'])
-                            ) ?>
-                        </p>
-
-                        <p>
-                            <strong>Enfermeiro:</strong>
-
-                            <?= limparTexto(
-                                $anamnese['enfermeiro_nome']
-                            ) ?: 'Não informado' ?>
-                        </p>
-
-                        <p>
-                            <strong>Cuidados:</strong><br>
-
-                            <?= nl2br(
-                                limparTexto(
-                                    $anamnese['cuidados']
-                                )
-                            ) ?>
-                        </p>
-
-                        <p>
-                            <strong>Frequência:</strong><br>
-
-                            <?= limparTexto(
-                                $anamnese['frequencia']
-                            ) ?>
-                        </p>
-
-                        <p class="mb-0">
-                            <strong>Observações:</strong><br>
-
-                            <?= nl2br(
-                                limparTexto(
-                                    $anamnese['observacoes']
-                                )
-                            ) ?>
-                        </p>
-
-                    </div>
-
-                <?php endforeach; ?>
-
-            <?php else: ?>
-
-                <p class="text-muted mb-0">
-                    Nenhuma anamnese encontrada.
-                </p>
-
-            <?php endif; ?>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         PRESCRIÇÕES
-         ===================================================== -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-
-            <strong>
-                💊 Prescrições médicas
-            </strong>
-
-        </div>
-
-        <div class="card-body">
-
-            <?php if (count($prescricoes) > 0): ?>
-
-                <div class="table-responsive">
-
-                    <table class="table table-bordered table-hover">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>Medicamento</th>
-                                <th>Dosagem</th>
-                                <th>Via</th>
-                                <th>Frequência</th>
-                                <th>Quantidade</th>
-                                <th>Duração</th>
-                                <th>Médico</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            <?php foreach ($prescricoes as $prescricao): ?>
-
-                                <tr>
-
-                                    <td>
-                                        <?= limparTexto(
-                                            $prescricao['medicamento_nome']
-                                        ) ?>
-                                    </td>
-
-                                    <td>
-                                        <?= limparTexto(
-                                            $prescricao['dosagem']
-                                        ) ?>
-                                    </td>
-
-                                    <td>
-                                        <?= limparTexto(
-                                            $prescricao['via_administracao']
-                                        ) ?>
-                                    </td>
-
-                                    <td>
-                                        <?= limparTexto(
-                                            $prescricao['frequencia']
-                                        ) ?>
-                                    </td>
-
-                                    <td>
-                                        <?= limparTexto(
-                                            $prescricao['quantidade']
-                                        ) ?>
-                                    </td>
-
-                                    <td>
-                                        <?= limparTexto(
-                                            $prescricao['duracao']
-                                        ) ?>
-                                    </td>
-
-                                    <td>
-                                        <?= limparTexto(
-                                            $prescricao['medico_nome']
-                                        ) ?: 'Não informado' ?>
-                                    </td>
-
-                                </tr>
-
-                            <?php endforeach; ?>
-
-                        </tbody>
-
-                    </table>
-
+                        </article>
+                    <?php endforeach; ?>
                 </div>
-
             <?php else: ?>
-
-                <p class="text-muted mb-0">
-                    Nenhuma prescrição encontrada.
-                </p>
-
+                <div class="hist-empty"><i class="bi bi-hospital"></i><strong>Nenhuma internação registrada</strong><span>As internações vinculadas ao paciente aparecerão aqui.</span></div>
             <?php endif; ?>
-
         </div>
+    </section>
 
-    </div>
-
-
-    <!-- =====================================================
-         EXAMES
-         ===================================================== -->
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-
-            <strong>
-                🔬 Exames realizados
-            </strong>
-
+    <!-- PRONTUÁRIOS -->
+    <section class="hist-section" id="prontuarios">
+        <div class="hist-section-head">
+            <div class="hist-section-title">
+                <span class="hist-section-icon icon-cyan"><i class="bi bi-journal-medical"></i></span>
+                <div><span class="hist-kicker">REGISTRO MÉDICO</span><h2>Prontuários</h2><p>Diagnósticos, histórico clínico, prescrições e observações.</p></div>
+            </div>
+            <span class="hist-count"><?= count($prontuarios) ?> registro(s)</span>
         </div>
+        <div class="hist-section-body">
+            <?php if (count($prontuarios) > 0): ?>
+                <div class="hist-record-list">
+                    <?php foreach ($prontuarios as $prontuario): ?>
+                        <article class="hist-record">
+                            <div class="hist-record-top">
+                                <div><span class="hist-record-label">PRONTUÁRIO #<?= (int) $prontuario['id'] ?></span><h3><?= formatarDataHistorico($prontuario['data_hora'], true) ?></h3></div>
+                                <span class="hist-professional"><i class="bi bi-person-badge"></i><?= limparTexto($prontuario['medico_nome'] ?: 'Médico não informado') ?></span>
+                            </div>
+                            <div class="hist-text-grid hist-text-grid-two">
+                                <div class="hist-text-block"><small>Diagnóstico</small><p><?= !empty($prontuario['diagnostico']) ? nl2br(limparTexto($prontuario['diagnostico'])) : 'Não informado' ?></p></div>
+                                <div class="hist-text-block"><small>Histórico</small><p><?= !empty($prontuario['historico']) ? nl2br(limparTexto($prontuario['historico'])) : 'Não informado' ?></p></div>
+                                <div class="hist-text-block"><small>Prescrições</small><p><?= !empty($prontuario['prescricoes']) ? nl2br(limparTexto($prontuario['prescricoes'])) : 'Não informado' ?></p></div>
+                                <div class="hist-text-block"><small>Observações</small><p><?= !empty($prontuario['observacoes']) ? nl2br(limparTexto($prontuario['observacoes'])) : 'Não informado' ?></p></div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="hist-empty"><i class="bi bi-journal-medical"></i><strong>Nenhum prontuário encontrado</strong><span>Os registros médicos aparecerão aqui quando forem cadastrados.</span></div>
+            <?php endif; ?>
+        </div>
+    </section>
 
-        <div class="card-body">
+    <!-- ANAMNESES -->
+    <section class="hist-section" id="anamneses">
+        <div class="hist-section-head">
+            <div class="hist-section-title">
+                <span class="hist-section-icon icon-violet"><i class="bi bi-clipboard2-heart"></i></span>
+                <div><span class="hist-kicker">CUIDADOS DE ENFERMAGEM</span><h2>Anamneses e cuidados</h2><p>Acompanhamentos e orientações registrados pela equipe de enfermagem.</p></div>
+            </div>
+            <span class="hist-count"><?= count($anamneses) ?> registro(s)</span>
+        </div>
+        <div class="hist-section-body">
+            <?php if (count($anamneses) > 0): ?>
+                <div class="hist-record-list">
+                    <?php foreach ($anamneses as $anamnese): ?>
+                        <article class="hist-record">
+                            <div class="hist-record-top">
+                                <div><span class="hist-record-label">ANAMNESE #<?= (int) $anamnese['id'] ?></span><h3><?= formatarDataHistorico($anamnese['data_hora'], true) ?></h3></div>
+                                <span class="hist-professional"><i class="bi bi-person-heart"></i><?= limparTexto($anamnese['enfermeiro_nome'] ?: 'Enfermeiro não informado') ?></span>
+                            </div>
+                            <div class="hist-text-grid hist-text-grid-two">
+                                <div class="hist-text-block"><small>Cuidados</small><p><?= !empty($anamnese['cuidados']) ? nl2br(limparTexto($anamnese['cuidados'])) : 'Não informado' ?></p></div>
+                                <div class="hist-text-block"><small>Frequência</small><p><?= !empty($anamnese['frequencia']) ? nl2br(limparTexto($anamnese['frequencia'])) : 'Não informado' ?></p></div>
+                                <div class="hist-text-block hist-text-block-full"><small>Observações</small><p><?= !empty($anamnese['observacoes']) ? nl2br(limparTexto($anamnese['observacoes'])) : 'Não informado' ?></p></div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="hist-empty"><i class="bi bi-clipboard2-heart"></i><strong>Nenhuma anamnese encontrada</strong><span>Os cuidados de enfermagem serão exibidos nesta seção.</span></div>
+            <?php endif; ?>
+        </div>
+    </section>
 
+    <!-- PRESCRIÇÕES -->
+    <section class="hist-section" id="prescricoes">
+        <div class="hist-section-head">
+            <div class="hist-section-title">
+                <span class="hist-section-icon icon-green"><i class="bi bi-capsule"></i></span>
+                <div><span class="hist-kicker">TRATAMENTO</span><h2>Prescrições médicas</h2><p>Medicamentos e instruções registrados para o paciente.</p></div>
+            </div>
+            <span class="hist-count"><?= count($prescricoes) ?> registro(s)</span>
+        </div>
+        <div class="hist-section-body">
+            <?php if (count($prescricoes) > 0): ?>
+                <div class="hist-table-wrap">
+                    <table class="hist-table">
+                        <thead><tr><th>Medicamento</th><th>Dosagem</th><th>Via</th><th>Frequência</th><th>Quantidade</th><th>Duração</th><th>Médico</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($prescricoes as $prescricao): ?>
+                                <tr>
+                                    <td><strong><?= limparTexto($prescricao['medicamento_nome'] ?: 'Não informado') ?></strong></td>
+                                    <td><?= limparTexto($prescricao['dosagem'] ?: '—') ?></td>
+                                    <td><?= limparTexto($prescricao['via_administracao'] ?: '—') ?></td>
+                                    <td><?= limparTexto($prescricao['frequencia'] ?: '—') ?></td>
+                                    <td><?= limparTexto($prescricao['quantidade'] ?: '—') ?></td>
+                                    <td><?= limparTexto($prescricao['duracao'] ?: '—') ?></td>
+                                    <td><?= limparTexto($prescricao['medico_nome'] ?: 'Não informado') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <div class="hist-empty"><i class="bi bi-capsule"></i><strong>Nenhuma prescrição encontrada</strong><span>As prescrições médicas aparecerão aqui quando forem registradas.</span></div>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- EXAMES -->
+    <section class="hist-section" id="exames">
+        <div class="hist-section-head">
+            <div class="hist-section-title">
+                <span class="hist-section-icon icon-orange"><i class="bi bi-eyedropper"></i></span>
+                <div><span class="hist-kicker">INVESTIGAÇÃO CLÍNICA</span><h2>Exames realizados</h2><p>Resultados, responsáveis e observações dos exames.</p></div>
+            </div>
+            <span class="hist-count"><?= count($exames) ?> registro(s)</span>
+        </div>
+        <div class="hist-section-body">
             <?php if (count($exames) > 0): ?>
-
-                <?php foreach ($exames as $exame): ?>
-
-                    <div class="border rounded p-3 mb-3">
-
-                        <p>
-                            <strong>Exame:</strong>
-
-                            <?= limparTexto(
-                                $exame['nome_exame']
-                            ) ?>
-                        </p>
-
-                        <p>
-                            <strong>Data:</strong>
-
-                            <?= date(
-                                'd/m/Y',
-                                strtotime($exame['data_exame'])
-                            ) ?>
-                        </p>
-
-                        <p>
-                            <strong>Médico responsável:</strong>
-
-                            <?= limparTexto(
-                                $exame['medico_responsavel']
-                            ) ?>
-                        </p>
-
-                        <p>
-                            <strong>Resultado:</strong><br>
-
-                            <?= nl2br(
-                                limparTexto(
-                                    $exame['resultado']
-                                )
-                            ) ?>
-                        </p>
-
-                        <p class="mb-0">
-                            <strong>Observações:</strong><br>
-
-                            <?= nl2br(
-                                limparTexto(
-                                    $exame['observacoes']
-                                )
-                            ) ?>
-                        </p>
-
-                    </div>
-
-                <?php endforeach; ?>
-
+                <div class="hist-record-list">
+                    <?php foreach ($exames as $exame): ?>
+                        <article class="hist-record">
+                            <div class="hist-record-top">
+                                <div><span class="hist-record-label">EXAME #<?= (int) $exame['id'] ?></span><h3><?= limparTexto($exame['nome_exame'] ?: 'Exame sem identificação') ?></h3></div>
+                                <span class="hist-date-pill"><i class="bi bi-calendar3"></i><?= formatarDataHistorico($exame['data_exame']) ?></span>
+                            </div>
+                            <div class="hist-detail-grid hist-detail-grid-two">
+                                <div class="hist-detail"><small>Médico responsável</small><strong><?= limparTexto($exame['medico_responsavel'] ?: 'Não informado') ?></strong></div>
+                            </div>
+                            <div class="hist-text-grid hist-text-grid-two">
+                                <div class="hist-text-block"><small>Resultado</small><p><?= !empty($exame['resultado']) ? nl2br(limparTexto($exame['resultado'])) : 'Não informado' ?></p></div>
+                                <div class="hist-text-block"><small>Observações</small><p><?= !empty($exame['observacoes']) ? nl2br(limparTexto($exame['observacoes'])) : 'Não informado' ?></p></div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
             <?php else: ?>
-
-                <p class="text-muted mb-0">
-                    Nenhum exame encontrado.
-                </p>
-
+                <div class="hist-empty"><i class="bi bi-eyedropper"></i><strong>Nenhum exame encontrado</strong><span>Os exames realizados ficarão disponíveis nesta seção.</span></div>
             <?php endif; ?>
-
         </div>
+    </section>
 
-    </div>
-
-
-</div>
+    <footer class="hist-footer">
+        <span><i class="bi bi-shield-lock"></i> Informações de uso restrito aos profissionais autorizados.</span>
+        <a href="pacientes.php"><i class="bi bi-arrow-up"></i> Voltar ao topo da lista</a>
+    </footer>
+</main>
 
 <?php
-
 // Carrega o rodapé padrão do sistema.
-require_once '../includes/footer.php';
-
+require_once __DIR__ . '/../includes/footer.php';
 ?>
