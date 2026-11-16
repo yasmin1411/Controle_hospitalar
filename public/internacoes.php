@@ -5,16 +5,12 @@
 // AUTENTICAÇÃO DO USUÁRIO
 // ==========================================================
 
-// Inclui o arquivo responsável pela autenticação,
-// sessão e controle de permissões.
 require_once '../includes/auth.php';
 
 // ==========================================================
 // CONTROLE DE ACESSO AO MÓDULO DE INTERNAÇÕES
 // ==========================================================
 
-// Verifica se o usuário possui autorização para acessar
-// o módulo de internações.
 verificarModulo('internacoes');
 
 // ==========================================================
@@ -23,93 +19,180 @@ verificarModulo('internacoes');
 
 require_once '../config/database.php';
 
-// Recebe o termo de pesquisa.
-$pesquisa = $_GET['pesquisa'] ?? '';
+// ==========================================================
+// FUNÇÕES AUXILIARES
+// ==========================================================
 
-/* =========================
-   BUSCAR INTERNAÇÕES
-   ========================= */
+function escapar($valor)
+{
+    return htmlspecialchars(
+        (string) ($valor ?? ''),
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
+
+// Formata datas do banco de dados.
+function formatarData($data)
+{
+    if (empty($data)) {
+        return '—';
+    }
+
+    $timestamp = strtotime($data);
+
+    return $timestamp !== false
+        ? date('d/m/Y', $timestamp)
+        : escapar($data);
+}
+
+// ==========================================================
+// RECEBER PESQUISA
+// ==========================================================
+
+$pesquisa = trim($_GET['pesquisa'] ?? '');
+
+// ==========================================================
+// BUSCAR INTERNAÇÕES
+// ==========================================================
 
 try {
+
+    $sqlBase = "
+        SELECT
+            i.*,
+            p.nome AS paciente,
+            p.cpf,
+            m.nome AS medico,
+            e.nome AS enfermeiro
+
+        FROM internacoes i
+
+        INNER JOIN pacientes p
+            ON p.id = i.paciente_id
+
+        INNER JOIN medico m
+            ON m.id = i.medico_id
+
+        LEFT JOIN enfermeiro e
+            ON e.id = i.enfermeiro_id
+    ";
+
     if (!empty($pesquisa)) {
+
         $busca = "%{$pesquisa}%";
 
-        $sql = $pdo->prepare("
-            SELECT
-                i.*,
-                p.nome AS paciente,
-                m.nome AS medico,
-                e.nome AS enfermeiro
-            FROM internacoes i
-            INNER JOIN pacientes p ON p.id = i.paciente_id
-            INNER JOIN medico m ON m.id = i.medico_id
-            LEFT JOIN enfermeiro e ON e.id = i.enfermeiro_id
+        $sql = $pdo->prepare($sqlBase . "
             WHERE
                 p.nome LIKE ?
+                OR p.cpf LIKE ?
                 OR m.nome LIKE ?
                 OR e.nome LIKE ?
                 OR i.status LIKE ?
                 OR i.quarto LIKE ?
                 OR i.leito LIKE ?
+                OR i.quadro_clinico LIKE ?
+
             ORDER BY i.data_entrada DESC
         ");
 
         $sql->execute([
-            $busca, $busca, $busca,
-            $busca, $busca, $busca
+            $busca,
+            $busca,
+            $busca,
+            $busca,
+            $busca,
+            $busca,
+            $busca,
+            $busca
         ]);
+
     } else {
-        $sql = $pdo->query("
-            SELECT
-                i.*,
-                p.nome AS paciente,
-                m.nome AS medico,
-                e.nome AS enfermeiro
-            FROM internacoes i
-            INNER JOIN pacientes p ON p.id = i.paciente_id
-            INNER JOIN medico m ON m.id = i.medico_id
-            LEFT JOIN enfermeiro e ON e.id = i.enfermeiro_id
+
+        $sql = $pdo->query($sqlBase . "
             ORDER BY i.data_entrada DESC
         ");
+
     }
 
     $internacoes = $sql->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-    die("Erro ao carregar internações: " . $e->getMessage());
+
+    error_log($e->getMessage());
+
+    die("Erro ao carregar internações. Verifique o banco de dados.");
+
 }
 
-/* =========================
-   ESTATÍSTICAS
-   ========================= */
+// ==========================================================
+// ESTATÍSTICAS
+// ==========================================================
 
 $totalInternacoes = count($internacoes);
+
 $internacoesAtivas = 0;
+
 $leitosEmUso = 0;
+
 $pacientesAlta = 0;
 
-// Calcula os números exibidos nos cards.
-foreach ($internacoes as $internacao) {
-    $statusAtual = strtolower(trim($internacao['status'] ?? ''));
+$pacientesObito = 0;
 
-    if (empty($internacao['data_saida']) && $statusAtual !== 'alta') {
+foreach ($internacoes as $internacao) {
+
+    $statusAtual = strtolower(
+        trim($internacao['status'] ?? '')
+    );
+
+    $ehObito = in_array(
+        $statusAtual,
+        ['óbito', 'obito'],
+        true
+    );
+
+    $ehAlta = $statusAtual === 'alta';
+
+    $encerrada = (
+        $ehAlta ||
+        $ehObito ||
+        !empty($internacao['data_saida'])
+    );
+
+    // Internações ainda ativas.
+    if (!$encerrada) {
         $internacoesAtivas++;
     }
 
-    if (empty($internacao['data_saida']) && !empty($internacao['leito'])) {
+    // Leitos atualmente ocupados.
+    if (
+        !$encerrada &&
+        !empty($internacao['leito'])
+    ) {
         $leitosEmUso++;
     }
 
-    if ($statusAtual === 'alta' || !empty($internacao['data_saida'])) {
+    // Pacientes que receberam alta.
+    if (
+        $ehAlta ||
+        (!$ehObito && !empty($internacao['data_saida']))
+    ) {
         $pacientesAlta++;
     }
+
+    // Pacientes com registro de óbito.
+    if ($ehObito) {
+        $pacientesObito++;
+    }
 }
+
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -119,47 +202,57 @@ foreach ($internacoes as $internacao) {
 
     <title>Controle de Internações</title>
 
-    <!-- Aplica o tema salvo antes da renderização visual. -->
+    <!-- Tema salvo pelo sistema. -->
+
     <script>
         (() => {
-            const tema = localStorage.getItem('controleHospitalarTema') || 'light';
+
+            const tema =
+                localStorage.getItem('controleHospitalarTema') || 'light';
 
             document.documentElement.setAttribute(
                 'data-theme',
                 tema === 'dark' ? 'dark' : 'light'
             );
+
         })();
     </script>
 
-    <!-- Bootstrap 5.3.3. -->
+    <!-- Bootstrap 5.3.3 -->
+
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-    <!-- Bootstrap Icons. -->
+    <!-- Bootstrap Icons -->
+
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
 
-    <!-- CSS externo da página de internações. -->
+    <!-- CSS da página -->
+
     <link
         rel="stylesheet"
         href="../includes/css/internacoes.css"
     >
+
 </head>
 
 <body>
 
 <div class="container-principal">
+
     <main class="card-principal">
 
         <!-- ==================================================
-             CABEÇALHO PRINCIPAL
+             CABEÇALHO
         =================================================== -->
 
         <header class="info-card">
+
             <h2>
                 <i class="bi bi-hospital"></i>
                 Sistema Hospitalar
@@ -168,21 +261,73 @@ foreach ($internacoes as $internacao) {
             <p>
                 Controle e acompanhamento das internações hospitalares.
             </p>
+
         </header>
+
+
+        <!-- ==================================================
+             MENSAGEM DE RESULTADO
+        =================================================== -->
+
+        <?php if (isset($_GET['resultado'])): ?>
+
+            <?php if ($_GET['resultado'] === 'obito_registrado'): ?>
+
+                <div class="alert alert-success alert-dismissible fade show">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Registro de óbito realizado com sucesso.
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                    ></button>
+
+                </div>
+
+            <?php elseif ($_GET['resultado'] === 'alta_registrada'): ?>
+
+                <div class="alert alert-success alert-dismissible fade show">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Alta hospitalar registrada com sucesso.
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                    ></button>
+
+                </div>
+
+            <?php endif; ?>
+
+        <?php endif; ?>
+
 
         <!-- ==================================================
              CARDS DE ESTATÍSTICAS
         =================================================== -->
 
-        <section class="row g-4 mb-4" aria-label="Resumo das internações">
+        <section
+            class="row g-4 mb-4"
+            aria-label="Resumo das internações"
+        >
+
+            <!-- TOTAL DE INTERNAÇÕES -->
 
             <div class="col-12 col-sm-6 col-xl-3">
+
                 <button
                     type="button"
                     class="estatistica-card"
                     onclick="mostrarTodasInternacoes()"
                     title="Visualizar todas as internações"
                 >
+
                     <span class="icone-estatistica icone-azul">
                         <i class="bi bi-hospital"></i>
                     </span>
@@ -194,16 +339,23 @@ foreach ($internacoes as $internacao) {
                     <span class="estatistica-legenda">
                         Total de Internações
                     </span>
+
                 </button>
+
             </div>
 
+
+            <!-- INTERNAÇÕES ATIVAS -->
+
             <div class="col-12 col-sm-6 col-xl-3">
+
                 <button
                     type="button"
                     class="estatistica-card"
                     onclick="mostrarInternacoesAtivas()"
                     title="Visualizar internações ativas"
                 >
+
                     <span class="icone-estatistica icone-verde">
                         <i class="bi bi-person-check"></i>
                     </span>
@@ -215,16 +367,23 @@ foreach ($internacoes as $internacao) {
                     <span class="estatistica-legenda">
                         Internações Ativas
                     </span>
+
                 </button>
+
             </div>
 
+
+            <!-- LEITOS EM USO -->
+
             <div class="col-12 col-sm-6 col-xl-3">
+
                 <button
                     type="button"
                     class="estatistica-card"
                     onclick="mostrarInternacoesAtivas()"
                     title="Visualizar internações com leito em uso"
                 >
+
                     <span class="icone-estatistica icone-roxo">
                         <i class="bi bi-person-badge"></i>
                     </span>
@@ -236,16 +395,23 @@ foreach ($internacoes as $internacao) {
                     <span class="estatistica-legenda">
                         Leitos em Uso
                     </span>
+
                 </button>
+
             </div>
 
+
+            <!-- PACIENTES COM ALTA -->
+
             <div class="col-12 col-sm-6 col-xl-3">
+
                 <button
                     type="button"
                     class="estatistica-card"
                     onclick="mostrarPacientesAlta()"
                     title="Visualizar pacientes com alta"
                 >
+
                     <span class="icone-estatistica icone-alta">
                         <i class="bi bi-check-circle"></i>
                     </span>
@@ -257,10 +423,13 @@ foreach ($internacoes as $internacao) {
                     <span class="estatistica-legenda">
                         Pacientes com Alta
                     </span>
+
                 </button>
+
             </div>
 
         </section>
+
 
         <!-- ==================================================
              TÍTULO E AÇÕES
@@ -269,39 +438,64 @@ foreach ($internacoes as $internacao) {
         <section class="cabecalho-lista">
 
             <div class="titulo-area">
+
                 <h1 class="titulo">
+
                     <i class="bi bi-person-badge"></i>
+
                     Controle de Internações
+
                 </h1>
 
                 <p class="subtitulo">
                     Cadastro, acompanhamento e controle dos pacientes internados.
                 </p>
+
             </div>
+
 
             <div class="acoes-topo">
 
-                <a href="dashboard.php" class="btn-voltar">
+                <a
+                    href="dashboard.php"
+                    class="btn-voltar"
+                >
+
                     <i class="bi bi-arrow-left"></i>
+
                     Voltar ao Menu
+
                 </a>
 
-                <a href="internacao_cadastrar.php" class="btn-azul">
+
+                <a
+                    href="internacao_cadastrar.php"
+                    class="btn-azul"
+                >
+
                     <i class="bi bi-plus-circle"></i>
+
                     Nova Internação
+
                 </a>
 
             </div>
 
         </section>
 
+
         <!-- ==================================================
              PESQUISA
         =================================================== -->
 
-        <form method="GET" class="form-pesquisa" id="formPesquisa">
+        <form
+            method="GET"
+            class="form-pesquisa"
+            id="formPesquisa"
+        >
 
             <div class="campo-pesquisa-wrapper">
+
                 <i class="bi bi-search icone-pesquisa"></i>
 
                 <input
@@ -310,24 +504,42 @@ foreach ($internacoes as $internacao) {
                     id="campoPesquisa"
                     class="form-control campo-pesquisa"
                     placeholder="Pesquisar paciente, médico, enfermeiro, quarto, leito ou status..."
-                    value="<?= htmlspecialchars($pesquisa, ENT_QUOTES, 'UTF-8') ?>"
+                    value="<?= escapar($pesquisa) ?>"
                     aria-label="Pesquisar internações"
                 >
+
             </div>
 
-            <button type="submit" class="btn-azul btn-pesquisar">
+
+            <button
+                type="submit"
+                class="btn-azul btn-pesquisar"
+            >
+
                 <i class="bi bi-search"></i>
+
                 Pesquisar
+
             </button>
 
+
             <?php if (!empty($pesquisa)): ?>
-                <a href="internacoes.php" class="btn-limpar-pesquisa">
+
+                <a
+                    href="internacoes.php"
+                    class="btn-limpar-pesquisa"
+                >
+
                     <i class="bi bi-x-circle"></i>
+
                     Limpar
+
                 </a>
+
             <?php endif; ?>
 
         </form>
+
 
         <!-- ==================================================
              TABELA DE INTERNAÇÕES
@@ -336,22 +548,37 @@ foreach ($internacoes as $internacao) {
         <div class="tabela-container">
 
             <div class="tabela-scroll">
+
                 <table class="table table-hover align-middle mb-0">
 
                     <thead>
+
                         <tr>
+
                             <th>Paciente</th>
+
                             <th>Médico</th>
+
                             <th>Enfermeiro</th>
+
                             <th>Entrada</th>
+
                             <th>Saída</th>
+
                             <th>Quarto</th>
+
                             <th>Leito</th>
+
                             <th>Quadro Clínico</th>
+
                             <th>Status</th>
+
                             <th>Ações</th>
+
                         </tr>
+
                     </thead>
+
 
                     <tbody>
 
@@ -360,120 +587,208 @@ foreach ($internacoes as $internacao) {
                         <?php foreach ($internacoes as $i): ?>
 
                             <?php
-                            // Verifica o status e se a internação foi encerrada.
-                            $status = $i['status'] ?? '';
-                            $statusLower = strtolower(trim($status));
 
-                            $pacienteComAlta =
-                                $statusLower === 'alta' ||
-                                !empty($i['data_saida']);
+                            // ==================================================
+                            // IDENTIFICAÇÃO DO STATUS
+                            // ==================================================
+
+                            $status = trim($i['status'] ?? '');
+
+                            $statusLower = strtolower($status);
+
+                            $pacienteComObito = in_array(
+                                $statusLower,
+                                ['óbito', 'obito'],
+                                true
+                            );
+
+                            $pacienteComAlta = (
+                                $statusLower === 'alta'
+                            );
+
+                            $internacaoEncerrada = (
+                                $pacienteComAlta ||
+                                $pacienteComObito ||
+                                !empty($i['data_saida'])
+                            );
+
                             ?>
 
-                            <tr>
+                            <tr
+                                data-status="<?= escapar($statusLower) ?>"
+                                data-encerrada="<?= $internacaoEncerrada ? '1' : '0' ?>"
+                            >
 
-                                <!-- Paciente. -->
+
+                                <!-- PACIENTE -->
+
                                 <td>
+
                                     <div class="nome-pessoa">
+
                                         <i class="bi bi-person-circle"></i>
+
                                         <strong>
-                                            <?= htmlspecialchars($i['paciente'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                                            <?= escapar($i['paciente']) ?>
                                         </strong>
+
                                     </div>
+
                                 </td>
 
-                                <!-- Médico. -->
+
+                                <!-- MÉDICO -->
+
                                 <td>
+
                                     <div class="nome-pessoa">
-                                        <i class="bi bi-heart-pulse"></i>
-                                        <span>
-                                            <?= htmlspecialchars($i['medico'] ?? '', ENT_QUOTES, 'UTF-8') ?>
-                                        </span>
-                                    </div>
-                                </td>
 
-                                <!-- Enfermeiro. -->
-                                <td>
-                                    <?php if (!empty($i['enfermeiro'])): ?>
-                                        <div class="nome-pessoa enfermeiro-pessoa">
-                                            <i class="bi bi-person-check"></i>
-                                            <span>
-                                                <?= htmlspecialchars($i['enfermeiro'], ENT_QUOTES, 'UTF-8') ?>
-                                            </span>
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="texto-muted">Não informado</span>
-                                    <?php endif; ?>
-                                </td>
-
-                                <!-- Data de entrada. -->
-                                <td>
-                                    <?php
-                                    if (!empty($i['data_entrada'])) {
-                                        $dataEntrada = strtotime($i['data_entrada']);
-
-                                        echo $dataEntrada !== false
-                                            ? date('d/m/Y H:i', $dataEntrada)
-                                            : htmlspecialchars($i['data_entrada'], ENT_QUOTES, 'UTF-8');
-                                    } else {
-                                        echo '—';
-                                    }
-                                    ?>
-                                </td>
-
-                                <!-- Data de saída. -->
-                                <td>
-                                    <?php
-                                    if (!empty($i['data_saida'])) {
-                                        $dataSaida = strtotime($i['data_saida']);
-
-                                        echo $dataSaida !== false
-                                            ? date('d/m/Y H:i', $dataSaida)
-                                            : htmlspecialchars($i['data_saida'], ENT_QUOTES, 'UTF-8');
-                                    } else {
-                                        echo '<span class="texto-muted">—</span>';
-                                    }
-                                    ?>
-                                </td>
-
-                                <!-- Quarto. -->
-                                <td>
-                                    <span class="badge-local">
-                                        <i class="bi bi-door-open"></i>
-                                        <?= htmlspecialchars($i['quarto'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
-                                    </span>
-                                </td>
-
-                                <!-- Leito. -->
-                                <td>
-                                    <span class="badge-leito">
                                         <i class="bi bi-person-badge"></i>
-                                        <?= htmlspecialchars($i['leito'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
-                                    </span>
+
+                                        <span>
+                                            <?= escapar($i['medico']) ?>
+                                        </span>
+
+                                    </div>
+
                                 </td>
 
-                                <!-- Quadro clínico. -->
+
+                                <!-- ENFERMEIRO -->
+
+                                <td>
+
+                                    <?php if (!empty($i['enfermeiro'])): ?>
+
+                                        <div class="nome-pessoa enfermeiro-pessoa">
+
+                                            <i class="bi bi-person-check"></i>
+
+                                            <span>
+                                                <?= escapar($i['enfermeiro']) ?>
+                                            </span>
+
+                                        </div>
+
+                                    <?php else: ?>
+
+                                        <span class="texto-muted">
+                                            Não informado
+                                        </span>
+
+                                    <?php endif; ?>
+
+                                </td>
+
+
+                                <!-- DATA DE ENTRADA -->
+
+                                <td>
+                                    <?= formatarData($i['data_entrada']) ?>
+                                </td>
+
+
+                                <!-- DATA DE SAÍDA -->
+
+                                <td>
+
+                                    <?php if (!empty($i['data_saida'])): ?>
+
+                                        <?= formatarData($i['data_saida']) ?>
+
+                                    <?php else: ?>
+
+                                        <span class="texto-muted">—</span>
+
+                                    <?php endif; ?>
+
+                                </td>
+
+
+                                <!-- QUARTO -->
+
+                                <td>
+
+                                    <span class="badge-local">
+
+                                        <i class="bi bi-door-open"></i>
+
+                                        <?= escapar($i['quarto'] ?? '-') ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- LEITO -->
+
+                                <td>
+
+                                    <span class="badge-leito">
+
+                                        <i class="bi bi-person-badge"></i>
+
+                                        <?= escapar($i['leito'] ?? '-') ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- QUADRO CLÍNICO -->
+
                                 <td class="coluna-quadro">
+
                                     <?php
+
                                     $quadro = $i['quadro_clinico'] ?? '';
 
                                     if (empty($quadro)) {
+
                                         echo '<span class="texto-muted">Não informado</span>';
-                                    } elseif (strlen($quadro) > 45) {
-                                        echo htmlspecialchars(substr($quadro, 0, 45), ENT_QUOTES, 'UTF-8') . '...';
+
+                                    } elseif (mb_strlen($quadro) > 45) {
+
+                                        echo escapar(
+                                            mb_substr($quadro, 0, 45)
+                                        ) . '...';
+
                                     } else {
-                                        echo htmlspecialchars($quadro, ENT_QUOTES, 'UTF-8');
+
+                                        echo escapar($quadro);
+
                                     }
+
                                     ?>
+
                                 </td>
 
-                                <!-- Status. -->
+
+                                <!-- STATUS -->
+
                                 <td>
-                                    <?php if ($statusLower === 'alta'): ?>
+
+                                    <?php if ($pacienteComObito): ?>
+
+                                        <span class="badge-status obito">
+
+                                            <i class="bi bi-file-earmark-medical"></i>
+
+                                            Óbito
+
+                                        </span>
+
+
+                                    <?php elseif ($pacienteComAlta): ?>
 
                                         <span class="badge-status alta">
+
                                             <i class="bi bi-check-circle"></i>
+
                                             Alta
+
                                         </span>
+
 
                                     <?php elseif (
                                         $statusLower === 'internado' ||
@@ -481,24 +796,41 @@ foreach ($internacoes as $internacao) {
                                     ): ?>
 
                                         <span class="badge-status ativo">
+
                                             <i class="bi bi-circle-fill"></i>
-                                            <?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>
+
+                                            <?= escapar($status) ?>
+
                                         </span>
+
 
                                     <?php else: ?>
 
                                         <span class="badge-status outro">
-                                            <?= htmlspecialchars($status ?: 'Não informado', ENT_QUOTES, 'UTF-8') ?>
+
+                                            <?= escapar(
+                                                $status ?: 'Não informado'
+                                            ) ?>
+
                                         </span>
 
                                     <?php endif; ?>
+
                                 </td>
 
-                                <!-- Ações. -->
+
+                                <!-- ==================================================
+                                     AÇÕES
+                                =================================================== -->
+
                                 <td>
+
                                     <div class="acoes-linha">
 
-                                        <?php if (!$pacienteComAlta): ?>
+                                        <?php if (!$internacaoEncerrada): ?>
+
+
+                                            <!-- EDITAR INTERNAÇÃO -->
 
                                             <a
                                                 href="internacao_editar.php?id=<?= (int) $i['id'] ?>"
@@ -506,15 +838,13 @@ foreach ($internacoes as $internacao) {
                                                 title="Editar internação"
                                                 aria-label="Editar internação"
                                             >
+
                                                 <i class="bi bi-pencil-square"></i>
+
                                             </a>
 
-                                        <?php endif; ?>
 
-                                        <?php if (
-                                            empty($i['data_saida']) &&
-                                            $statusLower !== 'alta'
-                                        ): ?>
+                                            <!-- DAR ALTA -->
 
                                             <button
                                                 type="button"
@@ -522,39 +852,81 @@ foreach ($internacoes as $internacao) {
                                                 title="Dar alta ao paciente"
                                                 aria-label="Dar alta ao paciente"
                                                 data-id="<?= (int) $i['id'] ?>"
-                                                data-paciente="<?= htmlspecialchars(
-                                                    $i['paciente'] ?? '',
-                                                    ENT_QUOTES,
-                                                    'UTF-8'
-                                                ) ?>"
+                                                data-paciente="<?= escapar($i['paciente']) ?>"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#modalAlta"
                                             >
+
                                                 <i class="bi bi-box-arrow-right"></i>
+
                                             </button>
+
+
+                                            <!-- REGISTRAR ÓBITO -->
+
+                                            <a
+                                                href="internacao_obito.php?id=<?= (int) $i['id'] ?>"
+                                                class="btn-acao btn-obito"
+                                                title="Registrar óbito"
+                                                aria-label="Registrar óbito"
+                                            >
+
+                                                <i class="bi bi-file-earmark-medical"></i>
+
+                                            </a>
+
+
+                                        <?php elseif ($pacienteComObito): ?>
+
+                                            <span
+                                                class="texto-muted"
+                                                title="Internação encerrada por óbito"
+                                            >
+                                                <i class="bi bi-lock-fill"></i>
+                                            </span>
+
+
+                                        <?php else: ?>
+
+                                            <span
+                                                class="texto-muted"
+                                                title="Internação encerrada"
+                                            >
+                                                <i class="bi bi-lock-fill"></i>
+                                            </span>
 
                                         <?php endif; ?>
 
                                     </div>
+
                                 </td>
 
                             </tr>
 
                         <?php endforeach; ?>
 
+
                     <?php else: ?>
 
-                        <!-- Estado exibido quando não existem resultados. -->
+
+                        <!-- NENHUMA INTERNAÇÃO ENCONTRADA -->
+
                         <tr>
+
                             <td colspan="10">
 
                                 <div class="estado-vazio">
 
                                     <div class="icone-vazio">
+
                                         <i class="bi bi-hospital"></i>
+
                                     </div>
 
-                                    <h4>Nenhuma internação encontrada.</h4>
+                                    <h4>
+                                        Nenhuma internação encontrada.
+                                    </h4>
+
 
                                     <?php if (!empty($pesquisa)): ?>
 
@@ -562,10 +934,17 @@ foreach ($internacoes as $internacao) {
                                             Não encontramos resultados para a pesquisa realizada.
                                         </p>
 
-                                        <a href="internacoes.php" class="btn-contorno">
+                                        <a
+                                            href="internacoes.php"
+                                            class="btn-contorno"
+                                        >
+
                                             <i class="bi bi-arrow-counterclockwise"></i>
+
                                             Limpar pesquisa
+
                                         </a>
+
 
                                     <?php else: ?>
 
@@ -573,9 +952,15 @@ foreach ($internacoes as $internacao) {
                                             Ainda não existem internações cadastradas no sistema.
                                         </p>
 
-                                        <a href="internacao_cadastrar.php" class="btn-azul">
+                                        <a
+                                            href="internacao_cadastrar.php"
+                                            class="btn-azul"
+                                        >
+
                                             <i class="bi bi-plus-circle"></i>
+
                                             Cadastrar primeira internação
+
                                         </a>
 
                                     <?php endif; ?>
@@ -583,28 +968,69 @@ foreach ($internacoes as $internacao) {
                                 </div>
 
                             </td>
+
                         </tr>
 
                     <?php endif; ?>
 
                     </tbody>
+
                 </table>
+
             </div>
 
         </div>
 
+
+        <!-- ==================================================
+             RODAPÉ
+        =================================================== -->
+
         <div class="rodape-lista">
+
             <span>
+
                 <i class="bi bi-info-circle"></i>
+
                 Os dados exibidos correspondem ao resultado da consulta atual.
+
             </span>
+
             <span>
-                Registros: <strong><?= $totalInternacoes ?></strong>
+
+                Registros:
+
+                <strong><?= $totalInternacoes ?></strong>
+
             </span>
+
+        </div>
+
+
+        <!-- ==================================================
+             LEGENDA DOS STATUS
+        =================================================== -->
+
+        <div class="d-flex flex-wrap gap-3 mt-3">
+
+            <small>
+                <span class="badge-status ativo">Internado</span>
+            </small>
+
+            <small>
+                <span class="badge-status alta">Alta</span>
+            </small>
+
+            <small>
+                <span class="badge-status obito">Óbito</span>
+            </small>
+
         </div>
 
     </main>
+
 </div>
+
 
 <!-- ==================================================
      MODAL DE CONFIRMAÇÃO DE ALTA
@@ -617,34 +1043,53 @@ foreach ($internacoes as $internacao) {
     aria-labelledby="modalAltaLabel"
     aria-hidden="true"
 >
+
     <div class="modal-dialog modal-dialog-centered">
+
         <div class="modal-content">
 
             <div class="modal-header">
+
                 <div class="icone-modal-alta">
+
                     <i class="bi bi-check-circle"></i>
+
                 </div>
+
             </div>
+
 
             <div class="modal-body">
 
-                <h4 id="modalAltaLabel">Confirmar alta</h4>
+                <h4 id="modalAltaLabel">
+                    Confirmar alta
+                </h4>
 
                 <p>
                     Você está prestes a dar alta para o paciente:
                 </p>
 
+
                 <div class="paciente-alta">
+
                     <i class="bi bi-person-check"></i>
-                    <span id="nomePacienteAlta">Paciente</span>
+
+                    <span id="nomePacienteAlta">
+                        Paciente
+                    </span>
+
                 </div>
 
+
                 <p class="texto-modal-final">
+
                     Após a alta, o paciente não será mais considerado
                     uma internação ativa.
+
                 </p>
 
             </div>
+
 
             <div class="modal-footer">
 
@@ -653,29 +1098,44 @@ foreach ($internacoes as $internacao) {
                     class="btn-cancelar-alta"
                     data-bs-dismiss="modal"
                 >
+
                     <i class="bi bi-x-lg"></i>
+
                     Cancelar
+
                 </button>
+
 
                 <a
                     href="#"
                     id="btnConfirmarAlta"
                     class="btn-confirmar-alta"
                 >
+
                     <i class="bi bi-check-lg"></i>
+
                     Confirmar Alta
+
                 </a>
 
             </div>
 
         </div>
+
     </div>
+
 </div>
 
-<!-- Bootstrap JavaScript: necessário para o modal. -->
+
+<!-- ==================================================
+     BOOTSTRAP JAVASCRIPT
+=================================================== -->
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+
 <script>
+
 // ==========================================================
 // MODAL DE CONFIRMAÇÃO DE ALTA
 // ==========================================================
@@ -683,74 +1143,113 @@ foreach ($internacoes as $internacao) {
 const modalAlta = document.getElementById('modalAlta');
 
 if (modalAlta) {
+
     modalAlta.addEventListener('show.bs.modal', function(event) {
+
         const botao = event.relatedTarget;
+
         const id = botao.getAttribute('data-id');
+
         const paciente = botao.getAttribute('data-paciente');
 
-        // Usa textContent para apresentar o nome como texto.
-        document.getElementById('nomePacienteAlta').textContent = paciente;
+        document.getElementById(
+            'nomePacienteAlta'
+        ).textContent = paciente;
 
-        // Mantém o encaminhamento para a página de alta.
-        document.getElementById('btnConfirmarAlta').href =
-            'internacao_alta.php?id=' + encodeURIComponent(id);
+        document.getElementById(
+            'btnConfirmarAlta'
+        ).href = 'internacao_alta.php?id=' + encodeURIComponent(id);
+
     });
+
 }
+
 
 // ==========================================================
 // NAVEGAÇÃO DOS CARDS DE ESTATÍSTICAS
 // ==========================================================
 
 // Rola a tela até a tabela.
+
 function irParaTabela() {
+
     const tabela = document.querySelector('.tabela-container');
 
     if (tabela) {
+
         window.scrollTo({
+
             top: tabela.getBoundingClientRect().top + window.scrollY - 30,
+
             behavior: 'smooth'
+
         });
+
     }
+
 }
 
-// Mostra todas as internações que foram carregadas na página.
+
+// ==========================================================
+// MOSTRAR TODAS AS INTERNAÇÕES
+// ==========================================================
+
 function mostrarTodasInternacoes() {
-    document.querySelectorAll('.tabela-container tbody tr').forEach(linha => {
+
+    document.querySelectorAll(
+        '.tabela-container tbody tr[data-status]'
+    ).forEach(linha => {
+
         linha.style.display = '';
+
     });
 
     irParaTabela();
+
 }
 
-// Mostra as internações sem alta.
+
+// ==========================================================
+// MOSTRAR INTERNAÇÕES ATIVAS
+// ==========================================================
+
 function mostrarInternacoesAtivas() {
-    document.querySelectorAll('.tabela-container tbody tr').forEach(linha => {
-        const status = linha.querySelector('.badge-status');
 
-        if (!status) return;
+    document.querySelectorAll(
+        '.tabela-container tbody tr[data-status]'
+    ).forEach(linha => {
 
-        const texto = status.textContent.trim().toLowerCase();
-        linha.style.display = texto.includes('alta') ? 'none' : '';
+        linha.style.display =
+            linha.dataset.encerrada === '1' ? 'none' : '';
+
     });
 
     irParaTabela();
+
 }
 
-// Mostra as internações com alta.
+
+// ==========================================================
+// MOSTRAR PACIENTES COM ALTA
+// ==========================================================
+
 function mostrarPacientesAlta() {
-    document.querySelectorAll('.tabela-container tbody tr').forEach(linha => {
-        const status = linha.querySelector('.badge-status');
 
-        if (!status) return;
+    document.querySelectorAll(
+        '.tabela-container tbody tr[data-status]'
+    ).forEach(linha => {
 
-        const texto = status.textContent.trim().toLowerCase();
-        linha.style.display = texto.includes('alta') ? '' : 'none';
+        linha.style.display =
+            linha.dataset.status === 'alta' ? '' : 'none';
+
     });
 
     irParaTabela();
+
 }
+
 </script>
 
 </body>
-</html>
 
+</html>
