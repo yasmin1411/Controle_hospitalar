@@ -465,7 +465,7 @@ foreach ($internacoes as $internacao) {
 
                     <i class="bi bi-arrow-left"></i>
 
-                    Voltar ao Menu
+                    Voltar ao Painel
 
                 </a>
 

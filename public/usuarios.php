@@ -106,7 +106,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <a href="dashboard.php" class="btn btn-secondary btn-voltar">
             <i class="bi bi-arrow-left me-1"></i>
-            Voltar ao painel
+            Voltar ao Painel
         </a>
     </section>
 

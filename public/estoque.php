@@ -225,7 +225,7 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
         <!-- Retorna ao painel administrativo. -->
         <a href="dashboard.php" class="btn-voltar">
             <i class="bi bi-arrow-left"></i>
-            Voltar ao painel
+            Voltar ao Painel
         </a>
 
     </section>

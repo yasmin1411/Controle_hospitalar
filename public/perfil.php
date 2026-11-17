@@ -646,10 +646,10 @@ $inicial = function_exists('mb_substr')
             <a
                 class="top-button"
                 href="dashboard.php"
-                title="Voltar ao painel"
+                title="Voltar ao Painel"
             >
                 <i class="bi bi-arrow-left"></i>
-                <span class="button-label">Voltar ao painel</span>
+                <span class="button-label">Voltar ao Painel</span>
             </a>
 
         </div>
@@ -874,7 +874,7 @@ $inicial = function_exists('mb_substr')
 
         <a class="back-button" href="dashboard.php">
             <i class="bi bi-arrow-left"></i>
-            Voltar ao painel
+            Voltar ao Painel
         </a>
 
         <div class="footer-note">

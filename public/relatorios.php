@@ -325,7 +325,7 @@ $totalPerdas = (int) ($resumoMovimentacoes['total_perdas'] ?? 0);
 
             <a href="dashboard.php" class="btn-hero">
                 <i class="bi bi-arrow-left"></i>
-                Voltar ao painel
+                Voltar ao Painel
             </a>
 
         </div>

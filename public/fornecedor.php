@@ -218,13 +218,13 @@ try {
 
         </div>
 
-        <!-- Voltar ao painel. -->
+        <!-- Voltar ao Painel. -->
         <a
             href="dashboard.php"
             class="btn-voltar"
         >
             <i class="bi bi-arrow-left"></i>
-            Voltar ao painel
+            Voltar ao Painel
         </a>
 
     </section>

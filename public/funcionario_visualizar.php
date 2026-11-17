@@ -207,7 +207,7 @@ $registro = !empty($funcionario['registro'])
 
         <a href="funcionarios.php" class="btn btn-voltar">
             <i class="bi bi-arrow-left"></i>
-            <span>Voltar</span>
+            <span>Voltar para Funcionários</span>
         </a>
     </header>
 
@@ -397,21 +397,16 @@ $registro = !empty($funcionario['registro'])
             </div>
         </section>
 
-        <!-- Ações da página -->
-        <footer class="acoes-pagina">
-            <a href="funcionarios.php" class="btn btn-voltar">
-                <i class="bi bi-arrow-left"></i>
-                Voltar para funcionários
-            </a>
-
-            <a
-                href="funcionario_editar.php?id=<?= (int) $funcionario['id'] ?>&tabela=<?= urlencode($tabela) ?>"
-                class="btn btn-editar"
-            >
-                <i class="bi bi-pencil-square"></i>
-                Editar funcionário
-            </a>
-        </footer>
+<!-- Ações da página -->
+<footer class="acoes-pagina">
+    <a
+        href="funcionario_editar.php?id=<?= (int) $funcionario['id'] ?>&tabela=<?= urlencode($tabela) ?>"
+        class="btn btn-editar"
+    >
+        <i class="bi bi-pencil-square"></i>
+        Editar funcionário
+    </a>
+</footer>
 
     </main>
 

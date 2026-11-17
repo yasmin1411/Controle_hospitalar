@@ -396,7 +396,7 @@ try {
 
         <a href="dashboard.php" class="btn-voltar">
             <i class="bi bi-arrow-left"></i>
-            Voltar ao Menu
+            Voltar ao Painel
         </a>
     </div>
 

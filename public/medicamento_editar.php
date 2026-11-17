@@ -192,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <!-- Retorna para a listagem de medicamentos. -->
         <a href="medicamento.php" class="btn-voltar">
             <i class="bi bi-arrow-left" aria-hidden="true"></i>
-            Voltar ao catálogo
+            Voltar aos Medicamentos 
         </a>
     </section>
 

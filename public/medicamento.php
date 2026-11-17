@@ -181,7 +181,7 @@ $medicamento = $sql->fetchAll(PDO::FETCH_ASSOC);
         <!-- Link que retorna ao painel administrativo. -->
         <a href="dashboard.php" class="btn btn-secondary btn-voltar">
             <i class="bi bi-arrow-left"></i>
-            Voltar ao painel
+            Voltar ao Painel
         </a>
     </section>
 
