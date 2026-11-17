@@ -196,3 +196,31 @@ html[data-theme="dark"] .btn-visualizar:hover,html[data-theme="dark"] .btn-relat
 html[data-theme="dark"] .btn-close{filter:invert(1) grayscale(100%) brightness(200%)}
 html[data-theme="dark"] .modal-backdrop{--bs-backdrop-bg:#020812}
 html[data-theme="dark"] .table,html[data-theme="dark"] .table>:not(caption)>*>*{--bs-table-color:var(--texto);--bs-table-bg:var(--card);--bs-table-border-color:var(--borda);color:var(--texto);border-color:var(--borda)}
+
+
+
+/* ======================================================
+   INDICADOR DE ÓBITOS
+====================================================== */
+
+.indicador-obitos::after {
+    background: #FFE1E6;
+}
+
+.indicador-obitos .indicador-icone {
+    background: #FFECEF;
+    color: var(--vermelho);
+}
+
+/* ======================================================
+   TEMA ESCURO - INDICADOR DE ÓBITOS
+====================================================== */
+
+html[data-theme="dark"] .indicador-obitos::after {
+    background: #452B34;
+}
+
+html[data-theme="dark"] .indicador-obitos .indicador-icone {
+    background: #452B34 !important;
+    color: #FFC1CB !important;
+}

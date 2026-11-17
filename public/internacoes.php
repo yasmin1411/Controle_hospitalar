@@ -58,6 +58,15 @@ $pesquisa = trim($_GET['pesquisa'] ?? '');
 
 try {
 
+    /*
+     * IMPORTANTE:
+     * Os registros com status de óbito não são excluídos do banco.
+     * Apenas deixam de aparecer nesta listagem.
+     *
+     * Eles continuam disponíveis para consulta nos históricos
+     * de internações e de óbitos da aba Relatórios.
+     */
+
     $sqlBase = "
         SELECT
             i.*,
@@ -76,6 +85,9 @@ try {
 
         LEFT JOIN enfermeiro e
             ON e.id = i.enfermeiro_id
+
+        WHERE LOWER(TRIM(COALESCE(i.status, '')))
+            NOT IN ('óbito', 'obito', 'falecido', 'falecida')
     ";
 
     if (!empty($pesquisa)) {
@@ -83,7 +95,7 @@ try {
         $busca = "%{$pesquisa}%";
 
         $sql = $pdo->prepare($sqlBase . "
-            WHERE
+            AND (
                 p.nome LIKE ?
                 OR p.cpf LIKE ?
                 OR m.nome LIKE ?
@@ -92,6 +104,7 @@ try {
                 OR i.quarto LIKE ?
                 OR i.leito LIKE ?
                 OR i.quadro_clinico LIKE ?
+            )
 
             ORDER BY i.data_entrada DESC
         ");
@@ -129,6 +142,9 @@ try {
 // ESTATÍSTICAS
 // ==========================================================
 
+// Os indicadores consideram somente os registros exibidos
+// nesta página: pacientes internados e pacientes com alta.
+
 $totalInternacoes = count($internacoes);
 
 $internacoesAtivas = 0;
@@ -137,25 +153,16 @@ $leitosEmUso = 0;
 
 $pacientesAlta = 0;
 
-$pacientesObito = 0;
-
 foreach ($internacoes as $internacao) {
 
     $statusAtual = strtolower(
         trim($internacao['status'] ?? '')
     );
 
-    $ehObito = in_array(
-        $statusAtual,
-        ['óbito', 'obito'],
-        true
-    );
-
-    $ehAlta = $statusAtual === 'alta';
+    $ehAlta = ($statusAtual === 'alta');
 
     $encerrada = (
         $ehAlta ||
-        $ehObito ||
         !empty($internacao['data_saida'])
     );
 
@@ -175,14 +182,9 @@ foreach ($internacoes as $internacao) {
     // Pacientes que receberam alta.
     if (
         $ehAlta ||
-        (!$ehObito && !empty($internacao['data_saida']))
+        !empty($internacao['data_saida'])
     ) {
         $pacientesAlta++;
-    }
-
-    // Pacientes com registro de óbito.
-    if ($ehObito) {
-        $pacientesObito++;
     }
 }
 
@@ -596,19 +598,12 @@ foreach ($internacoes as $internacao) {
 
                             $statusLower = strtolower($status);
 
-                            $pacienteComObito = in_array(
-                                $statusLower,
-                                ['óbito', 'obito'],
-                                true
-                            );
-
                             $pacienteComAlta = (
                                 $statusLower === 'alta'
                             );
 
                             $internacaoEncerrada = (
                                 $pacienteComAlta ||
-                                $pacienteComObito ||
                                 !empty($i['data_saida'])
                             );
 
@@ -768,18 +763,7 @@ foreach ($internacoes as $internacao) {
 
                                 <td>
 
-                                    <?php if ($pacienteComObito): ?>
-
-                                        <span class="badge-status obito">
-
-                                            <i class="bi bi-file-earmark-medical"></i>
-
-                                            Óbito
-
-                                        </span>
-
-
-                                    <?php elseif ($pacienteComAlta): ?>
+                                    <?php if ($pacienteComAlta): ?>
 
                                         <span class="badge-status alta">
 
@@ -874,16 +858,6 @@ foreach ($internacoes as $internacao) {
                                                 <i class="bi bi-file-earmark-medical"></i>
 
                                             </a>
-
-
-                                        <?php elseif ($pacienteComObito): ?>
-
-                                            <span
-                                                class="texto-muted"
-                                                title="Internação encerrada por óbito"
-                                            >
-                                                <i class="bi bi-lock-fill"></i>
-                                            </span>
 
 
                                         <?php else: ?>
@@ -992,7 +966,7 @@ foreach ($internacoes as $internacao) {
 
                 <i class="bi bi-info-circle"></i>
 
-                Os dados exibidos correspondem ao resultado da consulta atual.
+                A listagem apresenta somente pacientes internados e pacientes com alta.
 
             </span>
 
@@ -1019,10 +993,6 @@ foreach ($internacoes as $internacao) {
 
             <small>
                 <span class="badge-status alta">Alta</span>
-            </small>
-
-            <small>
-                <span class="badge-status obito">Óbito</span>
             </small>
 
         </div>
@@ -1193,6 +1163,9 @@ function irParaTabela() {
 // ==========================================================
 // MOSTRAR TODAS AS INTERNAÇÕES
 // ==========================================================
+
+// Mostra todos os registros disponíveis nesta listagem.
+// Os registros de óbito já foram excluídos pela consulta PHP.
 
 function mostrarTodasInternacoes() {
 
