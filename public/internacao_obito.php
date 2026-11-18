@@ -39,11 +39,7 @@ $sucesso = false;
 // IDENTIFICAÇÃO DA INTERNAÇÃO
 // ==========================================================
 
-$id = filter_input(
-    INPUT_GET,
-    'id',
-    FILTER_VALIDATE_INT
-);
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = filter_input(
@@ -366,131 +362,20 @@ $observacoes = $_POST['observacoes'] ?? '';
 <html lang="pt-BR">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Registrar Óbito | Controle Hospitalar</title>
 
-    <title>Registro de Óbito</title>
+    <script>
+        const temaSalvo = localStorage.getItem('controleHospitalarTema') || 'light';
+        document.documentElement.setAttribute('data-theme', temaSalvo);
+    </script>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+<link rel="stylesheet" href="../includes/css/internacao_obto.css">
 
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
-
-    <style>
-
-        body {
-            background: #eef3f9;
-            font-family: Arial, sans-serif;
-            color: #243247;
-        }
-
-        .pagina {
-            max-width: 1100px;
-            margin: 35px auto;
-            padding: 0 15px;
-        }
-
-        .cabecalho {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 22px;
-            border-left: 5px solid #dc3545;
-        }
-
-        .cabecalho h2 {
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .formulario {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 28px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.06);
-        }
-
-        .secao {
-            font-size: 18px;
-            font-weight: 700;
-            color: #285b91;
-            margin-bottom: 18px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e4e9ef;
-        }
-
-        .campo {
-            margin-bottom: 18px;
-        }
-
-        .form-label {
-            font-weight: 600;
-        }
-
-        .form-control[readonly] {
-            background: #f0f3f7;
-            color: #526174;
-        }
-
-        textarea {
-            resize: vertical;
-        }
-
-        .acoes {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 25px;
-        }
-
-        .btn-salvar {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 11px 22px;
-            border-radius: 7px;
-        }
-
-        .btn-salvar:hover {
-            background: #bb2635;
-            color: white;
-        }
-
-        .aviso {
-            background: #fff4e5;
-            border: 1px solid #ffdfae;
-            padding: 13px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .formulario {
-                padding: 18px;
-            }
-
-            .acoes {
-                flex-direction: column;
-            }
-
-            .acoes a,
-            .acoes button {
-                width: 100%;
-            }
-        }
-
-    </style>
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -501,27 +386,65 @@ $observacoes = $_POST['observacoes'] ?? '';
 
     <header class="cabecalho">
 
-        <h2>
-            <i class="bi bi-file-earmark-medical text-danger"></i>
-            Registro de Óbito
-        </h2>
+        <div class="cabecalho-icone">
+            <i class="bi bi-file-earmark-medical"></i>
+        </div>
 
-        <p class="text-muted mb-0">
-            Registro das informações relacionadas ao falecimento do paciente.
-        </p>
+        <div class="cabecalho-conteudo">
+
+            <span class="sobretitulo">
+                CONTROLE HOSPITALAR · INTERNAÇÕES
+            </span>
+
+            <h1>Registro de Óbito</h1>
+
+            <p>
+                Registro formal das informações relacionadas ao falecimento do paciente.
+            </p>
+
+        </div>
+
+        <a href="internacoes.php" class="btn-voltar">
+            <i class="bi bi-arrow-left"></i>
+            <span>Voltar às internações</span>
+        </a>
 
     </header>
 
 
+    <!-- AVISO -->
+
+    <div class="alerta-contexto">
+
+        <i class="bi bi-shield-exclamation"></i>
+
+        <div>
+            <strong>Registro administrativo e clínico</strong>
+
+            <span>
+                Preencha os campos conforme a documentação e a confirmação do profissional responsável.
+            </span>
+        </div>
+
+    </div>
+
+
+    <!-- ERRO -->
+
     <?php if (!empty($erro)): ?>
 
-        <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle"></i>
-            <?= escapar($erro) ?>
+        <div class="alerta-erro" role="alert">
+
+            <i class="bi bi-exclamation-circle-fill"></i>
+
+            <span><?= escapar($erro) ?></span>
+
         </div>
 
     <?php endif; ?>
 
+
+    <!-- FORMULÁRIO -->
 
     <form method="POST" class="formulario">
 
@@ -540,327 +463,427 @@ $observacoes = $_POST['observacoes'] ?? '';
 
         <!-- IDENTIFICAÇÃO DO PACIENTE -->
 
-        <h5 class="secao">
-            <i class="bi bi-person-vcard"></i>
-            Identificação do paciente
-        </h5>
+        <section class="bloco-formulario">
 
-        <div class="row">
+            <div class="secao-cabecalho">
 
-            <div class="col-md-6 campo">
+                <div class="secao-icone secao-icone-pessoa">
+                    <i class="bi bi-person-vcard"></i>
+                </div>
 
-                <label class="form-label">Nome completo</label>
+                <div>
+                    <h2>Identificação do paciente</h2>
+                    <p>Dados cadastrais vinculados à internação.</p>
+                </div>
 
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= escapar($internacao['paciente']) ?>"
-                    readonly
-                >
+                <span class="secao-etiqueta">Consulta</span>
 
             </div>
 
-            <div class="col-md-6 campo">
+            <div class="row g-3">
 
-                <label class="form-label">CPF</label>
+                <div class="col-md-6 campo">
 
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= escapar($internacao['cpf']) ?>"
-                    readonly
-                >
+                    <label class="form-label">Nome completo</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-person"></i>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="<?= escapar($internacao['paciente']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+                <div class="col-md-6 campo">
+
+                    <label class="form-label">CPF</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-card-text"></i>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="<?= escapar($internacao['cpf']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+                <div class="col-md-6 campo">
+
+                    <label class="form-label">Data de nascimento</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-calendar3"></i>
+
+                        <input
+                            type="date"
+                            class="form-control"
+                            value="<?= escapar($internacao['data_de_nascimento']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+                <div class="col-md-6 campo">
+
+                    <label class="form-label">Telefone</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-telephone"></i>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="<?= escapar($internacao['telefone']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+                <div class="col-md-6 campo">
+
+                    <label class="form-label">Cartão do cidadão</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-person-badge"></i>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="<?= escapar($internacao['cartao_cidadao']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
 
             </div>
 
-            <div class="col-md-6 campo">
-
-                <label class="form-label">Data de nascimento</label>
-
-                <input
-                    type="date"
-                    class="form-control"
-                    value="<?= escapar($internacao['data_de_nascimento']) ?>"
-                    readonly
-                >
-
-            </div>
-
-            <div class="col-md-6 campo">
-
-                <label class="form-label">Telefone</label>
-
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= escapar($internacao['telefone']) ?>"
-                    readonly
-                >
-
-            </div>
-
-            <div class="col-md-6 campo">
-
-                <label class="form-label">Cartão do cidadão</label>
-
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= escapar($internacao['cartao_cidadao']) ?>"
-                    readonly
-                >
-
-            </div>
-
-        </div>
+        </section>
 
 
         <!-- INFORMAÇÕES DA INTERNAÇÃO -->
 
-        <h5 class="secao mt-4">
-            <i class="bi bi-hospital"></i>
-            Informações da internação
-        </h5>
+        <section class="bloco-formulario">
 
-        <div class="row">
+            <div class="secao-cabecalho">
 
-            <div class="col-md-4 campo">
+                <div class="secao-icone secao-icone-hospital">
+                    <i class="bi bi-hospital"></i>
+                </div>
 
-                <label class="form-label">Data de entrada</label>
+                <div>
+                    <h2>Informações da internação</h2>
+                    <p>Dados da permanência hospitalar.</p>
+                </div>
 
-                <input
-                    type="date"
-                    class="form-control"
-                    value="<?= escapar($internacao['data_entrada']) ?>"
-                    readonly
-                >
+                <span class="secao-etiqueta">Consulta</span>
 
             </div>
 
-            <div class="col-md-4 campo">
+            <div class="row g-3">
 
-                <label class="form-label">Quarto</label>
+                <div class="col-md-4 campo">
 
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= escapar($internacao['quarto']) ?>"
-                    readonly
-                >
+                    <label class="form-label">Data de entrada</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-calendar-check"></i>
+
+                        <input
+                            type="date"
+                            class="form-control"
+                            value="<?= escapar($internacao['data_entrada']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+                <div class="col-md-4 campo">
+
+                    <label class="form-label">Quarto</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-door-closed"></i>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="<?= escapar($internacao['quarto']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+                <div class="col-md-4 campo">
+
+                    <label class="form-label">Leito</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-hospital"></i>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="<?= escapar($internacao['leito']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+                <div class="col-md-6 campo">
+
+                    <label class="form-label">Médico da internação</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-person-badge"></i>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="<?= escapar($internacao['medico']) ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+                <div class="col-md-6 campo">
+
+                    <label class="form-label">Enfermeiro responsável</label>
+
+                    <div class="campo-com-icone">
+                        <i class="bi bi-person-heart"></i>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="<?= escapar($internacao['enfermeiro'] ?: 'Não informado') ?>"
+                            readonly
+                        >
+                    </div>
+
+                </div>
 
             </div>
 
-            <div class="col-md-4 campo">
-
-                <label class="form-label">Leito</label>
-
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= escapar($internacao['leito']) ?>"
-                    readonly
-                >
-
-            </div>
-
-            <div class="col-md-6 campo">
-
-                <label class="form-label">Médico da internação</label>
-
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= escapar($internacao['medico']) ?>"
-                    readonly
-                >
-
-            </div>
-
-            <div class="col-md-6 campo">
-
-                <label class="form-label">Enfermeiro responsável</label>
-
-                <input
-                    type="text"
-                    class="form-control"
-                    value="<?= escapar($internacao['enfermeiro'] ?: 'Não informado') ?>"
-                    readonly
-                >
-
-            </div>
-
-        </div>
+        </section>
 
 
         <!-- INFORMAÇÕES DO FALECIMENTO -->
 
-        <h5 class="secao mt-4">
-            <i class="bi bi-clipboard2-pulse"></i>
-            Informações do falecimento
-        </h5>
+        <section class="bloco-formulario bloco-destaque">
 
-        <div class="aviso">
+            <div class="secao-cabecalho">
 
-            <i class="bi bi-info-circle"></i>
+                <div class="secao-icone secao-icone-obito">
+                    <i class="bi bi-clipboard2-pulse"></i>
+                </div>
 
-            Preencha as informações conforme documentação e confirmação
-            do profissional responsável.
+                <div>
+                    <h2>Informações do falecimento</h2>
+                    <p>Dados que serão incluídos no registro de óbito.</p>
+                </div>
 
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6 campo">
-
-                <label class="form-label">
-                    Data do óbito *
-                </label>
-
-                <input
-                    type="date"
-                    name="data_obito"
-                    class="form-control"
-                    value="<?= escapar($dataObito) ?>"
-                    required
-                >
+                <span class="secao-etiqueta etiqueta-obrigatorio">
+                    Registro
+                </span>
 
             </div>
 
-            <div class="col-md-6 campo">
+            <div class="aviso">
 
-                <label class="form-label">
-                    Horário do óbito *
-                </label>
+                <i class="bi bi-info-circle-fill"></i>
 
-                <input
-                    type="time"
-                    name="hora_obito"
-                    class="form-control"
-                    value="<?= escapar($horaObito) ?>"
-                    required
-                >
+                <span>
+                    Preencha as informações conforme documentação e confirmação do profissional responsável.
+                </span>
 
             </div>
 
-        </div>
+            <div class="row g-3">
 
+                <div class="col-md-6 campo">
 
-        <div class="campo">
+                    <label class="form-label" for="data_obito">
+                        Data do óbito <span>*</span>
+                    </label>
 
-            <label class="form-label">
-                Causa básica da morte *
-            </label>
+                    <div class="campo-com-icone">
+                        <i class="bi bi-calendar-event"></i>
 
-            <textarea
-                name="causa_basica"
-                class="form-control"
-                rows="3"
-                maxlength="5000"
-                required
-            ><?= escapar($causaBasica) ?></textarea>
+                        <input
+                            id="data_obito"
+                            type="date"
+                            name="data_obito"
+                            class="form-control"
+                            value="<?= escapar($dataObito) ?>"
+                            required
+                        >
+                    </div>
 
-        </div>
+                </div>
 
+                <div class="col-md-6 campo">
 
-        <div class="campo">
+                    <label class="form-label" for="hora_obito">
+                        Horário do óbito <span>*</span>
+                    </label>
 
-            <label class="form-label">
-                Causas antecedentes
-            </label>
+                    <div class="campo-com-icone">
+                        <i class="bi bi-clock"></i>
 
-            <textarea
-                name="causas_antecedentes"
-                class="form-control"
-                rows="3"
-                maxlength="5000"
-            ><?= escapar($causasAntecedentes) ?></textarea>
+                        <input
+                            id="hora_obito"
+                            type="time"
+                            name="hora_obito"
+                            class="form-control"
+                            value="<?= escapar($horaObito) ?>"
+                            required
+                        >
+                    </div>
 
-        </div>
+                </div>
 
+            </div>
 
-        <div class="campo">
+            <div class="campo">
 
-            <label class="form-label">
-                Outras condições relevantes
-            </label>
+                <label class="form-label" for="causa_basica">
+                    Causa básica da morte <span>*</span>
+                </label>
 
-            <textarea
-                name="outras_condicoes"
-                class="form-control"
-                rows="3"
-                maxlength="5000"
-            ><?= escapar($outrasCondicoes) ?></textarea>
+                <textarea
+                    id="causa_basica"
+                    name="causa_basica"
+                    class="form-control"
+                    rows="3"
+                    maxlength="5000"
+                    required
+                ><?= escapar($causaBasica) ?></textarea>
 
-        </div>
+                <small class="ajuda-campo">
+                    Campo obrigatório. Registre conforme a documentação oficial.
+                </small>
 
+            </div>
 
-        <div class="campo">
+            <div class="campo">
 
-            <label class="form-label">
-                Médico responsável pelo registro
-            </label>
+                <label class="form-label" for="causas_antecedentes">
+                    Causas antecedentes
+                </label>
 
-            <input
-                type="text"
-                name="medico_responsavel"
-                class="form-control"
-                maxlength="150"
-                value="<?= escapar($medicoResponsavel) ?>"
-            >
+                <textarea
+                    id="causas_antecedentes"
+                    name="causas_antecedentes"
+                    class="form-control"
+                    rows="3"
+                    maxlength="5000"
+                ><?= escapar($causasAntecedentes) ?></textarea>
 
-        </div>
+            </div>
 
+            <div class="campo">
 
-        <div class="campo">
+                <label class="form-label" for="outras_condicoes">
+                    Outras condições relevantes
+                </label>
 
-            <label class="form-label">
-                Observações complementares
-            </label>
+                <textarea
+                    id="outras_condicoes"
+                    name="outras_condicoes"
+                    class="form-control"
+                    rows="3"
+                    maxlength="5000"
+                ><?= escapar($outrasCondicoes) ?></textarea>
 
-            <textarea
-                name="observacoes"
-                class="form-control"
-                rows="4"
-                maxlength="5000"
-            ><?= escapar($observacoes) ?></textarea>
+            </div>
 
-        </div>
+            <div class="campo">
+
+                <label class="form-label" for="medico_responsavel">
+                    Médico responsável pelo registro
+                </label>
+
+                <div class="campo-com-icone">
+                    <i class="bi bi-person-vcard"></i>
+
+                    <input
+                        id="medico_responsavel"
+                        type="text"
+                        name="medico_responsavel"
+                        class="form-control"
+                        maxlength="150"
+                        value="<?= escapar($medicoResponsavel) ?>"
+                    >
+                </div>
+
+            </div>
+
+            <div class="campo mb-0">
+
+                <label class="form-label" for="observacoes">
+                    Observações complementares
+                </label>
+
+                <textarea
+                    id="observacoes"
+                    name="observacoes"
+                    class="form-control"
+                    rows="4"
+                    maxlength="5000"
+                ><?= escapar($observacoes) ?></textarea>
+
+            </div>
+
+        </section>
 
 
         <!-- AÇÕES -->
 
-        <div class="acoes">
+        <div class="rodape-formulario">
 
-            <a
-                href="internacoes.php"
-                class="btn btn-outline-secondary"
-            >
+            <p>
+                <i class="bi bi-asterisk"></i>
+                Campos obrigatórios
+            </p>
 
-                <i class="bi bi-arrow-left"></i>
+            <div class="acoes">
 
-                Cancelar
+                <a href="internacoes.php" class="btn-cancelar">
+                    <i class="bi bi-arrow-left"></i>
+                    Cancelar
+                </a>
 
-            </a>
+                <button type="submit" class="btn-salvar">
+                    <i class="bi bi-check2-circle"></i>
+                    Registrar óbito
+                </button>
 
-
-            <button
-                type="submit"
-                class="btn-salvar"
-            >
-
-                <i class="bi bi-file-earmark-check"></i>
-
-                Registrar óbito
-
-            </button>
+            </div>
 
         </div>
 
-        <p class="text-muted small mt-3 mb-0">
-            * Campos obrigatórios.
-        </p>
-
     </form>
+
+
+    <footer class="rodape-pagina">
+        Controle Hospitalar <span>·</span> Registro administrativo
+    </footer>
 
 </div>
 

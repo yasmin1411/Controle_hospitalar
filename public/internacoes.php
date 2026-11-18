@@ -846,18 +846,18 @@ foreach ($internacoes as $internacao) {
                                             </button>
 
 
-                                            <!-- REGISTRAR ÓBITO -->
+                                           <!-- REGISTRAR ÓBITO -->
 
-                                            <a
-                                                href="internacao_obito.php?id=<?= (int) $i['id'] ?>"
-                                                class="btn-acao btn-obito"
-                                                title="Registrar óbito"
-                                                aria-label="Registrar óbito"
-                                            >
+<a
+    href="internacao_obito.php?id=<?= (int) $i['id'] ?>"
+    class="btn-acao btn-obito"
+    title="Registrar óbito"
+    aria-label="Registrar óbito"
+>
 
-                                                <i class="bi bi-file-earmark-medical"></i>
+    <i class="bi bi-file-earmark-x"></i>
 
-                                            </a>
+</a>
 
 
                                         <?php else: ?>

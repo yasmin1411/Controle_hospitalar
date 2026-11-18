@@ -279,19 +279,20 @@ $totalPerdas = (int) ($resumoMovimentacoes['total_perdas'] ?? 0);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Relatórios | Controle Hospitalar</title>
+    <title>Relatórios - Controle Hospitalar</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <!-- SCRIPT DO TEMA -->
+    <script>
+        const temaSalvo = localStorage.getItem('controleHospitalarTema') || 'light';
+        document.documentElement.setAttribute('data-theme', temaSalvo);
+    </script>
 
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
-
+    <!-- CSS DA PÁGINA -->
     <link rel="stylesheet" href="../includes/css/relatorios.css">
+    <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+>
 </head>
 
 <body>

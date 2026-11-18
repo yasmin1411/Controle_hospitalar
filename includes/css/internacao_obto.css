@@ -1,0 +1,758 @@
+
+/* ==========================================================
+   CONTROLE HOSPITALAR — REGISTRO DE ÓBITO
+   Tema claro e escuro
+========================================================== */
+
+:root {
+    color-scheme: light;
+
+    --vermelho: #c9364b;
+    --vermelho-escuro: #a92339;
+    --vermelho-claro: #fff0f2;
+    --vermelho-borda: #f2cbd1;
+
+    --fundo: #f4f6fa;
+    --card: #ffffff;
+    --card-secundario: #fffafb;
+
+    --texto: #263449;
+    --texto-secundario: #718096;
+
+    --borda: #e5e9f0;
+    --campo: #ffffff;
+    --campo-leitura: #f2f4f7;
+
+    --sombra: 0 8px 28px rgba(35, 45, 65, .07);
+    --sombra-forte: 0 15px 40px rgba(35, 45, 65, .11);
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --vermelho: #f06478;
+    --vermelho-escuro: #d94860;
+    --vermelho-claro: #482b35;
+    --vermelho-borda: #70404c;
+
+    --fundo: #101d2d;
+    --card: #1b2b40;
+    --card-secundario: #202f43;
+
+    --texto: #e6edf6;
+    --texto-secundario: #a6b6c9;
+
+    --borda: #354960;
+    --campo: #142438;
+    --campo-leitura: #26384d;
+
+    --sombra: 0 8px 28px rgba(0, 0, 0, .18);
+    --sombra-forte: 0 15px 40px rgba(0, 0, 0, .28);
+}
+
+/* ==========================================================
+   ESTRUTURA GERAL
+========================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 5% 0%, rgba(201, 54, 75, .07), transparent 28%),
+        var(--fundo);
+    color: var(--texto);
+    font-family: "Segoe UI", Arial, sans-serif;
+    transition: background .25s, color .25s;
+}
+
+.pagina {
+    width: min(1120px, calc(100% - 36px));
+    margin: 38px auto;
+}
+
+/* ==========================================================
+   CABEÇALHO
+========================================================== */
+
+.cabecalho {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 30px;
+    margin-bottom: 22px;
+    overflow: hidden;
+    background: linear-gradient(120deg, #8f2035, #c9364b 65%, #e35b6d);
+    color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(169, 35, 57, .20);
+}
+
+.cabecalho::after {
+    content: "";
+    position: absolute;
+    width: 230px;
+    height: 230px;
+    right: -75px;
+    top: -115px;
+    border: 35px solid rgba(255,255,255,.08);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.cabecalho-icone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 19px;
+    font-size: 32px;
+}
+
+.cabecalho-conteudo {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+}
+
+.sobretitulo {
+    display: block;
+    margin-bottom: 7px;
+    color: #ffe0e4;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.cabecalho h1 {
+    margin: 0 0 7px;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 800;
+}
+
+.cabecalho p {
+    margin: 0;
+    color: #ffe7ea;
+    font-size: 14px;
+}
+
+.btn-voltar {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 17px;
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 10px;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: .2s;
+}
+
+.btn-voltar:hover {
+    background: rgba(255,255,255,.17);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* ==========================================================
+   AVISO E ERROS
+========================================================== */
+
+.alerta-contexto {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 17px 20px;
+    margin-bottom: 22px;
+    background: var(--vermelho-claro);
+    border: 1px solid var(--vermelho-borda);
+    border-radius: 13px;
+    color: var(--texto);
+}
+
+.alerta-contexto > i {
+    color: var(--vermelho);
+    font-size: 23px;
+}
+
+.alerta-contexto strong,
+.alerta-contexto span {
+    display: block;
+}
+
+.alerta-contexto strong {
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.alerta-contexto span {
+    color: var(--texto-secundario);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.alerta-erro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 18px;
+    margin-bottom: 20px;
+    background: var(--vermelho-claro);
+    border: 1px solid var(--vermelho-borda);
+    border-radius: 12px;
+    color: var(--vermelho);
+    font-weight: 600;
+}
+
+/* ==========================================================
+   FORMULÁRIO E SEÇÕES
+========================================================== */
+
+.formulario {
+    padding: 28px;
+    background: var(--card);
+    border: 1px solid var(--borda);
+    border-radius: 19px;
+    box-shadow: var(--sombra);
+}
+
+.bloco-formulario {
+    padding: 25px;
+    margin-bottom: 23px;
+    background: var(--card);
+    border: 1px solid var(--borda);
+    border-radius: 15px;
+}
+
+.bloco-destaque {
+    background: var(--card-secundario);
+    border-color: var(--vermelho-borda);
+    box-shadow: inset 4px 0 0 var(--vermelho);
+}
+
+.secao-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 25px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--borda);
+}
+
+.secao-icone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 49px;
+    height: 49px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    font-size: 23px;
+}
+
+.secao-icone-pessoa {
+    background: #eaf1ff;
+    color: #3975ca;
+}
+
+.secao-icone-hospital {
+    background: #e8f7f1;
+    color: #26966b;
+}
+
+.secao-icone-obito {
+    background: var(--vermelho-claro);
+    color: var(--vermelho);
+}
+
+.secao-cabecalho h2 {
+    margin: 0 0 5px;
+    color: var(--texto);
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.secao-cabecalho p {
+    margin: 0;
+    color: var(--texto-secundario);
+    font-size: 12px;
+}
+
+.secao-etiqueta {
+    margin-left: auto;
+    padding: 7px 11px;
+    background: #edf3fa;
+    color: #63758b;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.etiqueta-obrigatorio {
+    background: var(--vermelho-claro);
+    color: var(--vermelho);
+}
+
+/* ==========================================================
+   CAMPOS
+========================================================== */
+
+.campo {
+    margin-bottom: 19px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--texto);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.form-label span {
+    color: var(--vermelho);
+}
+
+.form-control {
+    width: 100%;
+    min-height: 45px;
+    padding: 11px 13px;
+    background: var(--campo);
+    border: 1px solid var(--borda);
+    border-radius: 9px;
+    color: var(--texto);
+    font-size: 13px;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.form-control:focus {
+    background: var(--campo);
+    border-color: var(--vermelho);
+    color: var(--texto);
+    box-shadow: 0 0 0 3px rgba(201, 54, 75, .13);
+}
+
+.form-control[readonly] {
+    background: var(--campo-leitura);
+    border-color: var(--borda);
+    color: var(--texto-secundario);
+    cursor: default;
+}
+
+textarea.form-control {
+    min-height: 100px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.campo-com-icone {
+    position: relative;
+}
+
+.campo-com-icone > i {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    z-index: 2;
+    color: var(--texto-secundario);
+    font-size: 15px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.campo-com-icone .form-control {
+    padding-left: 41px;
+}
+
+.ajuda-campo {
+    display: block;
+    margin-top: 7px;
+    color: var(--texto-secundario);
+    font-size: 11px;
+}
+
+/* ==========================================================
+   AVISO DO FORMULÁRIO
+========================================================== */
+
+.aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+    background: var(--vermelho-claro);
+    border: 1px solid var(--vermelho-borda);
+    border-radius: 10px;
+    color: var(--texto);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.aviso i {
+    color: var(--vermelho);
+    font-size: 17px;
+}
+
+/* ==========================================================
+   BOTÕES E RODAPÉ
+========================================================== */
+
+.rodape-formulario {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding-top: 22px;
+    border-top: 1px solid var(--borda);
+}
+
+.rodape-formulario p {
+    margin: 0;
+    color: var(--texto-secundario);
+    font-size: 12px;
+}
+
+.rodape-formulario p i {
+    margin-right: 5px;
+    color: var(--vermelho);
+    font-size: 9px;
+}
+
+.acoes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-cancelar,
+.btn-salvar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 45px;
+    padding: 11px 19px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 750;
+    text-decoration: none;
+    transition: .2s;
+}
+
+.btn-cancelar {
+    background: var(--campo);
+    border: 1px solid var(--borda);
+    color: var(--texto);
+}
+
+.btn-cancelar:hover {
+    background: var(--campo-leitura);
+    color: var(--texto);
+    transform: translateY(-2px);
+}
+
+.btn-salvar {
+    border: 0;
+    background: linear-gradient(120deg, #b92c43, #dc465c);
+    color: white;
+    box-shadow: 0 5px 14px rgba(185, 44, 67, .2);
+    cursor: pointer;
+}
+
+.btn-salvar:hover {
+    background: linear-gradient(120deg, #a92339, #c9364b);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 19px rgba(185, 44, 67, .28);
+}
+
+.rodape-pagina {
+    padding: 22px 10px;
+    color: var(--texto-secundario);
+    font-size: 11px;
+    text-align: center;
+}
+
+.rodape-pagina span {
+    margin: 0 5px;
+    color: var(--vermelho);
+}
+
+/* ==========================================================
+   TEMA ESCURO
+========================================================== */
+
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(circle at 5% 0%, rgba(220, 65, 90, .10), transparent 28%),
+        var(--fundo);
+}
+
+html[data-theme="dark"] .secao-icone-pessoa {
+    background: #263c5b;
+    color: #9fc5ff;
+}
+
+html[data-theme="dark"] .secao-icone-hospital {
+    background: #1e4037;
+    color: #83d6b0;
+}
+
+html[data-theme="dark"] .secao-etiqueta {
+    background: #293b50;
+    color: #bdcce0;
+}
+
+html[data-theme="dark"] .form-control::placeholder {
+    color: #8295aa;
+}
+
+html[data-theme="dark"] .form-control:focus {
+    background: #192d43;
+}
+
+html[data-theme="dark"] .form-control[readonly] {
+    background: var(--campo-leitura);
+    color: #a9b9cb;
+}
+
+html[data-theme="dark"] .btn-salvar {
+    color: #fff;
+}
+
+/* ==========================================================
+   RESPONSIVIDADE
+========================================================== */
+
+@media (max-width: 768px) {
+    .pagina {
+        width: min(100% - 24px, 600px);
+        margin: 18px auto;
+    }
+
+    .cabecalho {
+        flex-wrap: wrap;
+        padding: 22px;
+    }
+
+    .cabecalho-icone {
+        width: 57px;
+        height: 57px;
+        font-size: 26px;
+    }
+
+    .btn-voltar {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .formulario {
+        padding: 17px;
+    }
+
+    .bloco-formulario {
+        padding: 18px;
+    }
+
+    .secao-cabecalho {
+        flex-wrap: wrap;
+    }
+
+    .secao-etiqueta {
+        margin-left: 0;
+    }
+
+    .rodape-formulario {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .acoes {
+        width: 100%;
+        flex-direction: column-reverse;
+    }
+
+    .acoes a,
+    .acoes button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .cabecalho {
+        gap: 14px;
+    }
+
+    .cabecalho-conteudo {
+        width: 100%;
+        flex-basis: 100%;
+    }
+
+    .cabecalho h1 {
+        font-size: 25px;
+    }
+
+    .bloco-formulario {
+        padding: 15px;
+    }
+
+    .secao-cabecalho h2 {
+        font-size: 15px;
+    }
+}
+
+/* ==========================================================
+   IMPRESSÃO
+========================================================== */
+
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    .pagina {
+        width: 100%;
+        margin: 0;
+    }
+
+    .cabecalho {
+        background: white !important;
+        color: black !important;
+        border: 1px solid #ccc;
+        box-shadow: none;
+    }
+
+    .cabecalho p,
+    .sobretitulo {
+        color: #444 !important;
+    }
+
+    .btn-voltar,
+    .acoes,
+    .rodape-pagina {
+        display: none !important;
+    }
+
+    .formulario,
+    .bloco-formulario {
+        box-shadow: none;
+        break-inside: avoid;
+    }
+}
+
+/* ==========================================
+   MELHORIA DOS CAMPOS — REGISTRO DE ÓBITO
+========================================== */
+
+/* Campos de preenchimento */
+.campo input,
+.campo select,
+.campo textarea,
+.campo .form-control,
+.formulario input,
+.formulario select,
+.formulario textarea {
+    background: #f3f3f4 !important;
+    color: #29313b !important;
+    border: 1px solid #d9d9df !important;
+    border-radius: 9px !important;
+    box-shadow: none !important;
+    transition: all .2s ease;
+}
+
+/* Efeito ao clicar */
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus,
+.campo .form-control:focus,
+.formulario input:focus,
+.formulario select:focus,
+.formulario textarea:focus {
+    background: #ffffff !important;
+    color: #29313b !important;
+    border-color: #bd4055 !important;
+    box-shadow: 0 0 0 3px rgba(189, 64, 85, .13) !important;
+    outline: none;
+}
+
+/* Campos de texto */
+.campo textarea,
+.formulario textarea {
+    min-height: 105px;
+    padding: 13px 15px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+/* Campos de uma linha */
+.campo input,
+.campo select,
+.formulario input,
+.formulario select {
+    min-height: 43px;
+    padding: 10px 13px;
+}
+
+/* Placeholder */
+.campo input::placeholder,
+.campo textarea::placeholder,
+.formulario input::placeholder,
+.formulario textarea::placeholder {
+    color: #9298a2 !important;
+}
+
+/* Labels */
+.campo label,
+.formulario label {
+    color: var(--texto) !important;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* ==========================================
+   AJUSTES DO TEMA ESCURO
+========================================== */
+
+html[data-theme="dark"] .campo input,
+html[data-theme="dark"] .campo select,
+html[data-theme="dark"] .campo textarea,
+html[data-theme="dark"] .campo .form-control,
+html[data-theme="dark"] .formulario input,
+html[data-theme="dark"] .formulario select,
+html[data-theme="dark"] .formulario textarea {
+    background: #f0eff0 !important;
+    color: #29313b !important;
+    border-color: #d6d2d5 !important;
+}
+
+html[data-theme="dark"] .campo input:focus,
+html[data-theme="dark"] .campo select:focus,
+html[data-theme="dark"] .campo textarea:focus,
+html[data-theme="dark"] .formulario input:focus,
+html[data-theme="dark"] .formulario select:focus,
+html[data-theme="dark"] .formulario textarea:focus {
+    background: #ffffff !important;
+    border-color: #bd4055 !important;
+    box-shadow: 0 0 0 3px rgba(189, 64, 85, .16) !important;
+}
+
+html[data-theme="dark"] .campo label,
+html[data-theme="dark"] .formulario label {
+    color: #f1e9eb !important;
+}
