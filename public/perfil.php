@@ -872,11 +872,6 @@ $inicial = function_exists('mb_substr')
 
     <div class="page-footer">
 
-        <a class="back-button" href="dashboard.php">
-            <i class="bi bi-arrow-left"></i>
-            Voltar ao Painel
-        </a>
-
         <div class="footer-note">
             <i class="bi bi-hospital me-1"></i>
             Controle Hospitalar · Perfil de usuário

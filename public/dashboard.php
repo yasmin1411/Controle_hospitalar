@@ -1,19 +1,11 @@
 <?php
 
 // ==========================================================
-// AUTENTICAÇÃO DO SISTEMA
+// AUTENTICAÇÃO E PERMISSÃO DO DASHBOARD
 // ==========================================================
 
-// Inclui o arquivo responsável por verificar se o usuário
-// está autenticado e disponibilizar as funções de acesso.
 require_once __DIR__ . '/../includes/auth.php';
 
-// ==========================================================
-// PERMISSÃO DO DASHBOARD
-// ==========================================================
-
-// Todas as funções cadastradas no sistema podem acessar
-// o Dashboard, desde que estejam autenticadas.
 verificarFuncoesPermitidas([
     'admin',
     'medico',
@@ -28,25 +20,126 @@ verificarFuncoesPermitidas([
     'diretor_hospital'
 ]);
 
-// Nome do usuário autenticado, protegido contra HTML.
 $nomeUsuario = htmlspecialchars(
     $_SESSION['nome'] ?? 'Usuário',
     ENT_QUOTES,
     'UTF-8'
 );
 
+// ==========================================================
+// MÓDULOS E PERMISSÕES
+// ==========================================================
+
+$modulos = [
+    [
+        'nome' => 'Medicamentos',
+        'descricao' => 'Cadastro, consulta e gerenciamento dos medicamentos hospitalares.',
+        'icone' => 'bi-capsule-pill',
+        'classe' => 'medicamento',
+        'link' => 'medicamento.php',
+        'botao' => 'Acessar módulo',
+        'permissoes' => [
+            'admin', 'medico', 'enfermeiro', 'farmaceutico',
+            'cirurgiao', 'anestesista', 'comprador_almoxarifado',
+            'diretor_hospital'
+        ]
+    ],
+    [
+        'nome' => 'Pacientes',
+        'descricao' => 'Cadastro e gerenciamento das informações dos pacientes.',
+        'icone' => 'bi-person-heart',
+        'classe' => 'pacientes',
+        'link' => 'pacientes.php',
+        'botao' => 'Acessar módulo',
+        'permissoes' => [
+            'admin', 'medico', 'enfermeiro', 'farmaceutico',
+            'cirurgiao', 'anestesista', 'recepcionista',
+            'faturista', 'gerente_financeiro', 'diretor_hospital'
+        ]
+    ],
+    [
+        'nome' => 'Estoque',
+        'descricao' => 'Controle de entradas, saídas, ajustes e movimentações.',
+        'icone' => 'bi-box-seam',
+        'classe' => 'estoque',
+        'link' => 'estoque.php',
+        'botao' => 'Acessar módulo',
+        'permissoes' => [
+            'admin', 'farmaceutico', 'comprador_almoxarifado',
+            'gerente_financeiro', 'diretor_hospital'
+        ]
+    ],
+    [
+        'nome' => 'Fornecedores',
+        'descricao' => 'Cadastro e gerenciamento dos fornecedores do hospital.',
+        'icone' => 'bi-buildings',
+        'classe' => 'fornecedor',
+        'link' => 'fornecedor.php',
+        'botao' => 'Acessar módulo',
+        'permissoes' => [
+            'admin', 'farmaceutico', 'comprador_almoxarifado',
+            'gerente_financeiro', 'diretor_hospital'
+        ]
+    ],
+    [
+        'nome' => 'Internações',
+        'descricao' => 'Cadastro e acompanhamento das internações hospitalares.',
+        'icone' => 'bi-hospital',
+        'classe' => 'internacoes',
+        'link' => 'internacoes.php',
+        'botao' => 'Acessar módulo',
+        'permissoes' => [
+            'admin', 'medico', 'enfermeiro', 'cirurgiao',
+            'anestesista', 'recepcionista', 'faturista',
+            'gerente_financeiro', 'diretor_hospital'
+        ]
+    ],
+    [
+        'nome' => 'Funcionários',
+        'descricao' => 'Cadastro e gerenciamento dos profissionais do hospital.',
+        'icone' => 'bi-people',
+        'classe' => 'funcionarios',
+        'link' => 'funcionarios.php',
+        'botao' => 'Acessar módulo',
+        'permissoes' => ['admin', 'diretor_hospital']
+    ],
+    [
+        'nome' => 'Cadastro de Usuários',
+        'descricao' => 'Criação e gerenciamento das contas de acesso ao sistema.',
+        'icone' => 'bi-person-gear',
+        'classe' => 'usuarios',
+        'link' => 'novo_usuario.php',
+        'botao' => 'Acessar cadastro',
+        'permissoes' => ['admin', 'diretor_hospital']
+    ],
+    [
+        'nome' => 'Relatórios',
+        'descricao' => 'Consultas e análises das informações registradas no sistema.',
+        'icone' => 'bi-graph-up-arrow',
+        'classe' => 'relatorios',
+        'link' => 'relatorios.php',
+        'botao' => 'Acessar módulo',
+        'permissoes' => [
+            'admin', 'medico', 'enfermeiro', 'farmaceutico',
+            'cirurgiao', 'anestesista', 'faturista',
+            'comprador_almoxarifado', 'gerente_financeiro',
+            'diretor_hospital'
+        ]
+    ]
+];
+
 ?>
 
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <meta name="theme-color" content="#102b50">
     <title>Painel Administrativo | Controle Hospitalar</title>
 
-    <!-- Aplica o tema salvo antes de a página ser exibida. -->
     <script>
         (function () {
             let tema = 'light';
@@ -65,464 +158,273 @@ $nomeUsuario = htmlspecialchars(
         })();
     </script>
 
-    <!-- Bootstrap 5.3.3 -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-    <!-- Bootstrap Icons -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
 
-    <!-- CSS exclusivo do Dashboard -->
     <link
         rel="stylesheet"
-        href="../includes/css/dashboard.css"
+        href="../includes/css/dashboard.css?v=10"
     >
 </head>
 
 <body>
 
-<!-- =====================================================
-     MENU SUPERIOR
-===================================================== -->
+<div class="layout">
 
-<nav class="navbar navbar-dark navbar-custom">
-    <div class="container-fluid">
+    <!-- MENU LATERAL -->
 
-        <!-- Marca principal do sistema -->
-        <a class="navbar-brand fw-bold" href="dashboard.php">
-            <i class="bi bi-hospital"></i>
-            <span>Controle Hospitalar</span>
+    <aside class="sidebar">
+
+        <a href="dashboard.php" class="marca">
+            <span class="marca-icone">
+                <i class="bi bi-hospital"></i>
+            </span>
+
+            <span class="marca-texto">
+                <strong>CONTROLE</strong>
+                <b>HOSPITALAR</b>
+                <small>GESTÃO E CUIDADO</small>
+            </span>
         </a>
 
-        <div class="d-flex align-items-center gap-2">
+        <div class="menu-label">MENU PRINCIPAL</div>
 
-            <!-- Botão de acesso ao perfil do usuário -->
-            <a
-                href="perfil.php"
-                class="usuario-topo"
-                title="Acessar meu perfil"
-                aria-label="Acessar o perfil de <?= $nomeUsuario ?>"
-            >
-                <i class="bi bi-person-circle"></i>
+        <nav class="menu">
 
-                <span class="usuario-nome">
-                    <?= $nomeUsuario ?>
-                </span>
-
-                <i class="bi bi-chevron-down perfil-seta"></i>
-            </a>
-
-            <!-- Link responsável por encerrar a sessão -->
-            <a href="logout.php" class="btn-sair">
-                <i class="bi bi-box-arrow-right me-1"></i>
-                Sair
-            </a>
-
-        </div>
-    </div>
-</nav>
-
-<!-- =====================================================
-     CONTEÚDO PRINCIPAL
-===================================================== -->
-
-<main class="pagina">
-
-    <!-- =====================================================
-         BOAS-VINDAS
-    ====================================================== -->
-
-    <section class="hero-card">
-        <div class="hero-conteudo">
-
-            <div class="hero-tag">
+            <a href="dashboard.php" class="menu-link ativo">
                 <i class="bi bi-grid-1x2-fill"></i>
-                Painel Administrativo
-            </div>
+                <span>Início</span>
+            </a>
 
-            <h1 class="hero-title">
-                Olá, <strong><?= $nomeUsuario ?></strong>
-            </h1>
+            <?php foreach ($modulos as $modulo): ?>
+                <?php if (temPermissao($modulo['permissoes'])): ?>
 
-            <p class="hero-subtitle">
-                Bem-vindo ao sistema de gestão hospitalar.
-                Acesse rapidamente os módulos necessários para administrar
-                as operações do hospital.
-            </p>
-
-        </div>
-    </section>
-
-    <!-- =====================================================
-         CABEÇALHO DOS MÓDULOS
-    ====================================================== -->
-
-    <div class="modulos-header">
-        <div>
-            <div class="modulos-label">Sistema</div>
-
-            <h2 class="modulos-titulo">
-                Módulos disponíveis
-            </h2>
-
-            <p class="modulos-descricao">
-                Selecione uma das áreas abaixo para continuar.
-            </p>
-        </div>
-    </div>
-
-    <!-- =====================================================
-         MÓDULOS
-    ====================================================== -->
-
-    <div class="row g-4">
-
-        <!-- =====================================================
-             MEDICAMENTOS
-        ====================================================== -->
-
-        <?php if (temPermissao([
-            'admin',
-            'medico',
-            'enfermeiro',
-            'farmaceutico',
-            'cirurgiao',
-            'anestesista',
-            'comprador_almoxarifado',
-            'diretor_hospital'
-        ])): ?>
-
-        <div class="col-md-6 col-xl-4">
-            <div class="modulo-card medicamento">
-                <div class="modulo-conteudo">
-
-                    <div class="icone-box">
-                        <i class="bi bi-capsule-pill"></i>
-                    </div>
-
-                    <span class="modulo-mini">Módulo</span>
-
-                    <h3 class="modulo-titulo">Medicamentos</h3>
-
-                    <p class="modulo-descricao">
-                        Cadastro, consulta e gerenciamento dos medicamentos
-                        utilizados no hospital.
-                    </p>
-
-                    <a href="medicamento.php" class="btn-modulo">
-                        Acessar módulo
-                        <i class="bi bi-arrow-right"></i>
+                    <a href="<?= htmlspecialchars($modulo['link'], ENT_QUOTES, 'UTF-8') ?>"
+                       class="menu-link">
+                        <i class="bi <?= htmlspecialchars($modulo['icone'], ENT_QUOTES, 'UTF-8') ?>"></i>
+                        <span><?= htmlspecialchars($modulo['nome'], ENT_QUOTES, 'UTF-8') ?></span>
                     </a>
 
-                </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+
+        </nav>
+
+        <div class="sidebar-separador"></div>
+
+        <div class="menu-label">CONTA</div>
+
+        <a href="perfil.php" class="menu-link">
+            <i class="bi bi-person-circle"></i>
+            <span>Meu perfil</span>
+        </a>
+
+        <a href="logout.php" class="menu-link sair-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sair do sistema</span>
+        </a>
+
+        <div class="sidebar-rodape">
+            <div class="rodape-simbolo">
+                <i class="bi bi-heart-pulse-fill"></i>
             </div>
+
+            <strong>Controle Hospitalar</strong>
+            <span>Plataforma de gestão</span>
+            <small>Organização, segurança e cuidado.</small>
         </div>
 
-        <?php endif; ?>
+    </aside>
 
-        <!-- =====================================================
-             PACIENTES
-        ====================================================== -->
+    <!-- ÁREA PRINCIPAL -->
 
-        <?php if (temPermissao([
-            'admin',
-            'medico',
-            'enfermeiro',
-            'farmaceutico',
-            'cirurgiao',
-            'anestesista',
-            'recepcionista',
-            'faturista',
-            'gerente_financeiro',
-            'diretor_hospital'
-        ])): ?>
+    <main class="conteudo">
 
-        <div class="col-md-6 col-xl-4">
-            <div class="modulo-card pacientes">
-                <div class="modulo-conteudo">
+        <!-- CABEÇALHO SUPERIOR -->
 
-                    <div class="icone-box">
-                        <i class="bi bi-person-heart"></i>
-                    </div>
+        <header class="topbar">
 
-                    <span class="modulo-mini">Módulo</span>
+            <div class="topbar-esquerda">
+                <span class="topbar-legenda">AMBIENTE DE GESTÃO</span>
+                <strong>Painel administrativo</strong>
+            </div>
 
-                    <h3 class="modulo-titulo">Pacientes</h3>
+            <div class="topbar-direita">
 
-                    <p class="modulo-descricao">
-                        Cadastro, consulta e gerenciamento das informações
-                        dos pacientes.
+                <div class="usuario-info">
+                    <span class="usuario-avatar">
+                        <i class="bi bi-person-fill"></i>
+                    </span>
+
+                    <span class="usuario-dados">
+                        <strong><?= $nomeUsuario ?></strong>
+                        <small>Usuário do sistema</small>
+                    </span>
+                </div>
+
+                <a href="perfil.php" class="topbar-acao" title="Meu perfil">
+                    <i class="bi bi-gear"></i>
+                </a>
+
+            </div>
+
+        </header>
+
+        <div class="pagina">
+
+            <!-- BANNER DE BOAS-VINDAS -->
+
+            <section class="hero">
+
+                <div class="hero-texto">
+
+                    <span class="hero-etiqueta">
+                        <i class="bi bi-grid-fill"></i>
+                        SEU AMBIENTE DE TRABALHO
+                    </span>
+
+                    <h1>
+                        Olá, <span><?= $nomeUsuario ?></span>
+                    </h1>
+
+                    <p>
+                        Bem-vindo ao Controle Hospitalar.
+                        Gerencie as principais áreas do hospital
+                        em um só lugar.
                     </p>
 
-                    <a href="pacientes.php" class="btn-modulo">
-                        Acessar módulo
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
-
-                </div>
-            </div>
-        </div>
-
-        <?php endif; ?>
-
-        <!-- =====================================================
-             ESTOQUE
-        ====================================================== -->
-
-        <?php if (temPermissao([
-            'admin',
-            'farmaceutico',
-            'comprador_almoxarifado',
-            'gerente_financeiro',
-            'diretor_hospital'
-        ])): ?>
-
-        <div class="col-md-6 col-xl-4">
-            <div class="modulo-card estoque">
-                <div class="modulo-conteudo">
-
-                    <div class="icone-box">
-                        <i class="bi bi-box-seam"></i>
+                    <div class="hero-detalhe">
+                        <i class="bi bi-shield-check"></i>
+                        Gestão organizada e acesso por permissões
                     </div>
 
-                    <span class="modulo-mini">Módulo</span>
-
-                    <h3 class="modulo-titulo">Estoque</h3>
-
-                    <p class="modulo-descricao">
-                        Controle de entradas, saídas, ajustes e movimentações
-                        do estoque.
-                    </p>
-
-                    <a href="estoque.php" class="btn-modulo">
-                        Acessar módulo
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
-
                 </div>
-            </div>
-        </div>
 
-        <?php endif; ?>
+                <div class="hero-ilustracao" aria-hidden="true">
+                    <div class="hero-circulo circulo-um"></div>
+                    <div class="hero-circulo circulo-dois"></div>
 
-        <!-- =====================================================
-             FORNECEDORES
-        ====================================================== -->
-
-        <?php if (temPermissao([
-            'admin',
-            'farmaceutico',
-            'comprador_almoxarifado',
-            'gerente_financeiro',
-            'diretor_hospital'
-        ])): ?>
-
-        <div class="col-md-6 col-xl-4">
-            <div class="modulo-card fornecedor">
-                <div class="modulo-conteudo">
-
-                    <div class="icone-box">
-                        <i class="bi bi-building"></i>
+                    <div class="hero-cruz">
+                        <i class="bi bi-plus-lg"></i>
                     </div>
 
-                    <span class="modulo-mini">Módulo</span>
-
-                    <h3 class="modulo-titulo">Fornecedores</h3>
-
-                    <p class="modulo-descricao">
-                        Cadastro e gerenciamento dos fornecedores vinculados
-                        ao hospital.
-                    </p>
-
-                    <a href="fornecedor.php" class="btn-modulo">
-                        Acessar módulo
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
-
+                    <i class="bi bi-heart-pulse hero-coracao"></i>
+                    <i class="bi bi-activity hero-atividade"></i>
                 </div>
-            </div>
-        </div>
 
-        <?php endif; ?>
+            </section>
 
-        <!-- =====================================================
-             INTERNAÇÕES
-        ====================================================== -->
+            <!-- TÍTULO DOS MÓDULOS -->
 
-        <?php if (temPermissao([
-            'admin',
-            'medico',
-            'enfermeiro',
-            'cirurgiao',
-            'anestesista',
-            'recepcionista',
-            'faturista',
-            'gerente_financeiro',
-            'diretor_hospital'
-        ])): ?>
+            <section class="secao-modulos">
 
-        <div class="col-md-6 col-xl-4">
-            <div class="modulo-card internacoes">
-                <div class="modulo-conteudo">
+                <div class="secao-cabecalho">
 
-                    <div class="icone-box">
-                        <i class="bi bi-hospital-fill"></i>
+                    <div>
+                        <span class="secao-etiqueta">ÁREAS DO SISTEMA</span>
+                        <h2>Módulos disponíveis</h2>
+                        <p>Escolha uma área para acessar suas funcionalidades.</p>
                     </div>
 
-                    <span class="modulo-mini">Módulo</span>
-
-                    <h3 class="modulo-titulo">Internações</h3>
-
-                    <p class="modulo-descricao">
-                        Cadastro e acompanhamento das internações hospitalares.
-                    </p>
-
-                    <a href="internacoes.php" class="btn-modulo">
-                        Acessar módulo
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
+                    <span class="modulos-total">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                        Acesso aos módulos
+                    </span>
 
                 </div>
-            </div>
-        </div>
 
-        <?php endif; ?>
+                <!-- CARTÕES DOS MÓDULOS -->
 
-        <!-- =====================================================
-             FUNCIONÁRIOS
-        ====================================================== -->
+                <div class="modulos-grid">
 
-        <?php if (temPermissao([
-            'admin',
-            'diretor_hospital'
-        ])): ?>
+                    <?php foreach ($modulos as $modulo): ?>
+                        <?php if (temPermissao($modulo['permissoes'])): ?>
 
-        <div class="col-md-6 col-xl-4">
-            <div class="modulo-card funcionarios">
-                <div class="modulo-conteudo">
+                            <a
+                                href="<?= htmlspecialchars($modulo['link'], ENT_QUOTES, 'UTF-8') ?>"
+                                class="modulo-card <?= htmlspecialchars($modulo['classe'], ENT_QUOTES, 'UTF-8') ?>"
+                            >
 
-                    <div class="icone-box">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
+                                <div class="modulo-topo">
+                                    <span class="modulo-icone">
+                                        <i class="bi <?= htmlspecialchars($modulo['icone'], ENT_QUOTES, 'UTF-8') ?>"></i>
+                                    </span>
 
-                    <span class="modulo-mini">Módulo</span>
+                                    <span class="modulo-seta">
+                                        <i class="bi bi-arrow-up-right"></i>
+                                    </span>
+                                </div>
 
-                    <h3 class="modulo-titulo">Funcionários</h3>
+                                <div class="modulo-corpo">
+                                    <span class="modulo-categoria">ÁREA DO SISTEMA</span>
 
-                    <p class="modulo-descricao">
-                        Cadastro e gerenciamento dos profissionais do hospital.
-                    </p>
+                                    <h3>
+                                        <?= htmlspecialchars($modulo['nome'], ENT_QUOTES, 'UTF-8') ?>
+                                    </h3>
 
-                    <a href="funcionarios.php" class="btn-modulo">
-                        Acessar módulo
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
+                                    <p>
+                                        <?= htmlspecialchars($modulo['descricao'], ENT_QUOTES, 'UTF-8') ?>
+                                    </p>
+                                </div>
 
-                </div>
-            </div>
-        </div>
+                                <div class="modulo-rodape">
+                                    <span>
+                                        <?= htmlspecialchars($modulo['botao'], ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
 
-        <?php endif; ?>
+                                    <i class="bi bi-arrow-right"></i>
+                                </div>
 
-        <!-- =====================================================
-             CADASTRO DE USUÁRIOS
-        ====================================================== -->
+                            </a>
 
-        <?php if (temPermissao([
-            'admin',
-            'diretor_hospital'
-        ])): ?>
-
-        <div class="col-md-6 col-xl-4">
-            <div class="modulo-card usuarios">
-                <div class="modulo-conteudo">
-
-                    <div class="icone-box">
-                        <i class="bi bi-person-gear"></i>
-                    </div>
-
-                    <span class="modulo-mini">Administração</span>
-
-                    <h3 class="modulo-titulo">Cadastro de Usuários</h3>
-
-                    <p class="modulo-descricao">
-                        Criação e gerenciamento das contas de acesso
-                        dos funcionários ao sistema hospitalar.
-                    </p>
-
-                    <a href="novo_usuario.php" class="btn-modulo">
-                        Acessar cadastro
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
 
                 </div>
-            </div>
-        </div>
 
-        <?php endif; ?>
+            </section>
 
-        <!-- =====================================================
-             RELATÓRIOS
-        ====================================================== -->
+            <!-- ÁREA INSTITUCIONAL -->
 
-        <?php if (temPermissao([
-            'admin',
-            'medico',
-            'enfermeiro',
-            'farmaceutico',
-            'cirurgiao',
-            'anestesista',
-            'faturista',
-            'comprador_almoxarifado',
-            'gerente_financeiro',
-            'diretor_hospital'
-        ])): ?>
+            <section class="painel-institucional">
 
-        <div class="col-md-6 col-xl-4">
-            <div class="modulo-card relatorios">
-                <div class="modulo-conteudo">
-
-                    <div class="icone-box">
-                        <i class="bi bi-bar-chart-line"></i>
-                    </div>
-
-                    <span class="modulo-mini">Módulo</span>
-
-                    <h3 class="modulo-titulo">Relatórios</h3>
-
-                    <p class="modulo-descricao">
-                        Consultas, análises e relatórios das informações
-                        registradas no sistema.
-                    </p>
-
-                    <a href="relatorios.php" class="btn-modulo">
-                        Acessar módulo
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
-
+                <div class="institucional-icone">
+                    <i class="bi bi-heart-pulse-fill"></i>
                 </div>
-            </div>
+
+                <div class="institucional-texto">
+                    <span>CONTROLE HOSPITALAR</span>
+                    <h3>Tecnologia e organização a serviço do cuidado.</h3>
+                    <p>
+                        Um ambiente centralizado para apoiar a gestão
+                        e facilitar as rotinas hospitalares.
+                    </p>
+                </div>
+
+                <div class="institucional-selo">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Gestão com<br>responsabilidade</span>
+                </div>
+
+            </section>
+
+            <footer class="rodape">
+                <span>© <?= date('Y') ?> Controle Hospitalar</span>
+                <span>Plataforma de gestão hospitalar</span>
+            </footer>
+
         </div>
 
-        <?php endif; ?>
+    </main>
 
-    </div>
-
-    <!-- =====================================================
-         RODAPÉ
-    ====================================================== -->
-
-    <footer class="rodape">
-        <i class="bi bi-shield-check me-1"></i>
-        Ambiente administrativo • Controle Hospitalar
-    </footer>
-
-</main>
+</div>
 
 </body>
 </html>
