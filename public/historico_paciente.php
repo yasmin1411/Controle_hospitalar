@@ -196,6 +196,272 @@ $internacoes = $sqlInternacoes->fetchAll(PDO::FETCH_ASSOC);
 
 
 
+<!-- ====================================================== -->
+<!-- HISTÓRICO DE ÓBITOS -->
+<!-- ====================================================== -->
+
+<section class="hist-section" id="obitos">
+
+    <div class="hist-section-head">
+
+        <div class="hist-section-title">
+
+            <span class="hist-section-icon icon-orange">
+                <i class="bi bi-file-earmark-medical"></i>
+            </span>
+
+            <div>
+                <span class="hist-kicker">REGISTRO INSTITUCIONAL</span>
+
+                <h2>Relatórios de óbito</h2>
+
+                <p>
+                    Registros de óbito vinculados ao histórico deste paciente.
+                </p>
+            </div>
+
+        </div>
+
+        <span class="hist-count">
+            <?= count($obitos) ?> registro(s)
+        </span>
+
+    </div>
+
+    <div class="hist-section-body">
+
+        <?php if (count($obitos) > 0): ?>
+
+            <div class="hist-record-list">
+
+                <?php foreach ($obitos as $obito): ?>
+
+                    <article class="hist-record">
+
+                        <div class="hist-record-top">
+
+                            <div>
+
+                                <span class="hist-record-label">
+                                    RELATÓRIO DE ÓBITO #<?= (int) $obito['id'] ?>
+                                </span>
+
+                                <h3>
+                                    Registro de óbito
+                                </h3>
+
+                            </div>
+
+                            <span class="hist-status">
+                                <i class="bi bi-circle-fill"></i>
+                                Óbito registrado
+                            </span>
+
+                        </div>
+
+                        <!-- DATA E HORÁRIO -->
+
+                        <div class="hist-date-strip">
+
+                            <span>
+
+                                <small>Data do óbito</small>
+
+                                <strong>
+                                    <i class="bi bi-calendar-check"></i>
+
+                                    <?= formatarDataHistorico($obito['data_obito']) ?>
+                                </strong>
+
+                            </span>
+
+                            <span>
+
+                                <small>Horário</small>
+
+                                <strong>
+                                    <i class="bi bi-clock"></i>
+
+                                    <?= !empty($obito['hora_obito'])
+                                        ? limparTexto(date('H:i', strtotime($obito['hora_obito'])))
+                                        : 'Não informado'
+                                    ?>
+                                </strong>
+
+                            </span>
+
+                        </div>
+
+                        <!-- DADOS DA INTERNAÇÃO -->
+
+                        <div class="hist-detail-grid">
+
+                            <div class="hist-detail">
+
+                                <small>Internação vinculada</small>
+
+                                <strong>
+                                    <?= !empty($obito['internacao_id'])
+                                        ? '#' . (int) $obito['internacao_id']
+                                        : 'Não informada'
+                                    ?>
+                                </strong>
+
+                            </div>
+
+                            <div class="hist-detail">
+
+                                <small>Quarto</small>
+
+                                <strong>
+                                    <?= limparTexto($obito['quarto'] ?: 'Não informado') ?>
+                                </strong>
+
+                            </div>
+
+                            <div class="hist-detail">
+
+                                <small>Leito</small>
+
+                                <strong>
+                                    <?= limparTexto($obito['leito'] ?: 'Não informado') ?>
+                                </strong>
+
+                            </div>
+
+                            <div class="hist-detail">
+
+                                <small>Médico da internação</small>
+
+                                <strong>
+                                    <?= limparTexto($obito['medico_internacao'] ?: 'Não informado') ?>
+                                </strong>
+
+                            </div>
+
+                            <div class="hist-detail">
+
+                                <small>Enfermeiro responsável</small>
+
+                                <strong>
+                                    <?= limparTexto($obito['enfermeiro_nome'] ?: 'Não informado') ?>
+                                </strong>
+
+                            </div>
+
+                            <div class="hist-detail">
+
+                                <small>Registrado por</small>
+
+                                <strong>
+                                    <?= limparTexto($obito['usuario_registro'] ?: 'Não informado') ?>
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                        <!-- CAUSAS DO ÓBITO -->
+
+                        <div class="hist-text-grid hist-text-grid-two">
+
+                            <div class="hist-text-block hist-text-block-full">
+
+                                <small>Causa básica</small>
+
+                                <p>
+                                    <?= !empty($obito['causa_basica'])
+                                        ? nl2br(limparTexto($obito['causa_basica']))
+                                        : 'Não informada'
+                                    ?>
+                                </p>
+
+                            </div>
+
+                            <div class="hist-text-block">
+
+                                <small>Causas antecedentes</small>
+
+                                <p>
+                                    <?= !empty($obito['causas_antecedentes'])
+                                        ? nl2br(limparTexto($obito['causas_antecedentes']))
+                                        : 'Não informadas'
+                                    ?>
+                                </p>
+
+                            </div>
+
+                            <div class="hist-text-block">
+
+                                <small>Outras condições</small>
+
+                                <p>
+                                    <?= !empty($obito['outras_condicoes'])
+                                        ? nl2br(limparTexto($obito['outras_condicoes']))
+                                        : 'Não informadas'
+                                    ?>
+                                </p>
+
+                            </div>
+
+                            <div class="hist-text-block">
+
+                                <small>Médico responsável pelo registro</small>
+
+                                <p>
+                                    <?= !empty($obito['medico_responsavel'])
+                                        ? nl2br(limparTexto($obito['medico_responsavel']))
+                                        : 'Não informado'
+                                    ?>
+                                </p>
+
+                            </div>
+
+                            <div class="hist-text-block">
+
+                                <small>Observações</small>
+
+                                <p>
+                                    <?= !empty($obito['observacoes'])
+                                        ? nl2br(limparTexto($obito['observacoes']))
+                                        : 'Nenhuma observação registrada'
+                                    ?>
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                <?php endforeach; ?>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="hist-empty">
+
+                <i class="bi bi-file-earmark-medical"></i>
+
+                <strong>Nenhum relatório de óbito encontrado</strong>
+
+                <span>
+                    Caso exista um registro de óbito para este paciente,
+                    ele será apresentado nesta seção.
+                </span>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</section>
+
+
+
+
 // ==========================================================
 
 // BUSCAR PRONTUÁRIOS
@@ -423,7 +689,59 @@ $sqlExames->execute([$paciente_id]);
 $exames = $sqlExames->fetchAll(PDO::FETCH_ASSOC);
 
 
+// ==========================================================
+// BUSCAR RELATÓRIOS DE ÓBITO DO PACIENTE
+// ==========================================================
 
+$sqlObitos = $pdo->prepare("
+
+    SELECT
+        o.id,
+        o.paciente_id,
+        o.internacao_id,
+        o.data_obito,
+        o.hora_obito,
+        o.causa_basica,
+        o.causas_antecedentes,
+        o.outras_condicoes,
+        o.medico_responsavel,
+        o.observacoes,
+        o.registrado_por,
+        o.criado_em,
+
+        u.nome AS usuario_registro,
+
+        i.data_entrada,
+        i.quarto,
+        i.leito,
+        i.motivos,
+
+        m.nome AS medico_internacao,
+        e.nome AS enfermeiro_nome
+
+    FROM registro_obitos o
+
+    LEFT JOIN usuarios u
+        ON u.id = o.registrado_por
+
+    LEFT JOIN internacoes i
+        ON i.id = o.internacao_id
+
+    LEFT JOIN medico m
+        ON m.id = i.medico_id
+
+    LEFT JOIN enfermeiro e
+        ON e.id = i.enfermeiro_id
+
+    WHERE o.paciente_id = ?
+
+    ORDER BY o.data_obito DESC, o.hora_obito DESC
+
+");
+
+$sqlObitos->execute([$paciente_id]);
+
+$obitos = $sqlObitos->fetchAll(PDO::FETCH_ASSOC);
 
 
 // ==========================================================
@@ -444,7 +762,9 @@ $possuiHistorico =
 
     count($prescricoes) > 0 ||
 
-    count($exames) > 0;
+    count($exames) > 0 ||
+
+    count($obitos) > 0;
 
 
 
@@ -519,7 +839,14 @@ if (!empty($nomePartes)) {
     }
 }
 
-$totalRegistros = count($internacoes) + count($prontuarios) + count($anamneses) + count($prescricoes) + count($exames);
+$totalRegistros =
+    count($internacoes) +
+    count($prontuarios) +
+    count($anamneses) +
+    count($prescricoes) +
+    count($exames) +
+    count($obitos);
+
 
 function formatarDataHistorico($data, $comHora = false)
 {
@@ -629,6 +956,16 @@ function formatarDataHistorico($data, $comHora = false)
                 <strong><?= count($exames) ?></strong>
                 <span>Exames</span>
             </a>
+
+            <a href="#obitos" class="hist-stat stat-orange">
+    <span class="hist-stat-icon">
+        <i class="bi bi-file-earmark-medical"></i>
+    </span>
+
+    <strong><?= count($obitos) ?></strong>
+
+    <span>Relatórios de óbito</span>
+</a>
         </div>
     </section>
 
@@ -651,6 +988,7 @@ function formatarDataHistorico($data, $comHora = false)
         <a href="#anamneses"><i class="bi bi-clipboard2-heart"></i> Anamneses</a>
         <a href="#prescricoes"><i class="bi bi-capsule"></i> Prescrições</a>
         <a href="#exames"><i class="bi bi-eyedropper"></i> Exames</a>
+        <a href="#obitos"><i class="bi bi-file-earmark-medical"></i>Óbitos</a>
     </nav>
 
     <!-- INTERNAÇÕES -->
