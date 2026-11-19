@@ -287,12 +287,22 @@ $totalPerdas = (int) ($resumoMovimentacoes['total_perdas'] ?? 0);
         document.documentElement.setAttribute('data-theme', temaSalvo);
     </script>
 
-    <!-- CSS DA PÁGINA -->
-    <link rel="stylesheet" href="../includes/css/relatorios.css">
-    <link
+    
+<!-- CSS DO BOOTSTRAP -->
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+>
+
+<!-- CSS DA PÁGINA -->
+<link rel="stylesheet" href="../includes/css/relatorios.css">
+
+<!-- ÍCONES -->
+<link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
 >
+
 </head>
 
 <body>
