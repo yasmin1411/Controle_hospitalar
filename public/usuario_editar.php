@@ -1,5 +1,6 @@
 
 <?php
+
 // ==========================================================
 // AUTENTICAÇÃO E CONTROLE DE ACESSO
 // ==========================================================
@@ -15,6 +16,7 @@ if (!in_array($_SESSION['tipo'] ?? '', $funcoesPermitidas, true)) {
 }
 
 require_once __DIR__ . '/../config/database.php';
+
 
 // ==========================================================
 // VALIDAR ID E BUSCAR USUÁRIO
@@ -41,6 +43,7 @@ if (!$usuario) {
     exit('Usuário não encontrado.');
 }
 
+
 // ==========================================================
 // PROTEÇÃO CSRF E MENSAGENS
 // ==========================================================
@@ -51,10 +54,6 @@ if (empty($_SESSION['csrf_token'])) {
 
 $erro = $_GET['erro'] ?? '';
 $sucesso = $_GET['sucesso'] ?? '';
-
-// ==========================================================
-// FUNÇÕES DISPONÍVEIS
-// ==========================================================
 
 $funcoes = [
     'admin' => 'Administrador',
@@ -70,10 +69,6 @@ $funcoes = [
     'diretor_hospital' => 'Diretor do Hospital'
 ];
 
-// ==========================================================
-// CABEÇALHO
-// ==========================================================
-
 require_once __DIR__ . '/../includes/header.php';
 
 ?>
@@ -81,7 +76,7 @@ require_once __DIR__ . '/../includes/header.php';
 <main class="usuario-editar-page">
 
     <!-- ================================================== -->
-    <!-- CABEÇALHO DA PÁGINA -->
+    <!-- CABEÇALHO -->
     <!-- ================================================== -->
 
     <section class="ue-hero">
@@ -117,56 +112,48 @@ require_once __DIR__ . '/../includes/header.php';
     <?php if ($erro === 'email'): ?>
 
         <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill"></i>
             Este e-mail já está cadastrado em outra conta.
         </div>
 
     <?php elseif ($erro === 'dados'): ?>
 
         <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill"></i>
             Verifique os dados informados.
         </div>
 
     <?php elseif ($erro === 'senha'): ?>
 
         <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill"></i>
             As senhas não coincidem ou a nova senha possui menos de 8 caracteres.
         </div>
 
     <?php elseif ($erro === 'permissao'): ?>
 
         <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill"></i>
             Não é possível desativar o último administrador ativo.
         </div>
 
     <?php elseif ($erro === 'token'): ?>
 
         <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill"></i>
             Sessão de segurança inválida. Atualize a página e tente novamente.
         </div>
 
     <?php elseif ($erro === 'status'): ?>
 
         <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill"></i>
             Não foi possível alterar o status do usuário.
         </div>
 
     <?php elseif ($erro === 'acao'): ?>
 
         <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill"></i>
             Ação inválida.
         </div>
 
     <?php elseif ($erro === 'proprio'): ?>
 
         <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill"></i>
             Você não pode desativar sua própria conta.
         </div>
 
@@ -174,28 +161,28 @@ require_once __DIR__ . '/../includes/header.php';
 
 
     <!-- ================================================== -->
-    <!-- MENSAGENS DE SUCESSO -->
+    <!-- NOTIFICAÇÕES DE SUCESSO -->
     <!-- ================================================== -->
 
     <?php if ($sucesso === 'ativado'): ?>
 
-        <div class="alert alert-success">
+        <div class="ue-toast-success">
             <i class="bi bi-check-circle-fill"></i>
-            Usuário ativado com sucesso!
+            <span>Usuário ativado com sucesso!</span>
         </div>
 
     <?php elseif ($sucesso === 'desativado'): ?>
 
-        <div class="alert alert-success">
+        <div class="ue-toast-success">
             <i class="bi bi-check-circle-fill"></i>
-            Usuário desativado com sucesso!
+            <span>Usuário desativado com sucesso!</span>
         </div>
 
     <?php elseif ($sucesso === 'atualizado'): ?>
 
-        <div class="alert alert-success">
+        <div class="ue-toast-success">
             <i class="bi bi-check-circle-fill"></i>
-            Dados do usuário atualizados com sucesso!
+            <span>Dados do usuário atualizados com sucesso!</span>
         </div>
 
     <?php endif; ?>
@@ -215,7 +202,6 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div>
                 <h2>Status da conta</h2>
-
                 <p>
                     Gerencie a disponibilidade de acesso deste usuário ao sistema.
                 </p>
@@ -269,7 +255,6 @@ require_once __DIR__ . '/../includes/header.php';
                 <form
                     action="usuario_alterar_status.php"
                     method="POST"
-                    onsubmit="return confirmarAlteracaoStatus(this);"
                 >
 
                     <input
@@ -292,7 +277,7 @@ require_once __DIR__ . '/../includes/header.php';
                             value="desativar"
                         >
 
-                        <button type="submit" class="btn btn-danger ue-status-button">
+                        <button type="submit" class="btn btn-danger">
                             <i class="bi bi-person-x-fill"></i>
                             Desativar usuário
                         </button>
@@ -305,7 +290,7 @@ require_once __DIR__ . '/../includes/header.php';
                             value="ativar"
                         >
 
-                        <button type="submit" class="btn btn-success ue-status-button">
+                        <button type="submit" class="btn btn-success">
                             <i class="bi bi-person-check-fill"></i>
                             Ativar usuário
                         </button>
@@ -322,7 +307,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 
     <!-- ================================================== -->
-    <!-- DADOS DA CONTA -->
+    <!-- EDIÇÃO DOS DADOS DA CONTA -->
     <!-- ================================================== -->
 
     <section class="ue-card">
@@ -335,7 +320,6 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div>
                 <h2>Dados da conta</h2>
-
                 <p>
                     Informações principais do usuário selecionado.
                 </p>
@@ -362,6 +346,7 @@ require_once __DIR__ . '/../includes/header.php';
                 name="csrf_token"
                 value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"
             >
+
 
             <div class="row g-3">
 
@@ -488,7 +473,6 @@ require_once __DIR__ . '/../includes/header.php';
                             class="ue-eye"
                             data-target="senha"
                             aria-label="Mostrar senha"
-                            aria-pressed="false"
                         >
                             <i class="bi bi-eye"></i>
                         </button>
@@ -522,7 +506,6 @@ require_once __DIR__ . '/../includes/header.php';
                             class="ue-eye"
                             data-target="confirmar_senha"
                             aria-label="Mostrar confirmação da senha"
-                            aria-pressed="false"
                         >
                             <i class="bi bi-eye"></i>
                         </button>
@@ -546,12 +529,18 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div class="ue-actions">
 
-                <a href="usuarios.php" class="btn btn-outline-secondary">
+                <a
+                    href="usuarios.php"
+                    class="btn btn-outline-secondary"
+                >
                     <i class="bi bi-x-circle"></i>
                     Cancelar
                 </a>
 
-                <button type="submit" class="btn btn-primary">
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
                     <i class="bi bi-check-circle"></i>
                     Salvar alterações
                 </button>
@@ -566,16 +555,16 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 <!-- ====================================================== -->
-<!-- SCRIPTS DA PÁGINA -->
+<!-- SCRIPTS -->
 <!-- ====================================================== -->
 
 <script>
-(function () {
+(function(){
 
     // Mostrar e ocultar senhas.
-    document.querySelectorAll('.ue-eye').forEach(function (btn) {
+    document.querySelectorAll('.ue-eye').forEach(function(btn){
 
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function(){
 
             const input = document.getElementById(this.dataset.target);
 
@@ -591,11 +580,6 @@ require_once __DIR__ . '/../includes/header.php';
 
             this.setAttribute('aria-pressed', String(show));
 
-            this.setAttribute(
-                'aria-label',
-                show ? 'Ocultar senha' : 'Mostrar senha'
-            );
-
         });
 
     });
@@ -603,107 +587,62 @@ require_once __DIR__ . '/../includes/header.php';
 
     // Validação das senhas.
     const form = document.getElementById('formEditarUsuario');
-    const senha = document.getElementById('senha');
-    const confirmar = document.getElementById('confirmar_senha');
-    const mensagem = document.getElementById('mensagemSenha');
+    const a = document.getElementById('senha');
+    const b = document.getElementById('confirmar_senha');
+    const msg = document.getElementById('mensagemSenha');
 
-    if (form && senha && confirmar && mensagem) {
+    function check(){
 
-        function validarSenhas() {
+        msg.textContent = '';
+        msg.className = 'ue-feedback';
+        b.setCustomValidity('');
 
-            mensagem.textContent = '';
-            mensagem.className = 'ue-feedback';
-
-            confirmar.setCustomValidity('');
-
-            if (!senha.value && !confirmar.value) {
-                return true;
-            }
-
-            if (senha.value.length < 8) {
-
-                mensagem.textContent =
-                    'A nova senha deve possuir pelo menos 8 caracteres.';
-
-                mensagem.classList.add('erro');
-
-                return false;
-            }
-
-            if (senha.value !== confirmar.value) {
-
-                mensagem.textContent = 'As senhas não coincidem.';
-
-                mensagem.classList.add('erro');
-
-                confirmar.setCustomValidity(
-                    'As senhas não coincidem.'
-                );
-
-                return false;
-            }
-
-            mensagem.textContent = 'As senhas coincidem.';
-
-            mensagem.classList.add('ok');
-
+        if (!a.value && !b.value) {
             return true;
         }
 
-        senha.addEventListener('input', validarSenhas);
-        confirmar.addEventListener('input', validarSenhas);
+        if (a.value.length < 8) {
 
-        form.addEventListener('submit', function (e) {
+            msg.textContent = 'A nova senha deve possuir pelo menos 8 caracteres.';
+            msg.classList.add('erro');
 
-            if ((senha.value || confirmar.value) && !validarSenhas()) {
+            return false;
 
-                e.preventDefault();
+        }
 
-                confirmar.focus();
-            }
+        if (a.value !== b.value) {
 
-        });
+            msg.textContent = 'As senhas não coincidem.';
+            msg.classList.add('erro');
+            b.setCustomValidity('As senhas não coincidem.');
+
+            return false;
+
+        }
+
+        msg.textContent = 'As senhas coincidem.';
+        msg.classList.add('ok');
+
+        return true;
 
     }
+
+    a.addEventListener('input', check);
+    b.addEventListener('input', check);
+
+    form.addEventListener('submit', function(e){
+
+        if ((a.value || b.value) && !check()) {
+
+            e.preventDefault();
+            b.focus();
+
+        }
+
+    });
 
 })();
-
-
-// ==========================================================
-// CONFIRMAÇÃO DE ATIVAÇÃO OU DESATIVAÇÃO
-// ==========================================================
-
-function confirmarAlteracaoStatus(form) {
-
-    const campoAcao = form.querySelector('[name="acao"]');
-
-    if (!campoAcao) return false;
-
-    const acao = campoAcao.value;
-
-    if (acao === 'ativar') {
-
-        return confirm(
-            'Deseja realmente ativar esta conta?\n\n' +
-            'O usuário poderá acessar novamente o sistema.'
-        );
-
-    }
-
-    return confirm(
-        'Deseja realmente desativar esta conta?\n\n' +
-        'O usuário perderá o acesso ao sistema.'
-    );
-
-}
-
 </script>
 
 
-<?php
-// ==========================================================
-// RODAPÉ
-// ==========================================================
-
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
