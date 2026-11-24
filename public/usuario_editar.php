@@ -26,7 +26,6 @@ if (!$id || $id <= 0) {
     exit('ID de usuário inválido.');
 }
 
-// Agora também buscamos a coluna ativo.
 $sql = $pdo->prepare("
     SELECT id, nome, email, tipo, ativo
     FROM usuarios
@@ -53,6 +52,10 @@ if (empty($_SESSION['csrf_token'])) {
 $erro = $_GET['erro'] ?? '';
 $sucesso = $_GET['sucesso'] ?? '';
 
+// ==========================================================
+// FUNÇÕES DISPONÍVEIS
+// ==========================================================
+
 $funcoes = [
     'admin' => 'Administrador',
     'medico' => 'Médico',
@@ -67,25 +70,18 @@ $funcoes = [
     'diretor_hospital' => 'Diretor do Hospital'
 ];
 
+// ==========================================================
+// CABEÇALHO
+// ==========================================================
+
 require_once __DIR__ . '/../includes/header.php';
 
 ?>
 
-<link rel="stylesheet" href="../includes/css/usuario_editar.css">
-
-<script>
-(function(){
-    document.documentElement.setAttribute(
-        'data-theme',
-        localStorage.getItem('controleHospitalarTema') || 'light'
-    );
-})();
-</script>
-
-<main class="container-fluid usuario-editar-page">
+<main class="usuario-editar-page">
 
     <!-- ================================================== -->
-    <!-- CABEÇALHO -->
+    <!-- CABEÇALHO DA PÁGINA -->
     <!-- ================================================== -->
 
     <section class="ue-hero">
@@ -115,59 +111,71 @@ require_once __DIR__ . '/../includes/header.php';
 
 
     <!-- ================================================== -->
-    <!-- MENSAGENS DO SISTEMA -->
+    <!-- MENSAGENS DE ERRO -->
     <!-- ================================================== -->
 
     <?php if ($erro === 'email'): ?>
 
         <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
             Este e-mail já está cadastrado em outra conta.
         </div>
 
     <?php elseif ($erro === 'dados'): ?>
 
         <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
             Verifique os dados informados.
         </div>
 
     <?php elseif ($erro === 'senha'): ?>
 
         <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
             As senhas não coincidem ou a nova senha possui menos de 8 caracteres.
         </div>
 
     <?php elseif ($erro === 'permissao'): ?>
 
         <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
             Não é possível desativar o último administrador ativo.
         </div>
 
     <?php elseif ($erro === 'token'): ?>
 
         <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
             Sessão de segurança inválida. Atualize a página e tente novamente.
         </div>
 
     <?php elseif ($erro === 'status'): ?>
 
         <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
             Não foi possível alterar o status do usuário.
         </div>
 
     <?php elseif ($erro === 'acao'): ?>
 
         <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
             Ação inválida.
         </div>
 
     <?php elseif ($erro === 'proprio'): ?>
 
         <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
             Você não pode desativar sua própria conta.
         </div>
 
     <?php endif; ?>
 
+
+    <!-- ================================================== -->
+    <!-- MENSAGENS DE SUCESSO -->
+    <!-- ================================================== -->
 
     <?php if ($sucesso === 'ativado'): ?>
 
@@ -186,6 +194,7 @@ require_once __DIR__ . '/../includes/header.php';
     <?php elseif ($sucesso === 'atualizado'): ?>
 
         <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill"></i>
             Dados do usuário atualizados com sucesso!
         </div>
 
@@ -193,10 +202,10 @@ require_once __DIR__ . '/../includes/header.php';
 
 
     <!-- ================================================== -->
-    <!-- GERENCIAMENTO DO STATUS DA CONTA -->
+    <!-- STATUS DA CONTA -->
     <!-- ================================================== -->
 
-    <section class="ue-card mb-4">
+    <section class="ue-card ue-status-card mb-4">
 
         <div class="ue-card-heading">
 
@@ -206,6 +215,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div>
                 <h2>Status da conta</h2>
+
                 <p>
                     Gerencie a disponibilidade de acesso deste usuário ao sistema.
                 </p>
@@ -213,17 +223,17 @@ require_once __DIR__ . '/../includes/header.php';
 
         </div>
 
-        <div class="p-3">
+        <div class="ue-status-content">
 
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
 
-                <div>
+                <div class="ue-status-info">
 
                     <strong>
                         <?= htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8') ?>
                     </strong>
 
-                    <p class="text-muted mb-2">
+                    <p class="ue-status-email">
                         <?= htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8') ?>
                     </p>
 
@@ -234,7 +244,7 @@ require_once __DIR__ . '/../includes/header.php';
                             Conta ativa
                         </span>
 
-                        <p class="small text-muted mt-2 mb-0">
+                        <p class="ue-status-description">
                             Este usuário está habilitado para acessar o sistema.
                         </p>
 
@@ -245,7 +255,7 @@ require_once __DIR__ . '/../includes/header.php';
                             Conta inativa
                         </span>
 
-                        <p class="small text-muted mt-2 mb-0">
+                        <p class="ue-status-description">
                             Este usuário está impedido de acessar o sistema.
                         </p>
 
@@ -282,10 +292,7 @@ require_once __DIR__ . '/../includes/header.php';
                             value="desativar"
                         >
 
-                        <button
-                            type="submit"
-                            class="btn btn-danger"
-                        >
+                        <button type="submit" class="btn btn-danger ue-status-button">
                             <i class="bi bi-person-x-fill"></i>
                             Desativar usuário
                         </button>
@@ -298,10 +305,7 @@ require_once __DIR__ . '/../includes/header.php';
                             value="ativar"
                         >
 
-                        <button
-                            type="submit"
-                            class="btn btn-success"
-                        >
+                        <button type="submit" class="btn btn-success ue-status-button">
                             <i class="bi bi-person-check-fill"></i>
                             Ativar usuário
                         </button>
@@ -318,7 +322,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 
     <!-- ================================================== -->
-    <!-- EDIÇÃO DOS DADOS DA CONTA -->
+    <!-- DADOS DA CONTA -->
     <!-- ================================================== -->
 
     <section class="ue-card">
@@ -331,6 +335,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div>
                 <h2>Dados da conta</h2>
+
                 <p>
                     Informações principais do usuário selecionado.
                 </p>
@@ -357,7 +362,6 @@ require_once __DIR__ . '/../includes/header.php';
                 name="csrf_token"
                 value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"
             >
-
 
             <div class="row g-3">
 
@@ -484,6 +488,7 @@ require_once __DIR__ . '/../includes/header.php';
                             class="ue-eye"
                             data-target="senha"
                             aria-label="Mostrar senha"
+                            aria-pressed="false"
                         >
                             <i class="bi bi-eye"></i>
                         </button>
@@ -517,6 +522,7 @@ require_once __DIR__ . '/../includes/header.php';
                             class="ue-eye"
                             data-target="confirmar_senha"
                             aria-label="Mostrar confirmação da senha"
+                            aria-pressed="false"
                         >
                             <i class="bi bi-eye"></i>
                         </button>
@@ -534,22 +540,18 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
 
+            <!-- ================================================== -->
             <!-- BOTÕES -->
+            <!-- ================================================== -->
 
             <div class="ue-actions">
 
-                <a
-                    href="usuarios.php"
-                    class="btn btn-outline-secondary"
-                >
+                <a href="usuarios.php" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle"></i>
                     Cancelar
                 </a>
 
-                <button
-                    type="submit"
-                    class="btn btn-primary"
-                >
+                <button type="submit" class="btn btn-primary">
                     <i class="bi bi-check-circle"></i>
                     Salvar alterações
                 </button>
@@ -564,16 +566,16 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 <!-- ====================================================== -->
-<!-- SCRIPTS -->
+<!-- SCRIPTS DA PÁGINA -->
 <!-- ====================================================== -->
 
 <script>
-(function(){
+(function () {
 
     // Mostrar e ocultar senhas.
-    document.querySelectorAll('.ue-eye').forEach(function(btn){
+    document.querySelectorAll('.ue-eye').forEach(function (btn) {
 
-        btn.addEventListener('click', function(){
+        btn.addEventListener('click', function () {
 
             const input = document.getElementById(this.dataset.target);
 
@@ -589,6 +591,11 @@ require_once __DIR__ . '/../includes/header.php';
 
             this.setAttribute('aria-pressed', String(show));
 
+            this.setAttribute(
+                'aria-label',
+                show ? 'Ocultar senha' : 'Mostrar senha'
+            );
+
         });
 
     });
@@ -596,77 +603,68 @@ require_once __DIR__ . '/../includes/header.php';
 
     // Validação das senhas.
     const form = document.getElementById('formEditarUsuario');
+    const senha = document.getElementById('senha');
+    const confirmar = document.getElementById('confirmar_senha');
+    const mensagem = document.getElementById('mensagemSenha');
 
-    const a = document.getElementById('senha');
+    if (form && senha && confirmar && mensagem) {
 
-    const b = document.getElementById('confirmar_senha');
+        function validarSenhas() {
 
-    const msg = document.getElementById('mensagemSenha');
+            mensagem.textContent = '';
+            mensagem.className = 'ue-feedback';
 
+            confirmar.setCustomValidity('');
 
-    function check(){
+            if (!senha.value && !confirmar.value) {
+                return true;
+            }
 
-        msg.textContent = '';
+            if (senha.value.length < 8) {
 
-        msg.className = 'ue-feedback';
+                mensagem.textContent =
+                    'A nova senha deve possuir pelo menos 8 caracteres.';
 
-        b.setCustomValidity('');
+                mensagem.classList.add('erro');
 
+                return false;
+            }
 
-        if (!a.value && !b.value) {
+            if (senha.value !== confirmar.value) {
+
+                mensagem.textContent = 'As senhas não coincidem.';
+
+                mensagem.classList.add('erro');
+
+                confirmar.setCustomValidity(
+                    'As senhas não coincidem.'
+                );
+
+                return false;
+            }
+
+            mensagem.textContent = 'As senhas coincidem.';
+
+            mensagem.classList.add('ok');
+
             return true;
         }
 
+        senha.addEventListener('input', validarSenhas);
+        confirmar.addEventListener('input', validarSenhas);
 
-        if (a.value.length < 8) {
+        form.addEventListener('submit', function (e) {
 
-            msg.textContent = 'A nova senha deve possuir pelo menos 8 caracteres.';
+            if ((senha.value || confirmar.value) && !validarSenhas()) {
 
-            msg.classList.add('erro');
+                e.preventDefault();
 
-            return false;
+                confirmar.focus();
+            }
 
-        }
-
-
-        if (a.value !== b.value) {
-
-            msg.textContent = 'As senhas não coincidem.';
-
-            msg.classList.add('erro');
-
-            b.setCustomValidity('As senhas não coincidem.');
-
-            return false;
-
-        }
-
-
-        msg.textContent = 'As senhas coincidem.';
-
-        msg.classList.add('ok');
-
-        return true;
+        });
 
     }
-
-
-    a.addEventListener('input', check);
-
-    b.addEventListener('input', check);
-
-
-    form.addEventListener('submit', function(e){
-
-        if ((a.value || b.value) && !check()) {
-
-            e.preventDefault();
-
-            b.focus();
-
-        }
-
-    });
 
 })();
 
@@ -675,9 +673,13 @@ require_once __DIR__ . '/../includes/header.php';
 // CONFIRMAÇÃO DE ATIVAÇÃO OU DESATIVAÇÃO
 // ==========================================================
 
-function confirmarAlteracaoStatus(form){
+function confirmarAlteracaoStatus(form) {
 
-    const acao = form.querySelector('[name="acao"]').value;
+    const campoAcao = form.querySelector('[name="acao"]');
+
+    if (!campoAcao) return false;
+
+    const acao = campoAcao.value;
 
     if (acao === 'ativar') {
 
@@ -698,4 +700,10 @@ function confirmarAlteracaoStatus(form){
 </script>
 
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php
+// ==========================================================
+// RODAPÉ
+// ==========================================================
+
+require_once __DIR__ . '/../includes/footer.php';
+?>

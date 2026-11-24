@@ -1,7 +1,954 @@
 
-:root{--ue-bg:#edf3fa;--ue-surface:#fff;--ue-surface2:#f4f8fd;--ue-text:#203247;--ue-muted:#708198;--ue-border:#dce7f2;--ue-blue:#2f80ed;--ue-shadow:0 14px 34px rgba(31,67,112,.09)}html[data-theme="dark"]{--ue-bg:#101d30;--ue-surface:#192a40;--ue-surface2:#20364f;--ue-text:#e8f0fb;--ue-muted:#a9bdd5;--ue-border:#344b66;--ue-shadow:0 14px 34px rgba(0,0,0,.2)}
-body:has(.usuario-editar-page)>nav,body:has(.usuario-editar-page) .navbar{display:none!important}body:has(.usuario-editar-page){background:var(--ue-bg)!important;color:var(--ue-text)}.usuario-editar-page{max-width:1250px;margin:auto;padding:34px clamp(14px,3vw,40px) 50px;color:var(--ue-text)}
-.ue-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:30px 34px;margin-bottom:24px;border-radius:22px;color:#fff;background:linear-gradient(120deg,#174ea6,#2f80ed 62%,#49bce9);box-shadow:var(--ue-shadow)}.ue-eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.12em}.ue-hero h1{font-size:clamp(1.7rem,3vw,2.3rem);font-weight:850;margin:10px 0}.ue-hero p{margin:0;color:#edf6ff}.ue-back{color:#fff;text-decoration:none;border:1px solid #ffffff80;padding:11px 15px;border-radius:11px;font-weight:700;white-space:nowrap}.ue-back:hover{background:#fff;color:#174ea6}
-.ue-card{background:var(--ue-surface);border:1px solid var(--ue-border);border-radius:20px;box-shadow:var(--ue-shadow);padding:clamp(20px,3vw,34px)}.ue-card-heading,.ue-section-title{display:flex;align-items:center;gap:14px;margin-bottom:24px}.ue-icon{width:48px;height:48px;border-radius:14px;background:#e3efff;color:#2f80ed;display:grid;place-items:center;font-size:1.35rem}.ue-card-heading h2,.ue-section-title h3{margin:0;font-size:1.2rem;font-weight:800;color:var(--ue-text)}.ue-card-heading p,.ue-section-title p{margin:4px 0 0;color:var(--ue-muted)}.usuario-editar-page .form-label{font-weight:700;color:var(--ue-text);margin-bottom:8px}.usuario-editar-page .form-control,.usuario-editar-page .form-select{min-height:48px;border-radius:11px;border-color:var(--ue-border);background:var(--ue-surface2);color:var(--ue-text)}.usuario-editar-page .form-control:focus,.usuario-editar-page .form-select:focus{border-color:#2f80ed;box-shadow:0 0 0 .2rem #2f80ed25}.ue-divider{height:1px;background:var(--ue-border);margin:28px 0}.ue-section-title{margin-bottom:18px}.ue-section-title>i{font-size:1.4rem;color:#2f80ed}.ue-password{display:flex;position:relative}.ue-password .form-control{padding-right:52px}.ue-eye{position:absolute;right:5px;top:5px;width:38px;height:38px;border:0;border-radius:8px;background:transparent;color:var(--ue-muted);font-size:1.15rem}.ue-eye:hover{background:var(--ue-surface2);color:#2f80ed}.ue-feedback{display:block;min-height:20px;margin-top:7px;color:var(--ue-muted)}.ue-feedback.erro{color:#e35b68}.ue-feedback.ok{color:#27ae60}.ue-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:28px}.ue-actions .btn{padding:11px 18px;border-radius:10px;font-weight:700}
-html[data-theme="dark"] .ue-card-heading h2,html[data-theme="dark"] .ue-section-title h3,html[data-theme="dark"] .usuario-editar-page .form-label{color:var(--ue-text)}html[data-theme="dark"] .ue-icon{background:#203d5e;color:#8dbbff}html[data-theme="dark"] .usuario-editar-page .form-control,html[data-theme="dark"] .usuario-editar-page .form-select{background:#122238;color:#edf4ff;border-color:#405a78}html[data-theme="dark"] .usuario-editar-page .form-control::placeholder{color:#91a8c3}html[data-theme="dark"] .ue-eye{color:#c3d6ed}html[data-theme="dark"] .ue-eye:hover{background:#263e59}html[data-theme="dark"] .ue-card-heading p,html[data-theme="dark"] .ue-section-title p{color:var(--ue-muted)}
-@media(max-width:650px){.ue-hero{align-items:flex-start;flex-direction:column;padding:24px}.ue-back{width:100%;text-align:center}.ue-actions{flex-direction:column-reverse}.ue-actions .btn{width:100%}}
+/* ==========================================================
+   CONTROLE HOSPITALAR — EDIÇÃO DE USUÁRIOS
+   Layout profissional | Tema claro e escuro
+========================================================== */
+
+/* ==========================================================
+   1. PALETA DE CORES
+========================================================== */
+
+:root {
+    color-scheme: light;
+
+    --ue-bg: #edf4fc;
+    --ue-surface: #ffffff;
+    --ue-surface2: #f5f8fd;
+    --ue-text: #203247;
+    --ue-muted: #71839b;
+    --ue-border: #dce7f3;
+
+    --ue-blue: #2f80ed;
+    --ue-blue-dark: #174ea6;
+    --ue-blue-light: #eaf3ff;
+
+    --ue-green: #198754;
+    --ue-green-light: #e9f8ef;
+
+    --ue-red: #dc3545;
+    --ue-red-light: #fff0f2;
+
+    --ue-shadow: 0 12px 34px rgba(31, 67, 112, .075);
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --ue-bg: #101d30;
+    --ue-surface: #192a40;
+    --ue-surface2: #20364f;
+    --ue-text: #e8f0fb;
+    --ue-muted: #a9bdd5;
+    --ue-border: #344b66;
+
+    --ue-blue: #62a2ff;
+    --ue-blue-dark: #347bd6;
+    --ue-blue-light: #203d5e;
+
+    --ue-green: #55c98a;
+    --ue-green-light: #1d4037;
+
+    --ue-red: #ff8290;
+    --ue-red-light: #48252d;
+
+    --ue-shadow: 0 12px 34px rgba(0, 0, 0, .20);
+}
+
+/* ==========================================================
+   2. ESTRUTURA GERAL
+========================================================== */
+
+body:has(.usuario-editar-page) {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 8% 8%, rgba(86,204,242,.12), transparent 28%),
+        radial-gradient(circle at 95% 12%, rgba(47,128,237,.12), transparent 30%),
+        var(--ue-bg) !important;
+
+    color: var(--ue-text);
+}
+
+body:has(.usuario-editar-page) > nav,
+body:has(.usuario-editar-page) .navbar {
+    display: none !important;
+}
+
+.usuario-editar-page {
+    width: min(1330px, 96%);
+    margin: 0 auto;
+    padding: 20px 0 55px;
+    color: var(--ue-text);
+}
+
+/* ==========================================================
+   3. CABEÇALHO
+========================================================== */
+
+.ue-hero {
+    position: relative;
+    isolation: isolate;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+
+    min-height: 210px;
+    padding: 35px 43px;
+    margin-bottom: 28px;
+
+    overflow: hidden;
+    border-radius: 24px;
+
+    color: #fff;
+
+    background: linear-gradient(
+        115deg,
+        #174ea6 0%,
+        #2878e5 58%,
+        #4bbfe9 100%
+    );
+
+    box-shadow: 0 15px 35px rgba(47,128,237,.18);
+}
+
+/* Elemento gráfico decorativo */
+.ue-hero::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+
+    width: 230px;
+    height: 230px;
+
+    right: 190px;
+    top: -95px;
+
+    border: 35px solid rgba(255,255,255,.09);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.ue-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+
+    color: #dcecff;
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.ue-eyebrow i {
+    font-size: 15px;
+}
+
+.ue-hero h1 {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    margin: 12px 0;
+
+    color: #fff;
+    font-size: clamp(2rem, 3vw, 2.7rem);
+    font-weight: 850;
+    letter-spacing: -.045em;
+}
+
+.ue-hero h1 > i {
+    font-size: .85em;
+}
+
+.ue-hero p {
+    margin: 0;
+    color: #e5f1ff;
+    font-size: 1rem;
+}
+
+.ue-back {
+    position: relative;
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    padding: 14px 20px;
+
+    border: 1px solid rgba(255,255,255,.42);
+    border-radius: 13px;
+
+    color: #fff;
+    background: rgba(255,255,255,.13);
+
+    font-weight: 750;
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition: .2s ease;
+}
+
+.ue-back:hover {
+    color: #174ea6;
+    background: #fff;
+    transform: translateY(-2px);
+}
+
+/* ==========================================================
+   4. CARTÕES
+========================================================== */
+
+.ue-card {
+    position: relative;
+
+    padding: clamp(25px, 3vw, 38px);
+    margin-bottom: 26px;
+
+    border: 1px solid var(--ue-border);
+    border-radius: 22px;
+
+    background: var(--ue-surface);
+    box-shadow: var(--ue-shadow);
+}
+
+.ue-card:last-child {
+    margin-bottom: 0;
+}
+
+/* ==========================================================
+   5. CABEÇALHOS DAS SEÇÕES
+========================================================== */
+
+.ue-card-heading,
+.ue-section-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    margin-bottom: 27px;
+}
+
+.ue-icon {
+    flex-shrink: 0;
+
+    display: grid;
+    place-items: center;
+
+    width: 58px;
+    height: 58px;
+
+    border-radius: 17px;
+
+    color: var(--ue-blue);
+    background: var(--ue-blue-light);
+
+    font-size: 1.55rem;
+}
+
+.ue-card-heading h2,
+.ue-section-title h3 {
+    margin: 0;
+
+    color: var(--ue-text);
+    font-size: 1.27rem;
+    font-weight: 850;
+    letter-spacing: -.02em;
+}
+
+.ue-card-heading p,
+.ue-section-title p {
+    margin: 5px 0 0;
+
+    color: var(--ue-muted);
+    font-size: .94rem;
+    line-height: 1.5;
+}
+
+/* ==========================================================
+   6. CARTÃO DE STATUS — COMPACTO
+========================================================== */
+
+.ue-status-card {
+    padding: 30px 36px;
+}
+
+.ue-status-card .ue-card-heading {
+    margin-bottom: 23px;
+}
+
+.ue-status-content {
+    padding: 0 !important;
+}
+
+.ue-status-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 25px !important;
+}
+
+.ue-status-info {
+    min-width: 0;
+}
+
+.ue-status-info > strong {
+    display: block;
+    margin-bottom: 5px;
+
+    color: var(--ue-text);
+    font-size: 1.04rem;
+    font-weight: 800;
+}
+
+.ue-status-info > p {
+    color: var(--ue-muted) !important;
+    margin-bottom: 10px;
+}
+
+.ue-status-info .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 7px 11px;
+    border-radius: 8px;
+
+    font-size: .78rem;
+    font-weight: 750;
+}
+
+.ue-status-info .bg-success {
+    background: var(--ue-green) !important;
+    color: #fff;
+}
+
+.ue-status-info .bg-danger {
+    background: var(--ue-red) !important;
+    color: #fff;
+}
+
+.ue-status-info .small {
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+    font-size: .88rem;
+}
+
+.ue-status-form {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.ue-status-form .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 46px;
+    padding: 12px 19px;
+
+    border: 0;
+    border-radius: 12px;
+
+    font-size: .91rem;
+    font-weight: 750;
+    white-space: nowrap;
+
+    transition: .2s ease;
+}
+
+.ue-status-form .btn-danger {
+    background: #dc3545;
+    color: #fff;
+}
+
+.ue-status-form .btn-danger:hover {
+    background: #bd2636;
+    transform: translateY(-2px);
+}
+
+.ue-status-form .btn-success {
+    background: #198754;
+    color: #fff;
+}
+
+.ue-status-form .btn-success:hover {
+    background: #146c43;
+    transform: translateY(-2px);
+}
+
+/* ==========================================================
+   7. FORMULÁRIO DE DADOS
+========================================================== */
+
+.ue-form .form-label {
+    display: block;
+    margin-bottom: 9px;
+
+    color: var(--ue-text);
+    font-size: .92rem;
+    font-weight: 750;
+}
+
+.ue-form .form-control,
+.ue-form .form-select {
+    width: 100%;
+    min-height: 54px;
+    padding: 12px 16px;
+
+    border: 1px solid var(--ue-border);
+    border-radius: 13px;
+
+    background-color: var(--ue-surface2);
+    color: var(--ue-text);
+
+    font-size: .97rem;
+    box-shadow: none;
+
+    transition: .2s ease;
+}
+
+.ue-form .form-control:hover,
+.ue-form .form-select:hover {
+    border-color: #a8c8f3;
+}
+
+.ue-form .form-control:focus,
+.ue-form .form-select:focus {
+    border-color: var(--ue-blue);
+    background-color: var(--ue-surface);
+    color: var(--ue-text);
+
+    box-shadow: 0 0 0 4px rgba(47,128,237,.12);
+}
+
+.ue-form .form-control::placeholder {
+    color: var(--ue-muted);
+    opacity: .8;
+}
+
+/* ==========================================================
+   8. DIVISÓRIA
+========================================================== */
+
+.ue-divider {
+    height: 1px;
+    margin: 32px 0;
+
+    border: 0;
+    background: var(--ue-border);
+}
+
+/* ==========================================================
+   9. SEÇÃO DE SENHA
+========================================================== */
+
+.ue-section-title {
+    margin-bottom: 23px;
+}
+
+.ue-section-title > i {
+    flex-shrink: 0;
+
+    display: grid;
+    place-items: center;
+
+    width: 50px;
+    height: 50px;
+
+    border-radius: 15px;
+
+    color: var(--ue-blue);
+    background: var(--ue-blue-light);
+
+    font-size: 1.35rem;
+}
+
+.ue-password {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ue-password .form-control {
+    width: 100%;
+    padding-right: 55px;
+}
+
+.ue-eye {
+    position: absolute;
+    right: 7px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    display: grid;
+    place-items: center;
+
+    width: 40px;
+    height: 40px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 11px;
+
+    background: transparent;
+    color: var(--ue-muted);
+
+    font-size: 1.15rem;
+    cursor: pointer;
+
+    transition: .2s ease;
+}
+
+.ue-eye:hover {
+    color: var(--ue-blue);
+    background: var(--ue-blue-light);
+}
+
+.ue-eye:focus-visible {
+    outline: 3px solid rgba(47,128,237,.3);
+}
+
+/* ==========================================================
+   10. FEEDBACK DE SENHA
+========================================================== */
+
+.ue-feedback {
+    display: block;
+    min-height: 20px;
+    margin-top: 8px;
+
+    color: var(--ue-muted);
+    font-size: .83rem;
+}
+
+.ue-feedback.erro {
+    color: var(--ue-red);
+    font-weight: 700;
+}
+
+.ue-feedback.ok {
+    color: var(--ue-green);
+    font-weight: 700;
+}
+
+/* ==========================================================
+   11. BOTÕES FINAIS
+========================================================== */
+
+.ue-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    margin-top: 32px;
+    padding-top: 25px;
+
+    border-top: 1px solid var(--ue-border);
+}
+
+.ue-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 50px;
+    padding: 12px 22px;
+
+    border-radius: 13px;
+
+    font-size: .95rem;
+    font-weight: 750;
+
+    transition: .2s ease;
+}
+
+.ue-actions .btn-primary {
+    border: 0;
+    color: #fff;
+
+    background: linear-gradient(120deg, #246bd0, #2f80ed);
+    box-shadow: 0 7px 17px rgba(47,128,237,.19);
+}
+
+.ue-actions .btn-primary:hover {
+    color: #fff;
+    background: linear-gradient(120deg, #174ea6, #246bd0);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(47,128,237,.23);
+}
+
+.ue-actions .btn-outline-secondary {
+    border: 1px solid var(--ue-border);
+    color: var(--ue-text);
+    background: var(--ue-surface);
+}
+
+.ue-actions .btn-outline-secondary:hover {
+    border-color: var(--ue-blue);
+    color: var(--ue-blue);
+    background: var(--ue-blue-light);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================
+   12. ALERTAS
+========================================================== */
+
+.usuario-editar-page > .alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 15px 18px;
+    margin-bottom: 20px;
+
+    border: 1px solid var(--ue-border);
+    border-radius: 13px;
+
+    box-shadow: var(--ue-shadow);
+}
+
+/* ==========================================================
+   13. TEMA ESCURO
+========================================================== */
+
+html[data-theme="dark"] .ue-card-heading h2,
+html[data-theme="dark"] .ue-section-title h3,
+html[data-theme="dark"] .ue-status-info > strong,
+html[data-theme="dark"] .ue-form .form-label {
+    color: var(--ue-text);
+}
+
+html[data-theme="dark"] .ue-icon,
+html[data-theme="dark"] .ue-section-title > i {
+    color: #8dbbff;
+    background: #203d5e;
+}
+
+html[data-theme="dark"] .ue-form .form-control,
+html[data-theme="dark"] .ue-form .form-select {
+    color: #edf4ff;
+    background-color: #122238;
+    border-color: #405a78;
+}
+
+html[data-theme="dark"] .ue-form .form-control:focus,
+html[data-theme="dark"] .ue-form .form-select:focus {
+    background-color: #192d47;
+    border-color: #62a2ff;
+}
+
+html[data-theme="dark"] .ue-form .form-control::placeholder {
+    color: #91a8c3;
+}
+
+html[data-theme="dark"] .ue-card-heading p,
+html[data-theme="dark"] .ue-section-title p,
+html[data-theme="dark"] .ue-status-info p {
+    color: var(--ue-muted) !important;
+}
+
+html[data-theme="dark"] .ue-eye {
+    color: #c3d6ed;
+}
+
+html[data-theme="dark"] .ue-eye:hover {
+    background: #263e59;
+}
+
+html[data-theme="dark"] .ue-actions .btn-outline-secondary {
+    color: var(--ue-text);
+    background: #20364f;
+    border-color: #405a78;
+}
+
+html[data-theme="dark"] .usuario-editar-page > .alert {
+    background-color: var(--ue-surface);
+    color: var(--ue-text);
+}
+
+/* ==========================================================
+   14. RESPONSIVIDADE
+========================================================== */
+
+@media (max-width: 768px) {
+
+    .usuario-editar-page {
+        width: 94%;
+        padding-top: 18px;
+    }
+
+    .ue-hero {
+        align-items: flex-start;
+        flex-direction: column;
+
+        min-height: auto;
+        padding: 27px;
+    }
+
+    .ue-hero::after {
+        right: -65px;
+        top: -80px;
+    }
+
+    .ue-back {
+        width: 100%;
+    }
+
+    .ue-card {
+        padding: 25px 20px;
+    }
+
+    .ue-status-card {
+        padding: 25px 22px;
+    }
+
+    .ue-status-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .ue-status-form {
+        justify-content: flex-start;
+    }
+
+    .ue-status-form .btn {
+        width: 100%;
+    }
+
+    .ue-actions {
+        flex-direction: column-reverse;
+    }
+
+    .ue-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .ue-card-heading,
+    .ue-section-title {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .ue-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+
+    .ue-hero h1 {
+        font-size: 1.8rem;
+    }
+
+    .ue-hero p {
+        font-size: .91rem;
+    }
+
+    .ue-card-heading h2,
+    .ue-section-title h3 {
+        font-size: 1.1rem;
+    }
+
+    .ue-status-card {
+        padding: 22px 17px;
+    }
+}
+
+/* ==========================================================
+   STATUS DA CONTA — ACABAMENTO E TEMA ESCURO
+========================================================== */
+
+/* Área interna do status */
+.ue-status-content {
+    padding: 12px 0 8px;
+    color: var(--ue-text);
+}
+
+.ue-status-content strong {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--ue-text);
+    font-size: 1.08rem;
+    font-weight: 800;
+}
+
+/* E-mail e descrição */
+.ue-status-content .text-muted {
+    color: var(--ue-muted) !important;
+}
+
+.ue-status-content p {
+    color: var(--ue-muted);
+}
+
+/* Indicadores de conta */
+.ue-status-content .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 13px;
+    border-radius: 9px;
+    font-size: .84rem;
+    font-weight: 750;
+    letter-spacing: .01em;
+}
+
+.ue-status-content .badge.bg-success {
+    color: #087443 !important;
+    background: #e2f7ec !important;
+    border: 1px solid #bcebd0;
+}
+
+.ue-status-content .badge.bg-danger {
+    color: #b42335 !important;
+    background: #fff0f1 !important;
+    border: 1px solid #ffd1d6;
+}
+
+/* Texto explicativo */
+.ue-status-content .small {
+    display: block;
+    margin-top: 10px !important;
+    font-size: .9rem;
+    line-height: 1.5;
+}
+
+/* Botões de ativar e desativar */
+.ue-status-content form .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 49px;
+    padding: 12px 20px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    font-size: .96rem;
+    font-weight: 750;
+    box-shadow: 0 5px 14px rgba(0, 0, 0, .10);
+    transition: all .2s ease;
+}
+
+.ue-status-content form .btn-danger {
+    color: #fff;
+    background: linear-gradient(120deg, #d92f45, #ef4055);
+    border-color: #d92f45;
+}
+
+.ue-status-content form .btn-success {
+    color: #fff;
+    background: linear-gradient(120deg, #168653, #25ae70);
+    border-color: #168653;
+}
+
+.ue-status-content form .btn:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 19px rgba(0, 0, 0, .16);
+}
+
+/* ==========================================================
+   TEMA ESCURO
+========================================================== */
+
+html[data-theme="dark"] .ue-status-content {
+    color: #edf4ff;
+}
+
+html[data-theme="dark"] .ue-status-content strong {
+    color: #f1f6ff;
+}
+
+html[data-theme="dark"] .ue-status-content .text-muted,
+html[data-theme="dark"] .ue-status-content p {
+    color: #b7c9df !important;
+}
+
+/* Indicador de conta ativa no tema escuro */
+html[data-theme="dark"] .ue-status-content .badge.bg-success {
+    color: #83e6b1 !important;
+    background: rgba(25, 135, 84, .20) !important;
+    border: 1px solid rgba(73, 210, 145, .35);
+}
+
+/* Indicador de conta inativa no tema escuro */
+html[data-theme="dark"] .ue-status-content .badge.bg-danger {
+    color: #ff9da8 !important;
+    background: rgba(220, 53, 69, .18) !important;
+    border: 1px solid rgba(255, 110, 125, .35);
+}
+
+/* Botões no tema escuro */
+html[data-theme="dark"] .ue-status-content form .btn-danger {
+    color: #fff !important;
+    background: linear-gradient(120deg, #c92d43, #e83d55) !important;
+    border-color: #ed5266 !important;
+}
+
+html[data-theme="dark"] .ue-status-content form .btn-success {
+    color: #fff !important;
+    background: linear-gradient(120deg, #147b4c, #209d65) !important;
+    border-color: #36b77e !important;
+}
+
+html[data-theme="dark"] .ue-status-content form .btn:hover {
+    filter: brightness(1.12);
+}
+/* TEXTO DO STATUS — BRANCO NO TEMA ESCURO */
+
+html[data-theme="dark"] .ue-status-content p,
+html[data-theme="dark"] .ue-status-content .text-muted,
+html[data-theme="dark"] .ue-status-content .small,
+html[data-theme="dark"] .ue-status-content p.text-muted {
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* E-mail do usuário */
+html[data-theme="dark"] .ue-status-content p.mb-2 {
+    color: #ffffff !important;
+}
+
+/* Mensagem abaixo do indicador de conta */
+html[data-theme="dark"] .ue-status-content .mt-2 {
+    color: #ffffff !important;
+}
+
+/* ==========================================================
+   CORREÇÃO DOS TEXTOS DO STATUS NO TEMA ESCURO
+   ========================================================== */
+
+   html[data-theme="dark"] .usuario-editar-page .ue-status-content {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .usuario-editar-page .ue-status-content strong {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .usuario-editar-page .ue-status-content p,
+html[data-theme="dark"] .usuario-editar-page .ue-status-content p.text-muted,
+html[data-theme="dark"] .usuario-editar-page .ue-status-content .small,
+html[data-theme="dark"] .usuario-editar-page .ue-status-content .text-muted {
+    color: #dce8f7 !important;
+    opacity: 1 !important;
+}
+
+html[data-theme="dark"] .usuario-editar-page .ue-status-content .badge {
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
