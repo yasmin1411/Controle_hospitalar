@@ -1,0 +1,863 @@
+
+/* ==========================================================
+   SISTEMA DE CONTROLE HOSPITALAR
+   MÓDULO: EDIÇÃO DE MOVIMENTAÇÕES
+   Arquivo: movimentacoes_editar.css
+
+   Tema claro e escuro integrado ao perfil do sistema.
+   ========================================================== */
+
+
+/* ==========================================================
+   1. VARIÁVEIS DO TEMA CLARO
+   ========================================================== */
+
+   :root {
+    color-scheme: light;
+
+    --me-bg: #f1f5fb;
+    --me-bg-gradient: #eaf2fc;
+
+    --me-surface: #ffffff;
+    --me-surface-soft: #f7faff;
+    --me-surface-hover: #edf5ff;
+
+    --me-primary: #2878d7;
+    --me-primary-dark: #185cae;
+    --me-primary-light: #e7f1ff;
+    --me-primary-shadow: rgba(40, 120, 215, .20);
+
+    --me-text: #20334a;
+    --me-text-secondary: #52657c;
+    --me-muted: #8291a4;
+
+    --me-border: #dfe8f2;
+    --me-border-strong: #cbd8e7;
+
+    --me-input-bg: #ffffff;
+    --me-input-text: #26384d;
+    --me-input-placeholder: #9aa8b8;
+
+    --me-shadow:
+        0 12px 35px rgba(36, 68, 108, .07);
+
+    --me-shadow-hover:
+        0 18px 42px rgba(36, 68, 108, .12);
+
+    --me-success: #16845b;
+    --me-danger: #d94a55;
+    --me-warning: #c58a20;
+
+    --me-radius: 18px;
+    --me-radius-small: 11px;
+}
+
+
+/* ==========================================================
+   2. VARIÁVEIS DO TEMA ESCURO
+   ========================================================== */
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --me-bg: #101a29;
+    --me-bg-gradient: #142238;
+
+    --me-surface: #19283b;
+    --me-surface-soft: #203148;
+    --me-surface-hover: #263b55;
+
+    --me-primary: #58a5ff;
+    --me-primary-dark: #3286ed;
+    --me-primary-light: #203c5d;
+    --me-primary-shadow: rgba(52, 139, 237, .18);
+
+    --me-text: #e8f0fa;
+    --me-text-secondary: #c0cee0;
+    --me-muted: #94a7bf;
+
+    --me-border: #30435a;
+    --me-border-strong: #405671;
+
+    --me-input-bg: #142236;
+    --me-input-text: #e8f0fa;
+    --me-input-placeholder: #8093aa;
+
+    --me-shadow:
+        0 12px 35px rgba(0, 0, 0, .20);
+
+    --me-shadow-hover:
+        0 18px 42px rgba(0, 0, 0, .30);
+
+    --me-success: #4acb98;
+    --me-danger: #ff737d;
+    --me-warning: #f0bd5e;
+}
+
+
+/* ==========================================================
+   3. CONFIGURAÇÃO GERAL
+   ========================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    background: var(--me-bg);
+    transition: background .25s ease;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+
+    background:
+        radial-gradient(
+            circle at top right,
+            var(--me-bg-gradient),
+            transparent 38%
+        ),
+        var(--me-bg);
+
+    color: var(--me-text);
+
+    font-family:
+        "Inter",
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    font-size: 14px;
+    line-height: 1.6;
+
+    transition:
+        background .25s ease,
+        color .25s ease;
+}
+
+body,
+.card,
+.form-control,
+.form-select,
+.btn,
+.alert {
+    transition:
+        background-color .25s ease,
+        color .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
+
+/* ==========================================================
+   4. CONTAINER PRINCIPAL
+   ========================================================== */
+
+.container-principal {
+    width: 100%;
+    max-width: 1440px;
+
+    margin: 0 auto;
+
+    padding: 42px 42px 55px;
+}
+
+
+/* ==========================================================
+   5. CABEÇALHO DA PÁGINA
+   ========================================================== */
+
+.titulo-pagina {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    color: var(--me-text);
+
+    font-size: clamp(23px, 2.5vw, 30px);
+    font-weight: 750;
+    letter-spacing: -.7px;
+
+    line-height: 1.25;
+}
+
+.titulo-pagina i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 45px;
+    height: 45px;
+
+    flex-shrink: 0;
+
+    color: #ffffff;
+
+    background: linear-gradient(
+        135deg,
+        #398eea,
+        #1762b9
+    );
+
+    border-radius: 13px;
+
+    box-shadow:
+        0 7px 16px rgba(40, 120, 215, .23);
+
+    font-size: 21px;
+}
+
+.container-principal > .d-flex > div > p {
+    margin-top: 7px;
+
+    color: var(--me-muted) !important;
+
+    font-size: 14px;
+}
+
+
+/* ==========================================================
+   6. BOTÃO VOLTAR
+   ========================================================== */
+
+.btn-outline-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 43px;
+
+    padding: 10px 17px;
+
+    color: var(--me-text-secondary);
+
+    background: var(--me-surface);
+
+    border: 1px solid var(--me-border-strong);
+    border-radius: 10px;
+
+    font-size: 13px;
+    font-weight: 650;
+
+    text-decoration: none;
+
+    box-shadow: 0 3px 10px rgba(30, 60, 100, .03);
+}
+
+.btn-outline-secondary:hover {
+    color: var(--me-primary-dark);
+
+    background: var(--me-primary-light);
+
+    border-color: var(--me-primary);
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 5px 13px var(--me-primary-shadow);
+}
+
+html[data-theme="dark"] .btn-outline-secondary {
+    color: var(--me-text-secondary);
+
+    background: var(--me-surface);
+
+    border-color: var(--me-border-strong);
+}
+
+html[data-theme="dark"] .btn-outline-secondary:hover {
+    color: #ffffff;
+
+    background: var(--me-primary-light);
+
+    border-color: var(--me-primary);
+}
+
+
+/* ==========================================================
+   7. CARTÃO PRINCIPAL
+   ========================================================== */
+
+.card-painel {
+    position: relative;
+
+    overflow: hidden;
+
+    background: var(--me-surface);
+
+    border: 1px solid var(--me-border);
+    border-radius: var(--me-radius);
+
+    box-shadow: var(--me-shadow);
+}
+
+.card-painel::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 4px;
+
+    background: linear-gradient(
+        90deg,
+        #2878d7,
+        #56b8ef,
+        #70d0ed
+    );
+}
+
+.card-painel:hover {
+    box-shadow: var(--me-shadow-hover);
+}
+
+.card-painel .card-body {
+    padding: 36px !important;
+}
+
+
+/* ==========================================================
+   8. CAMPOS E RÓTULOS
+   ========================================================== */
+
+.form-label {
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: var(--me-text);
+
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .1px;
+}
+
+.form-control,
+.form-select {
+    width: 100%;
+
+    min-height: 49px;
+
+    padding: 11px 14px;
+
+    color: var(--me-input-text);
+
+    background-color: var(--me-input-bg);
+
+    border: 1px solid var(--me-border-strong);
+    border-radius: var(--me-radius-small);
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    box-shadow: none;
+}
+
+.form-control::placeholder {
+    color: var(--me-input-placeholder);
+    opacity: 1;
+}
+
+.form-control:hover,
+.form-select:hover {
+    border-color: var(--me-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+    color: var(--me-input-text);
+
+    background-color: var(--me-input-bg);
+
+    border-color: var(--me-primary);
+
+    outline: none;
+
+    box-shadow:
+        0 0 0 4px var(--me-primary-shadow);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+    color: var(--me-muted);
+
+    background: var(--me-surface-soft);
+
+    opacity: .75;
+}
+
+
+/* ==========================================================
+   9. SELECTS
+   ========================================================== */
+
+.form-select {
+    cursor: pointer;
+
+    padding-right: 38px;
+}
+
+.form-select option {
+    color: var(--me-input-text);
+    background: var(--me-input-bg);
+}
+
+html[data-theme="dark"] .form-select {
+    color-scheme: dark;
+}
+
+
+/* ==========================================================
+   10. CAMPO DE QUANTIDADE
+   ========================================================== */
+
+input[type="number"] {
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
+
+/* ==========================================================
+   11. CAMPO DE OBSERVAÇÃO
+   ========================================================== */
+
+textarea.form-control {
+    min-height: 125px;
+
+    padding: 14px;
+
+    resize: vertical;
+
+    line-height: 1.6;
+}
+
+textarea.form-control:focus {
+    min-height: 125px;
+}
+
+
+/* ==========================================================
+   12. CAMPO DE AJUSTE
+   ========================================================== */
+
+#campoAjuste {
+    animation: me-entrada .22s ease;
+}
+
+@keyframes me-entrada {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ==========================================================
+   13. INFORMAÇÃO DO SALDO
+   ========================================================== */
+
+#saldoDisponivel {
+    display: block;
+
+    margin-top: 9px;
+    padding: 9px 11px;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+#saldoDisponivel:empty {
+    display: none;
+}
+
+#saldoDisponivel.text-muted {
+    color: var(--me-primary) !important;
+
+    background: var(--me-primary-light);
+}
+
+#saldoDisponivel.text-danger {
+    color: var(--me-danger) !important;
+
+    background: rgba(217, 74, 85, .10);
+}
+
+html[data-theme="dark"] #saldoDisponivel.text-muted {
+    color: #8fc3ff !important;
+}
+
+html[data-theme="dark"] #saldoDisponivel.text-danger {
+    color: #ff9299 !important;
+
+    background: rgba(255, 115, 125, .12);
+}
+
+
+/* ==========================================================
+   14. BOTÃO PRINCIPAL
+   ========================================================== */
+
+.btn-principal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    min-height: 47px;
+
+    padding: 11px 23px;
+
+    color: #ffffff;
+
+    background: linear-gradient(
+        135deg,
+        #3288e5,
+        #1764bd
+    );
+
+    border: 0;
+    border-radius: 10px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    letter-spacing: .15px;
+
+    box-shadow:
+        0 6px 15px rgba(40, 120, 215, .22);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        filter .2s ease;
+}
+
+.btn-principal:hover {
+    color: #ffffff;
+
+    background: linear-gradient(
+        135deg,
+        #2679d3,
+        #1255a4
+    );
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 9px 20px rgba(40, 120, 215, .30);
+}
+
+.btn-principal:active {
+    transform: translateY(0);
+}
+
+.btn-principal:focus-visible {
+    outline: 3px solid var(--me-primary-shadow);
+    outline-offset: 3px;
+}
+
+html[data-theme="dark"] .btn-principal {
+    color: #ffffff;
+
+    background: linear-gradient(
+        135deg,
+        #368eea,
+        #1766bd
+    );
+}
+
+
+/* ==========================================================
+   15. BOTÕES CANCELAR E SALVAR
+   ========================================================== */
+
+.container-principal form > .d-flex {
+    padding-top: 23px;
+
+    border-top: 1px solid var(--me-border);
+}
+
+.container-principal form > .d-flex .btn {
+    min-width: 125px;
+}
+
+
+/* ==========================================================
+   16. ALERTAS
+   ========================================================== */
+
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+
+    padding: 15px 18px;
+
+    border-radius: 12px;
+
+    font-size: 13px;
+    font-weight: 550;
+
+    line-height: 1.6;
+}
+
+.alert i {
+    margin-top: 2px;
+    font-size: 17px;
+}
+
+.alert-danger {
+    color: #a72e3b;
+
+    background: #fff0f1;
+
+    border: 1px solid #f4c9cd;
+}
+
+.alert-warning {
+    color: #956512;
+
+    background: #fff8e9;
+
+    border: 1px solid #f0dfb8;
+}
+
+html[data-theme="dark"] .alert-danger {
+    color: #ff9da4;
+
+    background: #3b202b;
+
+    border-color: #70404a;
+}
+
+html[data-theme="dark"] .alert-warning {
+    color: #f5d18a;
+
+    background: #3a3020;
+
+    border-color: #66502c;
+}
+
+
+/* ==========================================================
+   17. TEXTO MUTED DO BOOTSTRAP
+   ========================================================== */
+
+.text-muted {
+    color: var(--me-muted) !important;
+}
+
+
+/* ==========================================================
+   18. SELEÇÃO DE TEXTO
+   ========================================================== */
+
+::selection {
+    color: #ffffff;
+    background: #2878d7;
+}
+
+
+/* ==========================================================
+   19. BARRA DE ROLAGEM
+   ========================================================== */
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--me-border-strong) var(--me-bg);
+}
+
+*::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--me-bg);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--me-border-strong);
+
+    border: 2px solid var(--me-bg);
+    border-radius: 20px;
+}
+
+
+/* ==========================================================
+   20. TEMA ESCURO - AJUSTES DE SUPERFÍCIES
+   ========================================================== */
+
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(45, 91, 145, .13),
+            transparent 38%
+        ),
+        var(--me-bg);
+
+    color: var(--me-text);
+}
+
+html[data-theme="dark"] .card-painel {
+    background: var(--me-surface);
+
+    border-color: var(--me-border);
+
+    box-shadow: var(--me-shadow);
+}
+
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select {
+    color: var(--me-input-text);
+
+    background-color: var(--me-input-bg);
+
+    border-color: var(--me-border-strong);
+}
+
+html[data-theme="dark"] .form-control::placeholder {
+    color: var(--me-input-placeholder);
+}
+
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="dark"] .form-select:focus {
+    color: var(--me-input-text);
+
+    background-color: var(--me-input-bg);
+
+    border-color: var(--me-primary);
+}
+
+html[data-theme="dark"] .form-label {
+    color: var(--me-text);
+}
+
+html[data-theme="dark"] .titulo-pagina {
+    color: var(--me-text);
+}
+
+
+/* ==========================================================
+   21. RESPONSIVIDADE - TABLETS
+   ========================================================== */
+
+@media (max-width: 992px) {
+
+    .container-principal {
+        padding: 32px 25px 45px;
+    }
+
+    .card-painel .card-body {
+        padding: 28px !important;
+    }
+
+}
+
+
+/* ==========================================================
+   22. RESPONSIVIDADE - CELULARES
+   ========================================================== */
+
+@media (max-width: 576px) {
+
+    body {
+        font-size: 13px;
+    }
+
+    .container-principal {
+        padding: 24px 14px 35px;
+    }
+
+    .titulo-pagina {
+        font-size: 22px;
+        gap: 10px;
+    }
+
+    .titulo-pagina i {
+        width: 40px;
+        height: 40px;
+
+        font-size: 18px;
+    }
+
+    .container-principal > .d-flex {
+        align-items: flex-start !important;
+    }
+
+    .container-principal > .d-flex > a {
+        width: 100%;
+    }
+
+    .card-painel {
+        border-radius: 14px;
+    }
+
+    .card-painel .card-body {
+        padding: 21px 17px !important;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 47px;
+        font-size: 13px;
+    }
+
+    textarea.form-control {
+        min-height: 115px;
+    }
+
+    .container-principal form > .d-flex {
+        flex-direction: column-reverse;
+        gap: 10px !important;
+    }
+
+    .container-principal form > .d-flex .btn {
+        width: 100%;
+        min-height: 46px;
+    }
+
+    .btn-outline-secondary {
+        min-height: 43px;
+    }
+
+}
+
+
+/* ==========================================================
+   23. ACESSIBILIDADE
+   ========================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+
+}

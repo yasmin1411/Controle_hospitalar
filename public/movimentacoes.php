@@ -8,8 +8,6 @@
 
 // Autenticação e permissões
 require_once __DIR__ . '/../includes/auth.php';
-
-// Verifica permissão de acesso ao módulo
 verificarModulo('movimentacoes');
 
 // Conexão com o banco de dados
@@ -37,24 +35,16 @@ $sql = "
         mv.observacao,
         mv.data_movimentacao,
         mv.status,
-
         med.nome AS medicamento,
-
         est.lote,
-
         usu.nome AS responsavel
-
     FROM movimentacoes mv
-
     INNER JOIN medicamento med
         ON med.id = mv.medicamento_id
-
     LEFT JOIN estoque est
         ON est.id = mv.estoque_id
-
     LEFT JOIN usuarios usu
         ON usu.id = mv.usuario_id
-
     WHERE 1 = 1
 ";
 
@@ -77,7 +67,6 @@ $sql .= " ORDER BY mv.data_movimentacao DESC, mv.id DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($parametros);
-
 $movimentacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // ==========================================================
@@ -108,7 +97,7 @@ if (isset($_GET['erro'])) {
 }
 
 // ==========================================================
-// FUNÇÕES AUXILIARES PARA EXIBIÇÃO
+// FUNÇÕES AUXILIARES
 // ==========================================================
 
 function formatarTipoMovimentacao($tipo, $acaoAjuste = null)
@@ -158,7 +147,6 @@ function classeTipoMovimentacao($tipo)
             return 'bg-secondary';
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -170,106 +158,83 @@ function classeTipoMovimentacao($tipo)
 
     <title>Movimentações de Estoque | Controle Hospitalar</title>
 
+    <!-- Aplica o tema salvo pelo perfil antes de carregar o CSS -->
+    <script>
+        (function () {
+            const tema = localStorage.getItem('controleHospitalarTema') || 'light';
+
+            document.documentElement.setAttribute(
+                'data-theme',
+                tema === 'dark' ? 'dark' : 'light'
+            );
+        })();
+    </script>
+
+    <!-- Bootstrap -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
+    <!-- Bootstrap Icons -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
 
-    <style>
-        body {
-            background-color: #eef5ff;
-        }
-
-        .container-principal {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 25px;
-            margin-top: 30px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .titulo-pagina {
-            color: #2F80ED;
-            font-weight: 700;
-        }
-
-        .btn-principal {
-            background-color: #2F80ED;
-            color: #ffffff;
-            border: none;
-        }
-
-        .btn-principal:hover {
-            background-color: #2168c4;
-            color: #ffffff;
-        }
-
-        .tabela-container {
-            overflow-x: auto;
-        }
-
-        .table th {
-            white-space: nowrap;
-        }
-
-        .table td {
-            vertical-align: middle;
-        }
-
-        .acoes {
-            white-space: nowrap;
-        }
-
-        .filtros {
-            background-color: #f5f9ff;
-            padding: 18px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-    </style>
+    <!-- CSS da página -->
+    <link rel="stylesheet" href="../includes/css/movimentacoes.css?v=4">
 </head>
 
 <body>
 
-<div class="container container-principal">
+<main class="container-principal">
 
     <!-- ==================================================
          CABEÇALHO
     =================================================== -->
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <section class="cabecalho-pagina">
 
-        <div>
-            <h2 class="titulo-pagina mb-1">
-                <i class="bi bi-arrow-left-right"></i>
-                Movimentações de Estoque
-            </h2>
+        <div class="cabecalho-conteudo">
 
-            <p class="text-muted mb-0">
-                Consulte e gerencie as movimentações de medicamentos.
-            </p>
+            <div class="titulo-area">
+
+                <div class="icone-titulo">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+
+                <div>
+                    <span class="texto-superior">CONTROLE DE ESTOQUE</span>
+
+                    <h1 class="titulo-pagina">
+                        Movimentações de Estoque
+                    </h1>
+
+                    <p class="descricao-pagina">
+                        Consulte e gerencie as movimentações de medicamentos.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="botoes-cabecalho">
+
+                <a href="dashboard.php" class="btn-voltar">
+                    <i class="bi bi-arrow-left"></i>
+                    Voltar ao painel
+                </a>
+
+                <a href="movimentacoes_cadastrar.php" class="btn-principal">
+                    <i class="bi bi-plus-lg"></i>
+                    Nova movimentação
+                </a>
+
+            </div>
+
         </div>
 
-        <div class="d-flex gap-2 flex-wrap">
-
-            <a href="dashboard.php" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i>
-                Voltar ao painel
-            </a>
-
-            <a href="movimentacoes_cadastrar.php" class="btn btn-principal">
-                <i class="bi bi-plus-circle"></i>
-                Nova movimentação
-            </a>
-
-        </div>
-
-    </div>
+    </section>
 
     <!-- ==================================================
          MENSAGENS
@@ -279,9 +244,15 @@ function classeTipoMovimentacao($tipo)
 
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i>
+
             <?= htmlspecialchars($mensagemSucesso, ENT_QUOTES, 'UTF-8') ?>
 
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Fechar"
+            ></button>
         </div>
 
     <?php endif; ?>
@@ -290,9 +261,15 @@ function classeTipoMovimentacao($tipo)
 
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i>
+
             <?= htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8') ?>
 
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Fechar"
+            ></button>
         </div>
 
     <?php endif; ?>
@@ -301,263 +278,312 @@ function classeTipoMovimentacao($tipo)
          FILTROS
     =================================================== -->
 
-    <div class="filtros">
+    <section class="painel-filtros">
 
-        <form method="GET" action="movimentacoes.php">
+        <div class="filtros-cabecalho">
+            <div class="filtros-titulo">
+                <i class="bi bi-search"></i>
+                <span>Pesquisar movimentações</span>
+            </div>
 
-            <div class="row g-3 align-items-end">
+            <span class="filtros-ajuda">
+                Pesquise pelo medicamento ou tipo de movimentação.
+            </span>
+        </div>
 
-                <div class="col-md-6">
+        <form method="GET" action="movimentacoes.php" class="filtros">
 
-                    <label for="pesquisa" class="form-label">
-                        Pesquisar medicamento
-                    </label>
+            <div class="campo-pesquisa">
+
+                <label for="pesquisa">
+                    Medicamento
+                </label>
+
+                <div class="campo-com-icone">
+                    <i class="bi bi-capsule"></i>
 
                     <input
                         type="text"
                         name="pesquisa"
                         id="pesquisa"
                         class="form-control"
-                        placeholder="Digite o nome do medicamento"
+                        placeholder="Digite o nome do medicamento..."
                         value="<?= htmlspecialchars($pesquisa, ENT_QUOTES, 'UTF-8') ?>"
                     >
-
                 </div>
 
-                <div class="col-md-4">
+            </div>
 
-                    <label for="tipo" class="form-label">
-                        Tipo de movimentação
-                    </label>
+            <div class="campo-tipo">
 
-                    <select name="tipo" id="tipo" class="form-select">
+                <label for="tipo">
+                    Tipo de movimentação
+                </label>
 
-                        <option value="">Todos os tipos</option>
+                <select name="tipo" id="tipo" class="form-select">
 
-                        <option value="entrada" <?= $tipo === 'entrada' ? 'selected' : '' ?>>
-                            Entrada
-                        </option>
+                    <option value="">Todos os tipos</option>
 
-                        <option value="saida" <?= $tipo === 'saida' ? 'selected' : '' ?>>
-                            Saída
-                        </option>
+                    <option value="entrada" <?= $tipo === 'entrada' ? 'selected' : '' ?>>
+                        Entrada
+                    </option>
 
-                        <option value="perda" <?= $tipo === 'perda' ? 'selected' : '' ?>>
-                            Perda
-                        </option>
+                    <option value="saida" <?= $tipo === 'saida' ? 'selected' : '' ?>>
+                        Saída
+                    </option>
 
-                        <option value="ajuste" <?= $tipo === 'ajuste' ? 'selected' : '' ?>>
-                            Ajuste
-                        </option>
+                    <option value="perda" <?= $tipo === 'perda' ? 'selected' : '' ?>>
+                        Perda
+                    </option>
 
-                    </select>
+                    <option value="ajuste" <?= $tipo === 'ajuste' ? 'selected' : '' ?>>
+                        Ajuste
+                    </option>
 
-                </div>
+                </select>
 
-                <div class="col-md-2 d-flex gap-2">
+            </div>
 
-                    <button type="submit" class="btn btn-principal w-100">
-                        <i class="bi bi-search"></i>
-                        Filtrar
-                    </button>
+            <div class="botoes-filtro">
 
-                    <a href="movimentacoes.php" class="btn btn-outline-secondary" title="Limpar filtros">
-                        <i class="bi bi-x-lg"></i>
-                    </a>
+                <button type="submit" class="btn-principal">
+                    <i class="bi bi-search"></i>
+                    Filtrar
+                </button>
 
-                </div>
+                <a
+                    href="movimentacoes.php"
+                    class="btn-limpar"
+                    title="Limpar filtros"
+                >
+                    <i class="bi bi-x-lg"></i>
+                    <span class="visually-hidden">Limpar filtros</span>
+                </a>
 
             </div>
 
         </form>
 
-    </div>
+    </section>
 
     <!-- ==================================================
-         TABELA DE MOVIMENTAÇÕES
+         HISTÓRICO
     =================================================== -->
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <section class="secao-historico">
 
-        <h5 class="mb-0">
-            <i class="bi bi-list-ul"></i>
-            Histórico de movimentações
-        </h5>
+        <div class="historico-cabecalho">
 
-        <span class="badge bg-secondary">
-            <?= count($movimentacoes) ?> registro(s)
-        </span>
+            <div class="historico-titulo">
+                <i class="bi bi-clock-history"></i>
 
-    </div>
+                <div>
+                    <h2>Histórico de movimentações</h2>
+                    <p>Registros de entradas, saídas, perdas e ajustes de estoque.</p>
+                </div>
+            </div>
 
-    <div class="tabela-container">
+            <span class="contador-registros">
+                <i class="bi bi-database"></i>
+                <?= count($movimentacoes) ?> registro(s)
+            </span>
 
-        <table class="table table-hover table-bordered align-middle">
+        </div>
 
-            <thead class="table-primary">
+        <div class="tabela-container">
 
-                <tr>
-                    <th>ID</th>
-                    <th>Medicamento</th>
-                    <th>Lote</th>
-                    <th>Tipo</th>
-                    <th>Quantidade</th>
-                    <th>Responsável</th>
-                    <th>Data e hora</th>
-                    <th>Observação</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
+            <table class="table table-hover align-middle">
 
-            </thead>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Medicamento</th>
+                        <th>Lote</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                        <th>Responsável</th>
+                        <th>Data e hora</th>
+                        <th>Observação</th>
+                        <th>Status</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
 
-            <tbody>
+                <tbody>
 
-                <?php if (count($movimentacoes) > 0): ?>
+                    <?php if (count($movimentacoes) > 0): ?>
 
-                    <?php foreach ($movimentacoes as $mov): ?>
+                        <?php foreach ($movimentacoes as $mov): ?>
 
-                        <tr>
+                            <tr>
 
-                            <td>
-                                <?= (int) $mov['id'] ?>
-                            </td>
+                                <td class="coluna-id">
+                                    #<?= (int) $mov['id'] ?>
+                                </td>
 
-                            <td>
-                                <?= htmlspecialchars($mov['medicamento'] ?? 'Não informado', ENT_QUOTES, 'UTF-8') ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($mov['lote'] ?? 'Não informado', ENT_QUOTES, 'UTF-8') ?>
-                            </td>
-
-                            <td>
-                                <span class="badge <?= classeTipoMovimentacao($mov['tipo']) ?>">
+                                <td class="coluna-medicamento">
                                     <?= htmlspecialchars(
-                                        formatarTipoMovimentacao($mov['tipo'], $mov['acao_ajuste']),
+                                        $mov['medicamento'] ?? 'Não informado',
                                         ENT_QUOTES,
                                         'UTF-8'
                                     ) ?>
+                                </td>
+
+                                <td>
+                                    <?= htmlspecialchars(
+                                        $mov['lote'] ?? 'Não informado',
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+                                </td>
+
+                                <td>
+                                    <span class="badge <?= classeTipoMovimentacao($mov['tipo']) ?>">
+                                        <?= htmlspecialchars(
+                                            formatarTipoMovimentacao($mov['tipo'], $mov['acao_ajuste']),
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ) ?>
+                                    </span>
+                                </td>
+
+                                <td class="coluna-quantidade">
+                                    <?= htmlspecialchars(
+                                        (string) $mov['quantidade'],
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+                                </td>
+
+                                <td>
+                                    <?= htmlspecialchars(
+                                        $mov['responsavel'] ?? 'Não informado',
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+                                </td>
+
+                                <td class="coluna-data">
+                                    <?php
+                                    if (!empty($mov['data_movimentacao'])) {
+                                        echo date(
+                                            'd/m/Y H:i',
+                                            strtotime($mov['data_movimentacao'])
+                                        );
+                                    } else {
+                                        echo 'Não informado';
+                                    }
+                                    ?>
+                                </td>
+
+                                <td class="coluna-observacao">
+                                    <?= htmlspecialchars(
+                                        $mov['observacao'] ?? '-',
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+                                </td>
+
+                                <td>
+                                    <?php if ($mov['status'] === 'ativa'): ?>
+
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                            Ativa
+                                        </span>
+
+                                    <?php else: ?>
+
+                                        <span class="badge bg-secondary">
+                                            Cancelada
+                                        </span>
+
+                                    <?php endif; ?>
+                                </td>
+
+                                <td class="acoes">
+
+                                    <?php if ($mov['status'] === 'ativa'): ?>
+
+                                        <!-- Editar movimentação -->
+                                        <a
+                                            href="movimentacoes_editar.php?id=<?= (int) $mov['id'] ?>"
+                                            class="btn-acao-editar"
+                                            title="Editar movimentação"
+                                        >
+                                            <i class="bi bi-pencil-square"></i>
+                                            Editar
+                                        </a>
+
+                                        <!-- Cancelar movimentação -->
+                                        <form
+                                            method="POST"
+                                            action="movimentacoes_desativar.php"
+                                            class="form-cancelar"
+                                            onsubmit="return confirm('Tem certeza de que deseja cancelar esta movimentação? O registro será mantido no histórico.');"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="id"
+                                                value="<?= (int) $mov['id'] ?>"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="btn-acao-excluir"
+                                                title="Cancelar movimentação"
+                                            >
+                                                <i class="bi bi-x-circle"></i>
+                                                Excluir
+                                            </button>
+
+                                        </form>
+
+                                    <?php else: ?>
+
+                                        <span class="sem-acoes">
+                                            <i class="bi bi-lock"></i>
+                                            Indisponível
+                                        </span>
+
+                                    <?php endif; ?>
+
+                                </td>
+
+                            </tr>
+
+                        <?php endforeach; ?>
+
+                    <?php else: ?>
+
+                        <tr>
+                            <td colspan="10" class="estado-vazio">
+
+                                <div class="estado-vazio-icone">
+                                    <i class="bi bi-inbox"></i>
+                                </div>
+
+                                <strong>Nenhuma movimentação encontrada</strong>
+
+                                <span>
+                                    Tente alterar os filtros ou cadastre uma nova movimentação.
                                 </span>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars((string) $mov['quantidade'], ENT_QUOTES, 'UTF-8') ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($mov['responsavel'] ?? 'Não informado', ENT_QUOTES, 'UTF-8') ?>
-                            </td>
-
-                            <td>
-                                <?php
-                                if (!empty($mov['data_movimentacao'])) {
-                                    echo date(
-                                        'd/m/Y H:i',
-                                        strtotime($mov['data_movimentacao'])
-                                    );
-                                } else {
-                                    echo 'Não informado';
-                                }
-                                ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($mov['observacao'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
-                            </td>
-
-                            <td>
-
-                                <?php if ($mov['status'] === 'ativa'): ?>
-
-                                    <span class="badge bg-success">
-                                        Ativa
-                                    </span>
-
-                                <?php else: ?>
-
-                                    <span class="badge bg-secondary">
-                                        Cancelada
-                                    </span>
-
-                                <?php endif; ?>
 
                             </td>
-
-                            <td class="acoes">
-
-                                <?php if ($mov['status'] === 'ativa'): ?>
-
-                                    <!-- Botão Editar -->
-                                    <a
-                                        href="movimentacoes_editar.php?id=<?= (int) $mov['id'] ?>"
-                                        class="btn btn-sm btn-warning"
-                                        title="Editar movimentação"
-                                    >
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-
-                                    <!-- Formulário para cancelar movimentação -->
-                                    <form
-                                        method="POST"
-                                        action="movimentacoes_desativar.php"
-                                        class="d-inline"
-                                        onsubmit="return confirm('Tem certeza de que deseja cancelar esta movimentação? O registro será mantido no histórico.');"
-                                    >
-
-                                        <input
-                                            type="hidden"
-                                            name="id"
-                                            value="<?= (int) $mov['id'] ?>"
-                                        >
-
-                                        <button
-                                            type="submit"
-                                            class="btn btn-sm btn-danger"
-                                            title="Cancelar movimentação"
-                                        >
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-
-                                    </form>
-
-                                <?php else: ?>
-
-                                    <span class="text-muted small">
-                                        Sem ações
-                                    </span>
-
-                                <?php endif; ?>
-
-                            </td>
-
                         </tr>
 
-                    <?php endforeach; ?>
+                    <?php endif; ?>
 
-                <?php else: ?>
+                </tbody>
 
-                    <tr>
+            </table>
 
-                        <td colspan="10" class="text-center text-muted py-4">
+        </div>
 
-                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+    </section>
 
-                            Nenhuma movimentação encontrada.
-
-                        </td>
-
-                    </tr>
-
-                <?php endif; ?>
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

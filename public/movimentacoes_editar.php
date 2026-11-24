@@ -6,9 +6,7 @@
 // Arquivo: movimentacoes_editar.php
 // ==========================================================
 
-// ==========================================================
 // AUTENTICAÇÃO E PERMISSÕES
-// ==========================================================
 
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -25,8 +23,8 @@ function escaparMovEd($valor) {
 }
 
 // Retorna o impacto da movimentação sobre o estoque.
-// Valor positivo = aumenta o estoque.
-// Valor negativo = diminui o estoque.
+// Positivo = aumenta o estoque.
+// Negativo = diminui o estoque.
 
 function calcularImpactoMovEd($tipo, $acaoAjuste, $quantidade) {
 
@@ -122,9 +120,7 @@ try {
 
 } catch (PDOException $e) {
 
-    error_log(
-        'Erro ao carregar movimentação: ' . $e->getMessage()
-    );
+    error_log('Erro ao carregar movimentação: ' . $e->getMessage());
 
     http_response_code(500);
     exit('Não foi possível carregar a movimentação.');
@@ -135,7 +131,6 @@ try {
 // ==========================================================
 
 if ($movimentacao['status'] !== 'ativa') {
-
     $erro = 'Esta movimentação está cancelada e não pode ser editada.';
 }
 
@@ -173,9 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
         'perda'
     ];
 
-    // ======================================================
     // VALIDAÇÃO DOS DADOS
-    // ======================================================
 
     if (
         !$medicamentoId ||
@@ -206,22 +199,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
         $acaoAjuste = null;
     }
 
-    // ======================================================
     // EXECUÇÃO DA EDIÇÃO
-    // ======================================================
 
     if ($erro === '') {
 
         try {
 
             // Inicia uma transação.
-            // Todas as alterações serão confirmadas juntas.
-
             $pdo->beginTransaction();
 
-            // ==================================================
             // 1. BLOQUEIO DA MOVIMENTAÇÃO ORIGINAL
-            // ==================================================
 
             $sqlOriginal = "
                 SELECT
@@ -255,9 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                 );
             }
 
-            // ==================================================
             // 2. IDENTIFICAÇÃO DO IMPACTO ORIGINAL
-            // ==================================================
 
             $impactoOriginal = calcularImpactoMovEd(
                 $original['tipo'],
@@ -265,9 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                 $original['quantidade']
             );
 
-            // ==================================================
             // 3. IDENTIFICAÇÃO DOS LOTES ENVOLVIDOS
-            // ==================================================
 
             $idsEstoque = array_values(array_unique([
                 (int)$original['estoque_id'],
@@ -275,9 +258,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
             ]));
 
             sort($idsEstoque, SORT_NUMERIC);
-
-            // Bloqueia os lotes envolvidos na edição.
-            // A ordenação reduz o risco de deadlocks.
 
             $placeholders = implode(
                 ',',
@@ -326,15 +306,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                 );
             }
 
-            // ==================================================
             // 4. CONFERÊNCIA DOS MEDICAMENTOS
-            // ==================================================
 
             if (
                 (int)$estoques[$estoqueOriginalId]['medicamento_id']
                 !== (int)$original['medicamento_id']
             ) {
-
                 throw new Exception(
                     'O medicamento da movimentação original não corresponde ao lote registrado.'
                 );
@@ -344,40 +321,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                 (int)$estoques[(int)$estoqueId]['medicamento_id']
                 !== (int)$medicamentoId
             ) {
-
                 throw new Exception(
                     'O lote selecionado não pertence ao medicamento escolhido.'
                 );
             }
 
-            // ==================================================
             // 5. REVERSÃO DA MOVIMENTAÇÃO ANTERIOR
-            // ==================================================
-
-            // Recupera o saldo que existia antes da movimentação
-            // original, sem excluir o registro do histórico.
 
             $saldos = [];
 
             foreach ($estoques as $id => $item) {
-
                 $saldos[$id] = (int)$item['quantidade'];
             }
-
-            // Estorna o efeito da movimentação anterior.
 
             $saldos[$estoqueOriginalId] -= $impactoOriginal;
 
             if ($saldos[$estoqueOriginalId] < 0) {
-
                 throw new Exception(
                     'Não foi possível estornar a movimentação original com segurança.'
                 );
             }
 
-            // ==================================================
             // 6. VALIDAÇÃO DA NOVA MOVIMENTAÇÃO
-            // ==================================================
 
             $novoImpacto = calcularImpactoMovEd(
                 $tipo,
@@ -398,31 +363,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                 $validade < $dataAtual
             );
 
-            // Não permite saída de medicamentos vencidos.
-
             if ($tipo === 'saida' && $loteVencido) {
-
                 throw new Exception(
                     'Não é permitido retirar medicamentos vencidos. Registre uma perda para esse lote.'
                 );
             }
 
-            // Calcula o novo saldo.
-
             $novoSaldo = $saldoDisponivel + $novoImpacto;
-
-            // Impede que o estoque fique negativo.
 
             if ($novoSaldo < 0) {
 
                 if ($tipo === 'saida') {
-
                     throw new Exception(
                         'Quantidade solicitada superior ao saldo disponível.'
                     );
 
                 } elseif ($tipo === 'perda') {
-
                     throw new Exception(
                         'A quantidade da perda é superior ao saldo disponível.'
                     );
@@ -431,7 +387,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                     $tipo === 'ajuste' &&
                     $acaoAjuste === 'diminuir'
                 ) {
-
                     throw new Exception(
                         'O ajuste não pode deixar o estoque negativo.'
                     );
@@ -442,11 +397,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                 );
             }
 
-            // ==================================================
             // 7. ATUALIZAÇÃO DOS SALDOS DO ESTOQUE
-            // ==================================================
-
-            // Aplica o novo saldo ao lote selecionado.
 
             $saldos[(int)$estoqueId] = $novoSaldo;
 
@@ -468,13 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                 ]);
             }
 
-            // ==================================================
             // 8. ATUALIZAÇÃO DO REGISTRO ORIGINAL
-            // ==================================================
-
-            // Atualiza a movimentação existente.
-            // Não cria um novo registro.
-            // O status permanece como ativa.
 
             $sqlAtualizarMovimentacao = "
                 UPDATE movimentacoes
@@ -496,25 +441,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
             $stmtAtualizarMovimentacao->execute([
 
                 ':medicamento_id' => $medicamentoId,
-
                 ':estoque_id' => $estoqueId,
-
                 ':tipo' => $tipo,
-
                 ':acao_ajuste' => $acaoAjuste,
-
                 ':quantidade' => $quantidade,
-
                 ':observacao' => $observacao,
-
                 ':id' => $idMovimentacao
             ]);
 
             if ($stmtAtualizarMovimentacao->rowCount() === 0) {
-
-                // rowCount pode ser zero quando os valores
-                // enviados são iguais aos valores anteriores.
-                // Por isso, conferimos se o registro continua ativo.
 
                 $stmtConferencia = $pdo->prepare("
                     SELECT id
@@ -528,16 +463,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
                 ]);
 
                 if (!$stmtConferencia->fetch()) {
-
                     throw new Exception(
                         'Não foi possível atualizar a movimentação.'
                     );
                 }
             }
 
-            // ==================================================
             // 9. CONFIRMAÇÃO DA TRANSAÇÃO
-            // ==================================================
 
             $pdo->commit();
 
@@ -545,8 +477,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $erro === '') {
             exit;
 
         } catch (Throwable $e) {
-
-            // Qualquer erro desfaz todas as alterações.
 
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -637,9 +567,6 @@ try {
 // VALORES DO FORMULÁRIO
 // ==========================================================
 
-// Se houve erro no envio, mantém os dados digitados.
-// Caso contrário, apresenta os dados originais.
-
 $valorMedicamento = $_POST['medicamento_id']
     ?? $movimentacao['medicamento_id'];
 
@@ -671,62 +598,34 @@ $valorObservacao = $_POST['observacao']
 
     <title>Editar movimentação | Controle Hospitalar</title>
 
+    <!-- Aplica o tema escolhido no perfil antes dos estilos -->
+    <script>
+    (function () {
+        const tema = localStorage.getItem('controleHospitalarTema') || 'light';
+
+        document.documentElement.setAttribute(
+            'data-theme',
+            tema === 'dark' ? 'dark' : 'light'
+        );
+    })();
+    </script>
+
+    <!-- Bootstrap -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
+    <!-- Bootstrap Icons -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
         rel="stylesheet"
     >
 
-    <style>
-
-        body {
-            background-color: #eef5ff;
-            font-family: Arial, sans-serif;
-        }
-
-        .container-principal {
-            padding: 30px;
-        }
-
-        .titulo-pagina {
-            color: #2F80ED;
-            font-weight: 700;
-        }
-
-        .card-painel {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px rgba(0,0,0,.06);
-        }
-
-        .btn-principal {
-            background-color: #2F80ED;
-            color: white;
-            border: none;
-        }
-
-        .btn-principal:hover {
-            background-color: #1768ce;
-            color: white;
-        }
-
-        .form-label {
-            font-weight: 600;
-        }
-
-        @media(max-width:768px) {
-
-            .container-principal {
-                padding: 15px;
-            }
-
-        }
-
-    </style>
+    <!-- CSS personalizado da edição de movimentações -->
+    <link rel="stylesheet" href="../includes/css/movimentacoes_editar.css?v=101">
+>
+    >
 
 </head>
 
@@ -741,27 +640,19 @@ $valorObservacao = $_POST['observacao']
         <div>
 
             <h2 class="titulo-pagina mb-1">
-
                 <i class="bi bi-pencil-square"></i>
-
                 Editar movimentação
-
             </h2>
 
             <p class="text-muted mb-0">
-
                 Atualize os dados da movimentação de estoque.
-
             </p>
 
         </div>
 
         <a href="movimentacoes.php" class="btn btn-outline-secondary">
-
             <i class="bi bi-arrow-left"></i>
-
             Voltar
-
         </a>
 
     </div>
@@ -771,11 +662,8 @@ $valorObservacao = $_POST['observacao']
     <?php if ($erro !== ''): ?>
 
         <div class="alert alert-danger">
-
             <i class="bi bi-exclamation-circle"></i>
-
             <?= escaparMovEd($erro) ?>
-
         </div>
 
     <?php endif; ?>
@@ -908,11 +796,8 @@ $valorObservacao = $_POST['observacao']
                                     value="<?= (int)$med['id'] ?>"
                                     <?= (int)$valorMedicamento === (int)$med['id'] ? 'selected' : '' ?>
                                 >
-
                                     <?= escaparMovEd($med['nome']) ?>
-
                                     - <?= escaparMovEd($med['dosagem']) ?>
-
                                 </option>
 
                             <?php endforeach; ?>
@@ -943,50 +828,33 @@ $valorObservacao = $_POST['observacao']
                             <?php foreach ($lotes as $lote): ?>
 
                                 <?php
-
                                     $vencido = (
                                         !empty($lote['validade']) &&
                                         $lote['validade'] < date('Y-m-d')
                                     );
-
                                 ?>
 
                                 <option
-
                                     value="<?= (int)$lote['id'] ?>"
-
                                     data-medicamento="<?= (int)$lote['medicamento_id'] ?>"
-
                                     data-quantidade="<?= (int)$lote['quantidade'] ?>"
-
                                     data-vencido="<?= $vencido ? '1' : '0' ?>"
-
                                     <?= (int)$valorEstoque === (int)$lote['id'] ? 'selected' : '' ?>
-
                                 >
-
                                     <?= escaparMovEd($lote['lote']) ?>
-
                                     | Saldo: <?= (int)$lote['quantidade'] ?>
-
                                     | Validade:
-
                                     <?= !empty($lote['validade'])
                                         ? date('d/m/Y', strtotime($lote['validade']))
                                         : 'Não informada' ?>
-
                                     <?= $vencido ? '| VENCIDO' : '' ?>
-
                                 </option>
 
                             <?php endforeach; ?>
 
                         </select>
 
-                        <small
-                            class="text-muted"
-                            id="saldoDisponivel"
-                        ></small>
+                        <small class="text-muted" id="saldoDisponivel"></small>
 
                     </div>
 
@@ -999,21 +867,13 @@ $valorObservacao = $_POST['observacao']
                         </label>
 
                         <input
-
                             type="number"
-
                             name="quantidade"
-
                             class="form-control"
-
                             min="1"
-
                             step="1"
-
                             value="<?= escaparMovEd($valorQuantidade) ?>"
-
                             required
-
                         >
 
                     </div>
@@ -1027,17 +887,11 @@ $valorObservacao = $_POST['observacao']
                         </label>
 
                         <textarea
-
                             name="observacao"
-
                             class="form-control"
-
                             rows="4"
-
                             placeholder="Descreva o motivo da movimentação..."
-
                             required
-
                         ><?= escaparMovEd($valorObservacao) ?></textarea>
 
                     </div>
@@ -1052,20 +906,15 @@ $valorObservacao = $_POST['observacao']
                         href="movimentacoes.php"
                         class="btn btn-outline-secondary"
                     >
-
                         Cancelar
-
                     </a>
 
                     <button
                         type="submit"
                         class="btn btn-principal"
                     >
-
                         <i class="bi bi-check-circle"></i>
-
                         Salvar alterações
-
                     </button>
 
                 </div>
@@ -1079,11 +928,8 @@ $valorObservacao = $_POST['observacao']
     <?php else: ?>
 
         <div class="alert alert-warning">
-
             <i class="bi bi-exclamation-triangle"></i>
-
             Esta movimentação está cancelada. Não é permitido editá-la.
-
         </div>
 
     <?php endif; ?>
@@ -1097,15 +943,10 @@ $valorObservacao = $_POST['observacao']
 // ==========================================================
 
 const tipo = document.getElementById('tipo');
-
 const campoAjuste = document.getElementById('campoAjuste');
-
 const acaoAjuste = document.getElementById('acao_ajuste');
-
 const medicamento = document.getElementById('medicamento_id');
-
 const estoque = document.getElementById('estoque_id');
-
 const saldoDisponivel = document.getElementById('saldoDisponivel');
 
 // ==========================================================
@@ -1121,9 +962,7 @@ function atualizarCampoAjuste() {
     acaoAjuste.required = ajusteAtivo;
 
     if (!ajusteAtivo) {
-
         acaoAjuste.value = '';
-
     }
 
 }
@@ -1149,9 +988,6 @@ function filtrarLotes() {
 
     });
 
-    // Se o lote selecionado não pertencer ao medicamento,
-    // limpa a seleção.
-
     const opcaoSelecionada = estoque.selectedOptions[0];
 
     if (
@@ -1159,9 +995,7 @@ function filtrarLotes() {
         opcaoSelecionada.value !== '' &&
         opcaoSelecionada.dataset.medicamento !== medicamentoSelecionado
     ) {
-
         estoque.value = '';
-
     }
 
     atualizarSaldo();
@@ -1179,15 +1013,11 @@ function atualizarSaldo() {
     const opcao = estoque.selectedOptions[0];
 
     if (!opcao || !opcao.value) {
-
         saldoDisponivel.textContent = '';
-
         return;
-
     }
 
     const quantidade = opcao.dataset.quantidade;
-
     const vencido = opcao.dataset.vencido === '1';
 
     if (vencido) {
@@ -1197,7 +1027,6 @@ function atualizarSaldo() {
             '. Registre uma perda para retirar esse medicamento do estoque.';
 
         saldoDisponivel.classList.remove('text-muted');
-
         saldoDisponivel.classList.add('text-danger');
 
     } else {
@@ -1206,7 +1035,6 @@ function atualizarSaldo() {
             'Quantidade atualmente disponível: ' + quantidade;
 
         saldoDisponivel.classList.remove('text-danger');
-
         saldoDisponivel.classList.add('text-muted');
 
     }
@@ -1220,7 +1048,6 @@ estoque.addEventListener('change', atualizarSaldo);
 // ==========================================================
 
 atualizarCampoAjuste();
-
 filtrarLotes();
 
 </script>
