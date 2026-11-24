@@ -2,20 +2,15 @@
 <?php
 
 // =========================================================
-// AUTENTICAÇÃO DO USUARIO
+// AUTENTICAÇÃO DO USUÁRIO
 // =========================================================
 
-// Inclui o arquivo que verifica se o usuário está autenticado.
-require_once '../includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 
 // ==========================================================
 // CONTROLE DE ACESSO AO MÓDULO DE ESTOQUE
 // ==========================================================
-//
-// Verifica se a função do usuário possui autorização
-// para acessar o módulo de estoque.
-//
 
 verificarModulo('estoque');
 
@@ -24,34 +19,108 @@ verificarModulo('estoque');
 // CONEXÃO COM O BANCO
 // =========================================================
 
-// Inclui o arquivo responsável pela conexão com o banco de dados.
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
+
+
+// =========================================================
+// PERMISSÕES DE MOVIMENTAÇÃO
+// =========================================================
+
+// Verifica se o usuário também pode acessar movimentações.
+$podeMovimentar = temPermissaoModulo('movimentacoes');
+
+
+// =========================================================
+// MENSAGENS DA PÁGINA
+// =========================================================
+
+$mensagemErro = '';
 
 
 // =========================================================
 // EXCLUSÃO DE ITEM DO ESTOQUE
 // =========================================================
 
-// Verifica se o formulário de exclusão enviou o campo "id_excluir".
 if (isset($_POST['id_excluir'])) {
 
-    // Converte o ID recebido para número inteiro.
-    $id = (int) $_POST['id_excluir'];
+    $id = filter_input(INPUT_POST, 'id_excluir', FILTER_VALIDATE_INT);
 
-    // Prepara o comando SQL para excluir o item do estoque.
-    $delete = $pdo->prepare("
-        DELETE FROM estoque
-        WHERE id = ?
-    ");
+    if (!$id || $id <= 0) {
 
-    // Executa o comando DELETE utilizando o ID informado.
-    $delete->execute([$id]);
+        $mensagemErro = 'Identificação do item inválida.';
 
-    // Depois da exclusão, volta para a página principal do estoque.
-    header("Location: estoque.php");
+    } else {
 
-    // Encerra a execução do código.
-    exit;
+        try {
+
+            // --------------------------------------------------
+            // VERIFICA SE EXISTEM MOVIMENTAÇÕES VINCULADAS
+            // --------------------------------------------------
+
+            $sqlVerificar = "
+                SELECT COUNT(*)
+                FROM movimentacoes
+                WHERE estoque_id = :estoque_id
+            ";
+
+            $stmtVerificar = $pdo->prepare($sqlVerificar);
+
+            $stmtVerificar->execute([
+                ':estoque_id' => $id
+            ]);
+
+            $totalMovimentacoes = (int) $stmtVerificar->fetchColumn();
+
+
+            // --------------------------------------------------
+            // IMPEDE A EXCLUSÃO QUANDO EXISTE HISTÓRICO
+            // --------------------------------------------------
+
+            if ($totalMovimentacoes > 0) {
+
+                $mensagemErro = '
+                    Este lote não pode ser excluído porque possui
+                    movimentações registradas no histórico.
+                ';
+
+            } else {
+
+                // --------------------------------------------------
+                // EXCLUI O ITEM QUANDO NÃO EXISTE HISTÓRICO
+                // --------------------------------------------------
+
+                $sqlDelete = "
+                    DELETE FROM estoque
+                    WHERE id = :id
+                ";
+
+                $delete = $pdo->prepare($sqlDelete);
+
+                $delete->execute([
+                    ':id' => $id
+                ]);
+
+                if ($delete->rowCount() > 0) {
+
+                    header('Location: estoque.php?excluido=1');
+                    exit;
+
+                } else {
+
+                    $mensagemErro = 'O item não foi encontrado no estoque.';
+                }
+            }
+
+        } catch (PDOException $e) {
+
+            error_log('Erro ao excluir item do estoque: ' . $e->getMessage());
+
+            $mensagemErro = '
+                Não foi possível excluir o item.
+                Verifique se existem registros vinculados.
+            ';
+        }
+    }
 }
 
 
@@ -59,7 +128,6 @@ if (isset($_POST['id_excluir'])) {
 // BUSCAR ITENS DO ESTOQUE
 // =========================================================
 
-// Busca os dados necessários para exibir os medicamentos no estoque.
 $sql = "
     SELECT
         e.id,
@@ -77,8 +145,21 @@ $sql = "
     ORDER BY m.nome
 ";
 
-// Executa a consulta e recupera os resultados.
 $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+
+// =========================================================
+// FUNÇÃO AUXILIAR
+// =========================================================
+
+function escaparEstoque($valor)
+{
+    return htmlspecialchars(
+        (string) ($valor ?? ''),
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
 
 ?>
 
@@ -87,13 +168,10 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 <head>
 
-    <!-- Define a codificação da página. -->
     <meta charset="UTF-8">
 
-    <!-- Permite adaptação em celulares e tablets. -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Título da página. -->
     <title>Controle de Estoque</title>
 
     <!-- Aplica o tema salvo antes de carregar o visual da página. -->
@@ -126,11 +204,11 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="pagina">
 
+
     <!-- =====================================================
          CABEÇALHO
          ===================================================== -->
 
-    <!-- Apresenta a identidade visual do sistema. -->
     <section class="hero">
 
         <div class="hero-content">
@@ -162,7 +240,6 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
          RESUMO DO ESTOQUE
          ===================================================== -->
 
-    <!-- Mostra a quantidade total de itens cadastrados. -->
     <section class="resumo">
 
         <div class="resumo-left">
@@ -172,6 +249,7 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
             </div>
 
             <div>
+
                 <h2 class="resumo-numero">
                     <?= count($estoque) ?>
                 </h2>
@@ -179,6 +257,7 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                 <p class="resumo-texto">
                     Itens cadastrados no estoque
                 </p>
+
             </div>
 
         </div>
@@ -205,7 +284,6 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
             <div>
 
-                <!-- Identifica a área atual do sistema. -->
                 <span class="titulo-label">
                     Controle de estoque
                 </span>
@@ -222,7 +300,6 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
         </div>
 
-        <!-- Retorna ao painel administrativo. -->
         <a href="dashboard.php" class="btn-voltar">
             <i class="bi bi-arrow-left"></i>
             Voltar ao Painel
@@ -232,23 +309,102 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 
     <!-- =====================================================
+         MENSAGENS
+         ===================================================== -->
+
+    <?php if ($mensagemErro !== ''): ?>
+
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
+            <?= escaparEstoque($mensagemErro) ?>
+
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Fechar"
+            ></button>
+
+        </div>
+
+    <?php endif; ?>
+
+
+    <?php if (isset($_GET['excluido'])): ?>
+
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+
+            <i class="bi bi-check-circle-fill me-2"></i>
+
+            Item excluído do estoque com sucesso.
+
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Fechar"
+            ></button>
+
+        </div>
+
+    <?php endif; ?>
+
+
+    <!-- =====================================================
          AÇÕES
          ===================================================== -->
 
     <div class="linha-acoes">
 
-        <!-- Mostra a quantidade de registros encontrados. -->
         <div class="contador">
+
             <i class="bi bi-database me-1"></i>
+
             <?= count($estoque) ?>
+
             registro(s) encontrado(s)
+
         </div>
 
-        <!-- Acesso ao cadastro de um novo item. -->
-        <a href="estoque_cadastrar.php" class="novo">
-            <i class="bi bi-plus-lg"></i>
-            Novo item
-        </a>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <!-- Acesso ao histórico de movimentações. -->
+            <?php if ($podeMovimentar): ?>
+
+                <a href="movimentacoes.php" class="btn btn-outline-primary">
+
+                    <i class="bi bi-clock-history"></i>
+
+                    Movimentações
+
+                </a>
+
+
+                <!-- Cadastro de uma nova movimentação. -->
+                <a href="movimentacoes_cadastrar.php" class="btn btn-outline-success">
+
+                    <i class="bi bi-arrow-left-right"></i>
+
+                    Nova movimentação
+
+                </a>
+
+            <?php endif; ?>
+
+
+            <!-- Cadastro de um novo item no estoque. -->
+            <a href="estoque_cadastrar.php" class="novo">
+
+                <i class="bi bi-plus-lg"></i>
+
+                Novo item
+
+            </a>
+
+        </div>
 
     </div>
 
@@ -257,13 +413,12 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
          TABELA DO ESTOQUE
          ===================================================== -->
 
-    <!-- A tabela possui rolagem horizontal em telas menores. -->
     <div class="tabela table-responsive">
 
         <table class="table table-hover align-middle">
 
-            <!-- Cabeçalho da tabela. -->
             <thead>
+
                 <tr>
                     <th>ID</th>
                     <th>Medicamento</th>
@@ -274,15 +429,16 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                     <th>Código</th>
                     <th>Ações</th>
                 </tr>
+
             </thead>
 
-            <!-- Corpo da tabela. -->
+
             <tbody>
 
                 <?php if (empty($estoque)): ?>
 
-                    <!-- Mensagem exibida quando não há itens cadastrados. -->
                     <tr>
+
                         <td colspan="8" class="estado-vazio">
 
                             <div class="vazio-icone">
@@ -296,29 +452,37 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                             </p>
 
                             <a href="estoque_cadastrar.php" class="novo">
+
                                 <i class="bi bi-plus-lg"></i>
+
                                 Cadastrar primeiro item
+
                             </a>
 
                         </td>
+
                     </tr>
 
                 <?php else: ?>
 
-                    <!-- Percorre todos os itens encontrados no estoque. -->
+
                     <?php foreach ($estoque as $item): ?>
 
                         <tr>
 
                             <!-- ID do registro. -->
                             <td>
+
                                 <span class="id-registro">
                                     <?= (int) $item['id'] ?>
                                 </span>
+
                             </td>
+
 
                             <!-- Medicamento. -->
                             <td>
+
                                 <div class="med">
 
                                     <div class="med-icone">
@@ -326,92 +490,123 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
 
                                     <div>
+
                                         <div class="med-nome">
-                                            <?= htmlspecialchars($item['medicamento']) ?>
+                                            <?= escaparEstoque($item['medicamento']) ?>
                                         </div>
 
                                         <div class="med-sub">
                                             Medicamento hospitalar
                                         </div>
+
                                     </div>
 
                                 </div>
+
                             </td>
+
 
                             <!-- Quantidade disponível. -->
                             <td>
+
                                 <span class="badge-qtd">
+
                                     <i class="bi bi-box-seam"></i>
-                                    <?= htmlspecialchars((string) $item['quantidade']) ?>
+
+                                    <?= escaparEstoque($item['quantidade']) ?>
+
                                 </span>
+
                             </td>
+
 
                             <!-- Lote. -->
                             <td>
+
                                 <span class="lote">
-                                    <?= htmlspecialchars($item['lote']) ?>
+                                    <?= escaparEstoque($item['lote']) ?>
                                 </span>
+
                             </td>
+
 
                             <!-- Validade. -->
                             <td>
+
                                 <span class="validade">
-                                    <?= date('d/m/Y', strtotime($item['validade'])) ?>
+
+                                    <?= !empty($item['validade'])
+                                        ? date('d/m/Y', strtotime($item['validade']))
+                                        : 'Não informada' ?>
+
                                 </span>
+
                             </td>
+
 
                             <!-- Fornecedor. -->
                             <td>
+
                                 <span class="fornecedor">
-                                    <?= htmlspecialchars($item['fornecedor']) ?>
+                                    <?= escaparEstoque($item['fornecedor']) ?>
                                 </span>
+
                             </td>
+
 
                             <!-- Código de barras. -->
                             <td>
+
                                 <span class="codigo">
-                                    <?= htmlspecialchars($item['codigo_de_barra']) ?>
+                                    <?= escaparEstoque($item['codigo_de_barra']) ?>
                                 </span>
+
                             </td>
 
-                            <!-- =================================================
-                                 AÇÕES
-                                 ================================================= -->
 
+                            <!-- AÇÕES. -->
                             <td>
+
                                 <div class="acoes">
 
-                                    <!-- Abre a página de edição do item. -->
+                                    <!-- Edição do item. -->
                                     <a
                                         href="estoque_editar.php?id=<?= (int) $item['id'] ?>"
                                         class="btn editar"
                                         title="Editar item"
-                                        aria-label="Editar <?= htmlspecialchars($item['medicamento']) ?>"
+                                        aria-label="Editar <?= escaparEstoque($item['medicamento']) ?>"
                                     >
+
                                         <i class="bi bi-pencil-square"></i>
+
                                         Editar
+
                                     </a>
 
-                                    <!-- Abre o modal de confirmação. -->
+
+                                    <!-- Exclusão do item. -->
                                     <button
                                         type="button"
                                         class="btn excluir"
                                         data-bs-toggle="modal"
                                         data-bs-target="#modalExcluir<?= (int) $item['id'] ?>"
                                         title="Excluir item"
-                                        aria-label="Excluir <?= htmlspecialchars($item['medicamento']) ?>"
+                                        aria-label="Excluir <?= escaparEstoque($item['medicamento']) ?>"
                                     >
+
                                         <i class="bi bi-trash3"></i>
+
                                         Excluir
+
                                     </button>
 
                                 </div>
+
 
                                 <!-- =================================================
                                      MODAL DE CONFIRMAÇÃO
                                      ================================================= -->
 
-                                <!-- O ID do modal identifica o item correto. -->
                                 <div
                                     class="modal fade"
                                     id="modalExcluir<?= (int) $item['id'] ?>"
@@ -426,10 +621,10 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
                                             <div class="modal-body text-center">
 
-                                                <!-- Ícone de alerta. -->
                                                 <div class="alerta">
                                                     <i class="bi bi-exclamation-triangle-fill"></i>
                                                 </div>
+
 
                                                 <h3
                                                     class="modal-titulo"
@@ -438,70 +633,85 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                                                     Confirmar exclusão
                                                 </h3>
 
+
                                                 <p class="modal-descricao">
                                                     Esta ação não poderá ser desfeita.
                                                 </p>
 
-                                                <!-- Dados do item que será excluído. -->
+
                                                 <div class="info-box">
 
                                                     <p>
                                                         <strong>Medicamento:</strong>
-                                                        <?= htmlspecialchars($item['medicamento']) ?>
+
+                                                        <?= escaparEstoque($item['medicamento']) ?>
                                                     </p>
 
                                                     <p>
                                                         <strong>Quantidade:</strong>
-                                                        <?= htmlspecialchars((string) $item['quantidade']) ?>
+
+                                                        <?= escaparEstoque($item['quantidade']) ?>
                                                     </p>
 
                                                     <p>
                                                         <strong>Lote:</strong>
-                                                        <?= htmlspecialchars($item['lote']) ?>
+
+                                                        <?= escaparEstoque($item['lote']) ?>
                                                     </p>
 
                                                     <p>
                                                         <strong>Validade:</strong>
+
                                                         <?= date('d/m/Y', strtotime($item['validade'])) ?>
                                                     </p>
 
                                                     <p>
                                                         <strong>Fornecedor:</strong>
-                                                        <?= htmlspecialchars($item['fornecedor']) ?>
+
+                                                        <?= escaparEstoque($item['fornecedor']) ?>
                                                     </p>
 
                                                     <p>
                                                         <strong>Código de barras:</strong>
-                                                        <?= htmlspecialchars($item['codigo_de_barra']) ?>
+
+                                                        <?= escaparEstoque($item['codigo_de_barra']) ?>
                                                     </p>
 
                                                 </div>
 
-                                                <!-- Formulário responsável pela exclusão. -->
+
+                                                <!-- Formulário de exclusão. -->
                                                 <form method="POST" class="modal-acoes">
 
-                                                    <!-- Envia o ID do item para o PHP. -->
                                                     <input
                                                         type="hidden"
                                                         name="id_excluir"
                                                         value="<?= (int) $item['id'] ?>"
                                                     >
 
+
                                                     <button
                                                         type="button"
                                                         class="btn btn-cancelar"
                                                         data-bs-dismiss="modal"
                                                     >
+
                                                         <i class="bi bi-x-lg"></i>
+
                                                         Cancelar
+
                                                     </button>
+
 
                                                     <button
                                                         type="submit"
                                                         class="btn btn-confirmar-exclusao"
                                                     >
+
                                                         <i class="bi bi-trash3"></i>
+
                                                         Excluir item
+
                                                     </button>
 
                                                 </form>
@@ -528,15 +738,25 @@ $estoque = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
     </div>
 
-    <!-- Rodapé da página. -->
+
+    <!-- =====================================================
+         RODAPÉ
+         ===================================================== -->
+
     <footer class="rodape">
+
         <i class="bi bi-shield-check"></i>
+
         Controle de estoque hospitalar
+
         <span>·</span>
+
         Gestão organizada e segura
+
     </footer>
 
 </div>
+
 
 <!-- Bootstrap necessário para o funcionamento dos modais. -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

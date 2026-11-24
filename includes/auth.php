@@ -1,3 +1,4 @@
+
 <?php
 
 // ==========================================================
@@ -71,6 +72,16 @@ function obterPermissoesModulos()
             'farmaceutico',
             'comprador_almoxarifado',
             'gerente_financeiro',
+            'diretor_hospital'
+        ],
+
+        // --------------------------------------------------
+        // MÓDULO DE MOVIMENTAÇÕES DE ESTOQUE
+        // --------------------------------------------------
+        'movimentacoes' => [
+            'admin',
+            'farmaceutico',
+            'comprador_almoxarifado',
             'diretor_hospital'
         ],
 

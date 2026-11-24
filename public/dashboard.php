@@ -69,6 +69,24 @@ $modulos = [
             'gerente_financeiro', 'diretor_hospital'
         ]
     ],
+
+
+    [
+        'nome' => 'Movimentações de Estoque',
+        'descricao' => 'Registro e acompanhamento das entradas, saídas, ajustes e perdas de medicamentos.',
+        'icone' => 'bi-arrow-left-right',
+        'classe' => 'movimentacoes',
+        'link' => 'movimentacoes.php',
+        'botao' => 'Acessar módulo',
+        'permissoes' => [
+            'admin',
+            'farmaceutico',
+            'comprador_almoxarifado',
+            'diretor_hospital'
+        ]
+    ],
+
+    
     [
         'nome' => 'Fornecedores',
         'descricao' => 'Cadastro e gerenciamento dos fornecedores do hospital.',
