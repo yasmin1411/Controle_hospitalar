@@ -373,53 +373,15 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <script>
+    const temaSalvo = localStorage.getItem('controleHospitalarTema') || 'light';
+    document.documentElement.setAttribute(
+        'data-theme',
+        temaSalvo === 'dark' ? 'dark' : 'light'
+    );
+</script>
 
-    <style>
-
-        body {
-            background-color: #eef5ff;
-            font-family: Arial, sans-serif;
-        }
-
-        .container-principal {
-            padding: 30px;
-        }
-
-        .titulo-pagina {
-            color: #2F80ED;
-            font-weight: 700;
-        }
-
-        .card-painel {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px rgba(0,0,0,.06);
-        }
-
-        .btn-principal {
-            background-color: #2F80ED;
-            color: white;
-            border: none;
-        }
-
-        .btn-principal:hover {
-            background-color: #1768ce;
-            color: white;
-        }
-
-        .form-label {
-            font-weight: 600;
-        }
-
-        @media(max-width:768px) {
-
-            .container-principal {
-                padding: 15px;
-            }
-
-        }
-
-    </style>
+<link rel="stylesheet" href="../includes/css/movimentacoes_cadastrar.css?v=1">
 
 </head>
 

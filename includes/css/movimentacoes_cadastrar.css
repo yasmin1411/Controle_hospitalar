@@ -1,0 +1,389 @@
+
+/* ==========================================================
+   SISTEMA DE CONTROLE HOSPITALAR
+   MÓDULO: CADASTRO DE MOVIMENTAÇÕES
+   Arquivo: movimentacoes_cadastrar.css
+   ========================================================== */
+
+/* =========================
+   TEMA CLARO
+========================= */
+
+:root {
+    --mc-bg: #edf3fa;
+    --mc-surface: #ffffff;
+    --mc-surface-soft: #f5f8fd;
+    --mc-text: #203247;
+    --mc-muted: #718198;
+    --mc-border: #dce5f0;
+    --mc-primary: #2f80ed;
+    --mc-primary-dark: #1768ce;
+    --mc-primary-soft: #eaf3ff;
+    --mc-shadow: 0 8px 28px rgba(31, 65, 110, .08);
+    --mc-input-bg: #ffffff;
+    --mc-focus: rgba(47, 128, 237, .15);
+}
+
+/* =========================
+   TEMA ESCURO
+========================= */
+
+html[data-theme="dark"] {
+    --mc-bg: #111827;
+    --mc-surface: #1c2738;
+    --mc-surface-soft: #253247;
+    --mc-text: #e8eef7;
+    --mc-muted: #a0aec0;
+    --mc-border: #35445a;
+    --mc-primary: #5b9cf0;
+    --mc-primary-dark: #347bd5;
+    --mc-primary-soft: #263c59;
+    --mc-shadow: 0 8px 28px rgba(0, 0, 0, .22);
+    --mc-input-bg: #172233;
+    --mc-focus: rgba(91, 156, 240, .2);
+}
+
+/* =========================
+   CONFIGURAÇÕES GERAIS
+========================= */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--mc-bg) !important;
+    color: var(--mc-text);
+    font-family: "Segoe UI", Arial, sans-serif;
+    min-height: 100vh;
+    transition: background .25s ease, color .25s ease;
+}
+
+.container-principal {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 35px 42px;
+}
+
+/* =========================
+   CABEÇALHO DA PÁGINA
+========================= */
+
+.titulo-pagina {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--mc-primary) !important;
+    font-size: 1.75rem;
+    font-weight: 750;
+    letter-spacing: -.5px;
+}
+
+.titulo-pagina i {
+    width: 43px;
+    height: 43px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background: var(--mc-primary-soft);
+    color: var(--mc-primary);
+    font-size: 1.35rem;
+}
+
+.container-principal .text-muted {
+    color: var(--mc-muted) !important;
+}
+
+.container-principal > .d-flex:first-child {
+    padding: 4px 2px 23px;
+    border-bottom: 1px solid var(--mc-border);
+}
+
+/* =========================
+   CARD PRINCIPAL
+========================= */
+
+.card-painel {
+    background: var(--mc-surface) !important;
+    border: 1px solid var(--mc-border) !important;
+    border-radius: 19px !important;
+    box-shadow: var(--mc-shadow) !important;
+    overflow: hidden;
+    transition: background .25s ease, border-color .25s ease;
+}
+
+.card-painel .card-body {
+    padding: 36px !important;
+}
+
+/* =========================
+   FORMULÁRIO
+========================= */
+
+.form-label {
+    display: block;
+    margin-bottom: 9px;
+    color: var(--mc-text) !important;
+    font-size: .91rem;
+    font-weight: 700;
+}
+
+.form-control,
+.form-select {
+    width: 100%;
+    min-height: 49px;
+    padding: 11px 14px;
+    color: var(--mc-text) !important;
+    background-color: var(--mc-input-bg) !important;
+    border: 1px solid var(--mc-border) !important;
+    border-radius: 10px !important;
+    font-size: .94rem;
+    box-shadow: none !important;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.form-control::placeholder {
+    color: var(--mc-muted) !important;
+    opacity: .8;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--mc-primary) !important;
+    box-shadow: 0 0 0 4px var(--mc-focus) !important;
+    outline: none;
+}
+
+.form-select {
+    cursor: pointer;
+}
+
+.form-select option {
+    color: var(--mc-text);
+    background: var(--mc-surface);
+}
+
+textarea.form-control {
+    min-height: 125px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+/* =========================
+   CAMPO DE AJUSTE
+========================= */
+
+#campoAjuste {
+    animation: mcEntrada .25s ease;
+}
+
+#campoAjuste .form-select {
+    border-color: #b9d5fa !important;
+}
+
+html[data-theme="dark"] #campoAjuste .form-select {
+    border-color: #47658a !important;
+}
+
+/* =========================
+   SALDO DISPONÍVEL
+========================= */
+
+#saldoDisponivel {
+    display: block;
+    min-height: 20px;
+    margin-top: 9px;
+    font-size: .82rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+#saldoDisponivel.text-muted {
+    color: var(--mc-muted) !important;
+}
+
+#saldoDisponivel.text-danger {
+    color: #e05252 !important;
+}
+
+/* =========================
+   BOTÕES
+========================= */
+
+.btn {
+    min-height: 43px;
+    padding: 10px 17px;
+    border-radius: 9px !important;
+    font-size: .9rem;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.btn-principal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 21px;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #2f80ed, #1768ce) !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(47, 128, 237, .2);
+}
+
+.btn-principal:hover {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #1768ce, #1258b1) !important;
+    box-shadow: 0 6px 16px rgba(47, 128, 237, .3);
+    transform: translateY(-2px);
+}
+
+.btn-outline-secondary {
+    color: var(--mc-text) !important;
+    background: var(--mc-surface) !important;
+    border: 1px solid var(--mc-border) !important;
+}
+
+.btn-outline-secondary:hover {
+    color: var(--mc-primary) !important;
+    background: var(--mc-primary-soft) !important;
+    border-color: var(--mc-primary) !important;
+}
+
+.btn:active {
+    transform: scale(.98);
+}
+
+/* =========================
+   ALERTAS
+========================= */
+
+.alert {
+    padding: 15px 18px;
+    margin-bottom: 22px;
+    border-radius: 11px;
+    font-size: .92rem;
+    font-weight: 550;
+}
+
+.alert-danger {
+    color: #a83232;
+    background: #fff0f0;
+    border: 1px solid #f5caca;
+}
+
+html[data-theme="dark"] .alert-danger {
+    color: #ffaaaa;
+    background: #40252b;
+    border-color: #75404a;
+}
+
+/* =========================
+   ESPAÇAMENTO DOS CAMPOS
+========================= */
+
+.card-painel form > .row {
+    row-gap: 25px !important;
+}
+
+.card-painel form > .d-flex {
+    padding-top: 22px;
+    border-top: 1px solid var(--mc-border);
+}
+
+/* =========================
+   ANIMAÇÃO
+========================= */
+
+@keyframes mcEntrada {
+    from {
+        opacity: 0;
+        transform: translateY(7px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width: 992px) {
+    .container-principal {
+        padding: 27px;
+    }
+
+    .card-painel .card-body {
+        padding: 27px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .container-principal {
+        padding: 20px 15px;
+    }
+
+    .titulo-pagina {
+        font-size: 1.4rem;
+    }
+
+    .titulo-pagina i {
+        width: 39px;
+        height: 39px;
+    }
+
+    .card-painel {
+        border-radius: 14px !important;
+    }
+
+    .card-painel .card-body {
+        padding: 21px !important;
+    }
+
+    .card-painel form > .d-flex {
+        flex-direction: column-reverse;
+    }
+
+    .card-painel form > .d-flex .btn,
+    .container-principal > .d-flex:first-child > a {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .container-principal {
+        padding: 15px 11px;
+    }
+
+    .titulo-pagina {
+        font-size: 1.2rem;
+    }
+
+    .card-painel .card-body {
+        padding: 17px !important;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 46px;
+        font-size: .88rem;
+    }
+}
+
+/* =========================
+   ACESSIBILIDADE
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+}
